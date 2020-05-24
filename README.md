@@ -2,7 +2,7 @@
 
 Summer Camp is a free WebRTC telephony application built in Typescript and React. It is a phone for a single user and supports inbound and outbound calls.
 
-![Phone Preview](phone-preview@2x.png)
+<img src="phone-preview@2x.png" alt="Phone Preview" style="zoom:50%;" />
 
 ## Features
 
@@ -166,7 +166,7 @@ The API endpoint for the REST API and the WebSocket server. If this parameter is
 
 `SESSION_SECRET`, the secret to encrypt the JWT session, it should be a large unguessable string
 
-### Testing
+## Testing
 
 `npm run test-server`
 
@@ -178,6 +178,6 @@ Right now this project has no automated tests for the React frontend, we will ad
 
 We are happy to get your feedback!
 
-### License
+## License
 
 All files on this GitHub repository are subject to the GPLv3 license. Please read the License file at the root of the project.

@@ -2,7 +2,9 @@
 
 Summer Camp is a free WebRTC telephony application built in Typescript and React. It is a phone for a single user and supports inbound and outbound calls.
 
-<img src="phone-preview@2x.png" alt="Phone Preview" style="zoom:50%;" />
+<p align="center">
+    <img src="phone-preview@2x.png" alt="Phone Preview" width="500" />
+</p>
 
 ## Features
 

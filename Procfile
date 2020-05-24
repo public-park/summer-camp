@@ -1,0 +1,1 @@
+web: node --use-strict build-server/worker.js

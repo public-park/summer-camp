@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    /* Enable all strict type-checking options. */
+    "strict": true,
+    "target": "ES2017",
+    "module": "CommonJS",
+    "strictFunctionTypes":false
+  },
+}

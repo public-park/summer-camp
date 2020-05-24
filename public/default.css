@@ -1,0 +1,364 @@
+/* remove default margin */
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+ul[class],
+ol[class],
+li,
+figure,
+figcaption,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%; /* 2 */
+}
+
+:root {
+  --default-font: 'Roboto', 'Helvetica Neue';
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  font-family: var(--default-font), sans-serif;
+  text-rendering: auto;
+}
+
+textarea,
+select,
+input,
+button {
+  outline: none;
+  font-family: var(--default-font), sans-serif;
+  border: 0;
+  font-size: 100%;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  margin: 0;
+  padding: 0;
+}
+
+.page {
+  display: flex;
+  min-height: 100%;
+  justify-content: center;
+  flex-direction: row;
+}
+
+.page-body {
+  flex: auto;
+  max-width: 550px;
+  min-width: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 2px 1px -1px rgba(0, 0, 0, 0.12);
+}
+
+.workspace {
+  min-height: 400px;
+  max-height: 800px;
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace > .header {
+  height: 90px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: rgb(33, 150, 243);
+  color: white;
+  padding-left: 15px;
+}
+
+.workspace > .header .name {
+  flex-grow: 1;
+  margin-left: 10px;
+  font-size: 1.2em;
+}
+
+.workspace > .body {
+  flex: auto;
+  flex-direction: column;
+  display: flex;
+}
+
+.phone {
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.phone .keypad {
+  flex: auto;
+  flex-grow: 4;
+  display: flex;
+}
+
+.phone .keypad > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  grid-row-gap: 0;
+  grid-column-gap: 0;
+  flex: auto;
+}
+
+.phone .keypad .digit-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+}
+
+.phone .keypad .digit-button:hover {
+  background-color: #ececec;
+}
+
+.phone .keypad .digit-button .letter {
+  color: rgba(0, 0, 0, 0.38);
+  font-size: 0.7em;
+}
+
+.phone .keypad .digit-button .number {
+  color: rgb(33, 150, 243);
+  font-size: 2em;
+  font-weight: 400;
+}
+
+.phone .keypad .digit-button .number-in-grey {
+  color: rgba(0, 0, 0, 0.38);
+  font-size: 2.2em;
+}
+
+.phone .idle .display {
+  display: flex;
+  flex-direction: row;
+  flex: auto;
+}
+
+.phone .idle .display .phone-number-input {
+  flex: auto;
+  margin: 0px 10px 0px 35px;
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 2.2em;
+  line-height: 1.5em;
+  padding: 0;
+  min-width: 100px;
+}
+
+.phone .idle .display .remove-digit-button {
+  background-image: url(images/icon-delete.svg);
+  background-position: center center;
+  background-repeat: no-repeat;
+  min-width: 60px;
+  display: block;
+  background-size: 40%;
+  opacity: 0.7;
+}
+
+.phone .idle,
+.phone .call,
+.phone .incoming {
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.phone .idle .invalid-phone-number {
+  flex: none;
+  display: hidden;
+  background-color: rgb(244, 67, 54);
+  color: white;
+  line-height: 26px;
+  vertical-align: middle;
+  text-align: center;
+  font-weight: 500;
+  font-size: 0.9em;
+}
+
+.phone .idle .start-call-button {
+  background-color: #00c853;
+  background-image: url(images/icon-call.svg);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: auto 26px;
+  display: block;
+  height: 15%;
+  min-height: 40px;
+  border-radius: 2px;
+}
+
+.phone .idle .start-call-button[disabled] {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.phone .call .end-call-button {
+  background-color: #e53935;
+  background-size: auto 26px;
+  display: block;
+  height: 15%;
+  position: relative;
+  min-height: 40px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.phone .call .end-call-button:before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  background-image: url(images/icon-call.svg);
+  background-position: center center;
+  background-size: auto 26px;
+  background-repeat: no-repeat;
+  transform: rotate(135deg);
+}
+
+.phone .call .display {
+  padding: 25px 20px;
+}
+
+.phone .call .display .duration {
+  display: block;
+  color: rgba(0, 0, 0, 0.38);
+}
+
+.phone .call .display .phone-number {
+  color: black;
+  font-size: 1.9em;
+  line-height: 1.5em;
+  opacity: 0.8;
+}
+
+.phone .call .blank {
+  flex: auto;
+  flex-grow: 6;
+}
+
+.phone .call .control {
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 10px;
+  display: grid;
+  padding: 15px;
+}
+
+.phone .call .control div {
+  height: 60px;
+  align-self: center;
+  justify-self: center;
+}
+
+.phone .call .control .mute-button {
+  background-image: url(images/icon-microphone-on.svg);
+  background-position: center center;
+  background-size: auto 32px;
+  background-repeat: no-repeat;
+  opacity: 0.9;
+}
+
+.phone .call .control .unmute-button {
+  background-image: url(images/icon-microphone-off.svg);
+  background-position: center center;
+  background-size: auto 32px;
+  background-repeat: no-repeat;
+  opacity: 0.9;
+}
+
+.phone .call .control .keypad-button {
+  background-image: url(images/icon-keypad.svg);
+  background-position: center center;
+  background-size: auto 32px;
+  background-repeat: no-repeat;
+  opacity: 0.5;
+}
+
+.phone .incoming .display {
+  padding: 25px 20px;
+}
+
+.phone .incoming .display .duration {
+  display: block;
+  color: rgba(0, 0, 0, 0.38);
+}
+
+.phone .incoming .display .phone-number {
+  color: black;
+  font-size: 1.9em;
+  line-height: 1.5em;
+  opacity: 0.8;
+}
+
+.phone .incoming .blank {
+  flex: auto;
+  flex-grow: 6;
+}
+
+.phone .incoming .accept-call-button {
+  background-color: #00c853;
+  background-image: url(images/icon-call.svg);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: auto 26px;
+  display: block;
+  height: 15%;
+  min-height: 40px;
+  border-radius: 2px;
+}
+
+.login {
+  margin-top: 10px;
+  flex: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.login > div {
+  padding-right: 10px;
+}
+
+.login button {
+  padding-right: 10px;
+}
+
+@media (max-width: 800px) {
+  .login {
+    flex-direction: column;
+  }
+
+  .login > div {
+    width: 100%;
+    margin-top: 10px;
+  }
+}
+
+.connection-lost-alert-badge > div {
+  border-radius: 0;
+}
+
+.you-are-offline {
+  text-align: center;
+  padding: 20px;
+}

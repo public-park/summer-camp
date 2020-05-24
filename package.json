@@ -1,0 +1,98 @@
+{
+  "name": "summer-camp",
+  "version": "0.5.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/public-park/summer-camp"
+  },
+  "author": {
+    "name": "Noah Park"
+  },
+  "private": true,
+  "dependencies": {
+    "@material-ui/core": "^4.9.13",
+    "@material-ui/icons": "^4.9.1",
+    "@material-ui/lab": "^4.0.0-alpha.52",
+    "@material/react-icon-button": "^0.15.0",
+    "@material/react-material-icon": "^0.15.0",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.5.0",
+    "@types/bcrypt": "^3.0.0",
+    "@types/cors": "^2.8.6",
+    "@types/events": "^3.0.0",
+    "@types/express": "^4.17.6",
+    "@types/jest": "^25.2.3",
+    "@types/jsonwebtoken": "^8.3.9",
+    "@types/mongoose": "^5.7.15",
+    "@types/node": "^12.12.38",
+    "@types/pino": "^6.0.1",
+    "@types/react": "^16.9.34",
+    "@types/react-dom": "^16.9.7",
+    "@types/react-redux": "^7.1.8",
+    "@types/react-router-dom": "^5.1.5",
+    "@types/redux-logger": "^3.0.7",
+    "@types/superagent": "^4.1.7",
+    "@types/uuid": "^7.0.3",
+    "@types/validator": "^12.0.1",
+    "@types/ws": "^7.2.4",
+    "ajv": "^6.12.2",
+    "bcrypt": "^4.0.1",
+    "cors": "^2.8.5",
+    "events": "^3.1.0",
+    "express": "^4.17.1",
+    "immer": "^6.0.5",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.9.12",
+    "pino": "^6.2.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-redux": "^7.2.0",
+    "react-router-dom": "^5.1.2",
+    "react-scripts": "3.4.1",
+    "redux": "^4.0.5",
+    "redux-logger": "^3.0.6",
+    "superagent": "^5.2.2",
+    "ts-jest": "24.1.0",
+    "twilio": "^3.43.0",
+    "twilio-client": "^1.10.3",
+    "typeface-roboto": "0.0.75",
+    "typescript": "^3.8.3",
+    "uuid": "^7.0.3",
+    "validator": "^13.0.0",
+    "ws": "^7.2.5",
+    "dotenv": "^8.2.0"
+  },
+  "scripts": {
+    "start-server": "ts-node --project src-server/tsconfig.json src-server/worker.ts",
+    "build-server": "tsc --project src-server/tsconfig.json -outDir build-server",
+    "test-server": "jest --runInBand --config=jest.config.js",
+    "build": "react-scripts build && npm run build-server",
+    "start-frontend": "react-scripts start",
+    "start": "concurrently npm:start-server npm:start-frontend",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "engines": {
+    "node": "10.x"
+  },
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "ts-node": "^8.10.1",
+    "concurrently": "^5.2.0"
+  }
+}

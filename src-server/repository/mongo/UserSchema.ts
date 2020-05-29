@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-import { Document, Schema, Model } from 'mongoose';
+import { Document, Schema } from 'mongoose';
 import { User, UserAuthentication } from '../../models/User';
 import { v4 as uuidv4 } from 'uuid';
 import { UserActivity } from '../../models/UserActivity';
@@ -8,7 +8,7 @@ import { UserActivity } from '../../models/UserActivity';
 export interface UserDocument extends Document {
   _id: string;
   name: string;
-  profileUrl: string | undefined;
+  profileImageUrl: string | undefined;
   labels: Array<string>;
   activity: UserActivity;
   accountId: string;
@@ -22,7 +22,7 @@ const UserSchema = new Schema(
   {
     _id: { type: String, default: uuidv4 },
     name: { type: String, required: true, unique: true },
-    profileUrl: { type: String, required: false },
+    profileImageUrl: { type: String, required: false },
     labels: [String],
     activity: { type: String, required: true },
     accountId: { type: String, required: true },
@@ -37,7 +37,7 @@ UserSchema.methods.toUser = function (): User {
   return new User(
     this._id,
     this.name,
-    this.profileUrl,
+    this.profileImageUrl,
     new Set(this.labels),
     this.activity,
     this.accountId,

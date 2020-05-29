@@ -8,7 +8,7 @@ export interface UserAuthentication {
 export class User {
   id: string;
   name: string;
-  profileUrl: string | undefined;
+  profileImageUrl: string | undefined;
   labels: Set<string>;
   activity: UserActivity;
   accountId: string;
@@ -19,7 +19,7 @@ export class User {
   constructor(
     id: string,
     name: string,
-    profileUrl: string | undefined,
+    profileImageUrl: string | undefined,
     labels: Set<string>,
     activity: UserActivity,
     accountId: string,
@@ -28,10 +28,12 @@ export class User {
     createdAt: Date = new Date()
   ) {
     this.id = id;
-    (this.name = name), (this.profileUrl = profileUrl);
+    this.name = name;
+    this.profileImageUrl = profileImageUrl;
     this.labels = labels;
     this.activity = activity;
-    (this.accountId = accountId), (this.authentication = authentication);
+    this.accountId = accountId;
+    this.authentication = authentication;
     this.createdAt = createdAt;
     this.permissions = permissions;
   }

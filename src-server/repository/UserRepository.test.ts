@@ -38,7 +38,7 @@ describe('create an user', () => {
     expect(user).toBeInstanceOf(User);
     expect(user.id).toHaveLength(36);
     expect(user.name).toBe(personas.alice);
-    expect(user.profileUrl).toBeUndefined();
+    expect(user.profileImageUrl).toBeUndefined();
     expect(user.labels).toBeInstanceOf(Set);
     expect(user.labels.size).toBe(2);
     expect(user.labels.has('es')).toBeTruthy();
@@ -136,7 +136,7 @@ describe('read, update a user', () => {
     expect(user).toBeInstanceOf(User);
     expect(user.id).toHaveLength(36);
     expect(user.name).toBe(personas.joe);
-    expect(user.profileUrl).toBeUndefined();
+    expect(user.profileImageUrl).toBeUndefined();
     expect(user.labels).toBeInstanceOf(Set);
     expect(user.labels.size).toBe(2);
     expect(user.labels.has('es')).toBeTruthy();
@@ -162,7 +162,7 @@ describe('read, update a user', () => {
     let user = <User>await userRepository.getById(id);
 
     user.name = personas.max;
-    user.profileUrl = 'joe.png';
+    user.profileImageUrl = 'joe.png';
     user.labels.add('engineer');
     user.labels.add('de');
     user.permissions.add('user.create');
@@ -172,7 +172,7 @@ describe('read, update a user', () => {
 
     expect(user).toBeInstanceOf(User);
     expect(user.name).toBe(personas.max);
-    expect(user.profileUrl).toBe('joe.png');
+    expect(user.profileImageUrl).toBe('joe.png');
     expect(user.labels.size).toBe(4);
     expect(user.labels.has('engineer')).toBeTruthy();
     expect(user.labels.has('de')).toBeTruthy();

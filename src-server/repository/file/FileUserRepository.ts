@@ -79,6 +79,14 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     }
   };
 
+  getOneByAccountId = async (id: string) => {
+    for (const user of this.users.values()) {
+      if (user.accountId === id) {
+        return Promise.resolve(this.getCopy(user));
+      }
+    }
+  };
+
   protected getCopy(user: User | undefined) {
     if (user) {
       return this.fromPlainObject(this.toPlainObject(user));
@@ -113,7 +121,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     return new User(
       item.id,
       item.name,
-      item.profileUrl,
+      item.profileImageUrl,
       new Set(item.labels),
       item.activity,
       item.accountId,
@@ -125,7 +133,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
 
   create = async (
     name: string,
-    profileUrl: string | undefined,
+    profileImageUrl: string | undefined,
     labels: Set<string>,
     accountId: string,
     permissions: Set<UserPermissions>,
@@ -150,7 +158,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     const user = new User(
       uuidv4(),
       name,
-      profileUrl,
+      profileImageUrl,
       labels,
       UserActivity.Unknown,
       accountId,

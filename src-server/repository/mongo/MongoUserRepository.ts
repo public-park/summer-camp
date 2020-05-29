@@ -11,19 +11,21 @@ import AccountModel from './AccountSchema';
 export class MongoUserRepository implements UserRepository, BaseRepository<User> {
   async create(
     name: string,
-    profileUrl: string | undefined,
+    profileImageUrl: string | undefined,
     labels: Set<string>,
     accountId: string,
     permissions: Set<UserPermissions>,
     authentication: UserAuthentication
   ) {
-    if (name === '') throw new UserNameError();
+    if (name === '') {
+      throw new UserNameError();
+    }
 
     await AccountModel.findOne({ _id: accountId }).orFail();
 
     const model = new UserModel({
       name: name,
-      profileUrl: profileUrl,
+      profileImageUrl: profileImageUrl,
       labels: Array.from(labels.values()),
       accountId: accountId,
       permissions: Array.from(permissions.values()),
@@ -38,6 +40,14 @@ export class MongoUserRepository implements UserRepository, BaseRepository<User>
 
   async getByName(name: string) {
     const document = await UserModel.findOne({ name: name });
+
+    if (document) {
+      return document.toUser();
+    }
+  }
+
+  async getOneByAccountId(id: string) {
+    const document = await UserModel.findOne({ accountId: id });
 
     if (document) {
       return document.toUser();

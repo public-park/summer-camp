@@ -1,6 +1,6 @@
 export enum UserActivity {
-  Away = 'Away',
-  DoNotDisturb = 'DoNotDisturb',
-  WaitingForWork = 'WaitingForWork',
-  Unknown = 'Unknown',
+  Away = 'away',
+  DoNotDisturb = 'do-not-disturb',
+  WaitingForWork = 'waiting-for-work',
+  Unknown = 'unknown',
 }

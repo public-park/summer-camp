@@ -2,7 +2,7 @@
 openapi: 3.0.2
 info:
   title: Summer Camp
-  version: "0.5"
+  version: '0.6'
   license:
     name: GNU General Public License v3.0 or later
     url: https://github.com/public-park/summer-camp/LICENSE
@@ -27,17 +27,17 @@ paths:
                 password:
                   type: string
       responses:
-        "200":
+        '200':
           description: OK
-          $ref: "#/components/responses/LoginResponse"
-        "400":
+          $ref: '#/components/responses/LoginResponse'
+        '400':
           description: the server did not understand the request
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/NotAuthorized"
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthorized'
         5XX:
           description: Unexpected error.
-          $ref: "#/components/responses/ServerError"
+          $ref: '#/components/responses/ServerError'
   /register:
     post:
       description: register a user
@@ -53,228 +53,250 @@ paths:
                 password:
                   type: string
       responses:
-        "200":
+        '200':
           description: OK
-          $ref: "#/components/responses/RegisterResponse"
-        "400":
+          $ref: '#/components/responses/RegisterResponse'
+        '400':
           description: the server did not understand the request
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/NotAuthorized"
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthorized'
         5XX:
           description: Unexpected error.
-          $ref: "#/components/responses/ServerError"
+          $ref: '#/components/responses/ServerError'
+  /validate-token:
+    post:
+      description: validate a token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          $ref: '#/components/responses/ValidateTokenResponse'
+        '400':
+          description: the server did not understand the request
+          $ref: '#/components/responses/BadRequest'
+        5XX:
+          description: Unexpected error.
+          $ref: '#/components/responses/ServerError'
   /users/{userId}:
     get:
       security:
         - AuthenticationToken: []
       description: get a user by id
       parameters:
-        - $ref: "#/components/parameters/userId"
+        - $ref: '#/components/parameters/userId'
       responses:
-        "200":
-          $ref: "#/components/responses/UserResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "400":
+        '200':
+          $ref: '#/components/responses/UserResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
           description: Bad request. User ID must be an valid UUID
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/NotAuthorized"
-        "5XX":
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthorized'
+        '5XX':
           description: Unexpected error.
-          $ref: "#/components/responses/ServerError"
+          $ref: '#/components/responses/ServerError'
     post:
       security:
         - AuthenticationToken: []
       description: update a user
       parameters:
-        - $ref: "#/components/parameters/userId"
+        - $ref: '#/components/parameters/userId'
       requestBody:
         required: true
         description: updated user
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/User"
+              $ref: '#/components/schemas/User'
       responses:
-        "200":
+        '200':
           description: the updated user
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "400":
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
           description: Bad request. User ID must be an valid UUID
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/NotAuthorized"
-        "5XX":
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthorized'
+        '5XX':
           description: Unexpected error.
-          $ref: "#/components/responses/ServerError"
+          $ref: '#/components/responses/ServerError'
     delete:
       security:
         - AuthenticationToken: []
       description: delete a user
       parameters:
-        - $ref: "#/components/parameters/userId"
+        - $ref: '#/components/parameters/userId'
       responses:
-        "204":
+        '204':
           description: The user was deleted
-        "400":
+        '400':
           description: Bad request. User ID must be an valid UUID
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/NotAuthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "5XX":
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '5XX':
           description: Unexpected error.
-          $ref: "#/components/responses/ServerError"
-  "/users/{userid}/presence":
+          $ref: '#/components/responses/ServerError'
+  '/users/{userid}/presence':
     get:
       security:
         - AuthenticationToken: []
       description: get the presence details of a user
       parameters:
-        - $ref: "#/components/parameters/userId"
+        - $ref: '#/components/parameters/userId'
       responses:
-        "200":
-          $ref: "#/components/responses/UserPresenceResponse"
-        "400":
+        '200':
+          $ref: '#/components/responses/UserPresenceResponse'
+        '400':
           description: Bad request. User ID must be an valid UUID
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/NotAuthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "5XX":
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '5XX':
           description: Unexpected error.
-          $ref: "#/components/responses/ServerError"
-  "/users/{userid}/configuration":
+          $ref: '#/components/responses/ServerError'
+  '/users/{userid}/configuration':
     get:
       security:
         - AuthenticationToken: []
       description: get the configuration details of a user
       parameters:
-        - $ref: "#/components/parameters/userId"
+        - $ref: '#/components/parameters/userId'
       responses:
-        "200":
-          $ref: "#/components/responses/UserConfigurationResponse"
-        "400":
+        '200':
+          $ref: '#/components/responses/UserConfigurationResponse'
+        '400':
           description: Bad request. User ID must be an valid UUID
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/NotAuthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "5XX":
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '5XX':
           description: Unexpected error.
-          $ref: "#/components/responses/ServerError"
-  "/accounts/{accountId}":
+          $ref: '#/components/responses/ServerError'
+  '/accounts/{accountId}':
     get:
       security:
         - AuthenticationToken: []
       description: get an accountId
       parameters:
-        - $ref: "#/components/parameters/accountId"
+        - $ref: '#/components/parameters/accountId'
       responses:
-        "200":
-          $ref: "#/components/responses/AccountResponse"
-        "400":
+        '200':
+          $ref: '#/components/responses/AccountResponse'
+        '400':
           description: Bad request. accountid must be an valid UUID
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/NotAuthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "5XX":
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '5XX':
           description: Unexpected error.
-          $ref: "#/components/responses/ServerError"
-  "/accounts/{accountId}/configuration":
+          $ref: '#/components/responses/ServerError'
+  '/accounts/{accountId}/configuration':
     get:
       security:
         - AuthenticationToken: []
       description: get an accountId configuration
       parameters:
-        - $ref: "#/components/parameters/accountId"
+        - $ref: '#/components/parameters/accountId'
       responses:
-        "200":
-          $ref: "#/components/schemas/AccountConfiguration"
-        "400":
+        '200':
+          $ref: '#/components/schemas/AccountConfiguration'
+        '400':
           description: Bad request. accountid must be an valid UUID
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/NotAuthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "5XX":
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '5XX':
           description: Unexpected error.
-          $ref: "#/components/responses/ServerError"
+          $ref: '#/components/responses/ServerError'
     post:
       security:
         - AuthenticationToken: []
       description: update an accountId configuration
       parameters:
-        - $ref: "#/components/parameters/accountId"
+        - $ref: '#/components/parameters/accountId'
       requestBody:
         required: true
         description: updated configuration
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AccountConfiguration"
+              $ref: '#/components/schemas/AccountConfiguration'
       responses:
-        "200":
-          $ref: "#/components/responses/AccountConfigurationResponse"
-        "400":
+        '200':
+          $ref: '#/components/responses/AccountConfigurationResponse'
+        '400':
           description: Bad request. accountid must be an valid UUID
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/NotAuthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "5XX":
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '5XX':
           description: Unexpected error.
-          $ref: "#/components/responses/ServerError"
-  "/accounts/{accountId}/configuration/validate":
+          $ref: '#/components/responses/ServerError'
+  '/accounts/{accountId}/configuration/validate':
     post:
       security:
         - AuthenticationToken: []
       description: validate an accountId configuration
       parameters:
-        - $ref: "#/components/parameters/accountId"
+        - $ref: '#/components/parameters/accountId'
       requestBody:
         required: true
         description: configuration payload to check
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AccountConfiguration"
+              $ref: '#/components/schemas/AccountConfiguration'
       responses:
-        "200":
-          $ref: "#/components/responses/AccountConfigurationResponse"
-        "400":
+        '200':
+          $ref: '#/components/responses/AccountConfigurationResponse'
+        '400':
           description: Bad request. accountid must be an valid UUID
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/NotAuthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "5XX":
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '5XX':
           description: Unexpected error.
-          $ref: "#/components/responses/ServerError"
-  "/accounts/{accountId}/phone-numbers":
+          $ref: '#/components/responses/ServerError'
+  '/accounts/{accountId}/phone-numbers':
     post:
       security:
         - AuthenticationToken: []
       description: returns available phone numbers
       parameters:
-        - $ref: "#/components/parameters/accountId"
+        - $ref: '#/components/parameters/accountId'
       responses:
-        "200":
+        '200':
           description: list of phone numbers
           content:
             application/json:
@@ -282,17 +304,17 @@ paths:
                 type: array
                 items:
                   type: object
-                  $ref: "#/components/schemas/PhoneNumber"
-        "400":
+                  $ref: '#/components/schemas/PhoneNumber'
+        '400':
           description: Bad request. accountid must be an valid UUID
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/NotAuthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "5XX":
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/NotAuthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '5XX':
           description: Unexpected error.
-          $ref: "#/components/responses/ServerError"
+          $ref: '#/components/responses/ServerError'
 components:
   securitySchemes:
     AuthenticationToken:
@@ -315,7 +337,7 @@ components:
           items:
             type: string
         activity:
-          $ref: "#/components/schemas/Activity"
+          $ref: '#/components/schemas/Activity'
         accountId:
           type: string
           readOnly: true
@@ -342,7 +364,7 @@ components:
         isAvailable:
           type: boolean
         activity:
-          $ref: "#/components/schemas/Activity"
+          $ref: '#/components/schemas/Activity'
     UserConfiguration:
       type: object
       properties:
@@ -422,7 +444,7 @@ components:
   parameters:
     userId:
       in: path
-      description: "The unique identifier of the user."
+      description: 'The unique identifier of the user.'
       name: userId
       required: true
       schema:
@@ -431,7 +453,7 @@ components:
     accountId:
       in: path
       name: accountId
-      description: "The unique identifier of the account."
+      description: 'The unique identifier of the account.'
       required: true
       schema:
         type: string
@@ -460,55 +482,64 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
     NotFound:
       description: The resource was not found
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
     ServerError:
       description: A server error occured
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
     BadRequest:
       description: The request was invalid
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
     AccountResponse:
       description: an account
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Account"
+            $ref: '#/components/schemas/Account'
     AccountConfigurationResponse:
       description: an account configuration
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/AccountConfiguration"
+            $ref: '#/components/schemas/AccountConfiguration'
     UserResponse:
       description: an user
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/User"
+            $ref: '#/components/schemas/User'
     UserPresenceResponse:
       description: a user's precense details
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/UserPresence"
+            $ref: '#/components/schemas/UserPresence'
     UserConfigurationResponse:
       description: a user's configuration details
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/UserConfiguration"
+            $ref: '#/components/schemas/UserConfiguration'
+    ValidateTokenResponse:
+      description: response to a token validation request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              isValid:
+                type: boolean
     LoginResponse:
       description: response to a valid login request
       content:

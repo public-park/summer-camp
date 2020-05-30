@@ -34,6 +34,7 @@ import { RegisterRequestSchema } from './middlewares/schema-validation/RegisterR
 import { LoginRequestSchema } from './middlewares/schema-validation/LoginRequestSchema';
 import { AccountConfigurationRequestSchema } from './middlewares/schema-validation/AccountConfigurationRequestSchema';
 import { UserRequestSchema } from './middlewares/schema-validation/UserRequestSchema';
+import { ValidateTokenRequestSchema } from './middlewares/schema-validation/ValidateTokenRequestSchema';
 
 // controllers
 import { ConfigurationController } from './controllers/ConfigurationController';
@@ -44,6 +45,7 @@ import { RegisterController } from './controllers/RegisterController';
 import { AccountController } from './controllers/AccountController';
 import { UserController } from './controllers/UserController';
 import { UserPhoneController } from './controllers/UserPhoneController';
+import { ValidateTokenController } from './controllers/ValidateTokenController';
 
 import { PasswordAuthenticationProvider } from './security/authentication/PasswordAuthenticationProvider';
 
@@ -174,6 +176,16 @@ loginRouter.use(setHeaders);
 loginRouter.route('/').post(validateAgainst(LoginRequestSchema), LoginController.login);
 
 app.use('/api/login', loginRouter);
+
+const validateTokenRouter = express.Router();
+
+validateTokenRouter.use(express.json());
+validateTokenRouter.use(rejectIfContentTypeIsNot('application/json'));
+validateTokenRouter.use(setHeaders);
+
+validateTokenRouter.route('/').post(validateAgainst(ValidateTokenRequestSchema), ValidateTokenController.validate);
+
+app.use('/api/validate-token', validateTokenRouter);
 
 if (process.env.REGISTRATION_ENABLED === 'true') {
   const registerRouter = express.Router();

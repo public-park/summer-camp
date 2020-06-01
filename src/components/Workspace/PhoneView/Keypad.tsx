@@ -41,10 +41,9 @@ export const Keypad = (props: any) => {
         {keys.map((item: any) => {
           return (
             <KeypadButton
-              className="digit-button"
               key={`digit-button-${item.number}`}
               addDigit={addDigit}
-              letter={item.letter}
+              letter={item.letters}
               number={item.number}
             />
           );

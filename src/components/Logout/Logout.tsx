@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { selectLogoutReason } from '../../store/Store';
 import { ApplicationContext } from '../../context/ApplicationContext';
 
-export const LogoutPage = () => {
+export const Logout = () => {
   const { logout } = useContext(ApplicationContext);
   const reason = useSelector(selectLogoutReason);
 

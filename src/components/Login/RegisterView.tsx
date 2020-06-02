@@ -26,6 +26,7 @@ export const RegisterView = ({ isVisible }: RegisterProps) => {
   const [error, setError] = useState('');
 
   const handleChange = (name: string) => (event: any) => {
+    console.log('handle change');
     setValues({ ...values, [name]: event.target.value });
   };
 
@@ -67,7 +68,7 @@ export const RegisterView = ({ isVisible }: RegisterProps) => {
                 type="text"
                 autoComplete="off"
                 value={values.name}
-                onChange={(event) => handleChange('name')}
+                onChange={handleChange('name')}
                 id="name-register-input"
                 label="Name"
               />
@@ -84,7 +85,7 @@ export const RegisterView = ({ isVisible }: RegisterProps) => {
                 type="password"
                 autoComplete="off"
                 value={values.password}
-                onChange={(event) => handleChange('password')}
+                onChange={handleChange('password')}
                 id="password-register-input"
                 label="Passwordd"
               />

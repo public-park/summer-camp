@@ -3,7 +3,7 @@ import { AccountConfiguration } from '../../../../models/AccountConfiguration';
 import { User } from '../../../../models/User';
 import { getUrl } from '../../../../helpers/UrlHelper';
 
-export const fetchConfiguration = async (user: User): Promise<AccountConfiguration | undefined> => {
+export const fetchAccountConfiguration = async (user: User): Promise<AccountConfiguration | undefined> => {
   const response = await request(getUrl(`/accounts/${user.accountId}/configuration`))
     .withAuthentication(user)
     .fetch();

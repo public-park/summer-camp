@@ -3,12 +3,12 @@ import React, { useState, useContext, useEffect } from 'react';
 import { Typography, CardContent, Card, TextField, FormControl, Button } from '@material-ui/core';
 import { LoadIndicator } from './LoadIndicator';
 import { InitialConfiguration, PhoneConfigurationContext } from './PhoneConfigurationContext';
-import { useSelector } from 'react-redux';
-import { selectUser } from '../../../store/Store';
+import { ApplicationContext } from '../../../context/ApplicationContext';
 import { validateConfiguration } from './services/validateConfiguration';
 
 export const AccountForm = (props: any) => {
-  const user = useSelector(selectUser);
+  const { user } = useContext(ApplicationContext);
+
   const { configuration, setView, save, isSaving, setBaseConfiguration } = useContext(PhoneConfigurationContext);
 
   const [key, setKey] = useState(configuration.key);

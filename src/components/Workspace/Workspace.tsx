@@ -1,49 +1,82 @@
-import React, { useEffect } from 'react';
-
-import { useHistory } from 'react-router-dom';
+import React, { useEffect, useContext } from 'react';
 import { ConnectionLostAlertBadge } from './ConnectionLostAlertBadge';
-import { SetupHeader } from './Header/SetupHeader';
 import { Header } from './Header/Header';
 import { PhoneConfigurationContainer } from './PhoneConfigurationView/PhoneConfigurationContainer';
-import { useSelector } from 'react-redux';
-import { selectUser, selectView, selectConnectionState } from '../../store/Store';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectWorkspaceView, selectConnectionState } from '../../store/Store';
 import { PhoneParent } from './PhoneView/PhoneParent';
 import { PhoneContainer } from './PhoneView/PhoneContainer';
 import { UserConnectionState } from '../../models/enums/UserConnectionState';
-import { PhoneConfigurationParent } from './PhoneConfigurationView/PhoneConfigurationParent';
 import { PhoneConfigurationView } from './PhoneConfigurationView/PhoneConfigurationView';
+import { HeaderThemeProvider } from './Header/HeaderThemeProvider';
+import { WorkspaceView } from '../../actions/WorkspaceViewAction';
+import { CallListView } from './CallListView/CallListView';
+import { InititializeView } from './CallListView/InitializeView';
+import { fetchUserConfiguration } from './PhoneConfigurationView/services/fetchUserConfiguration';
+import { ApplicationContext } from '../../context/ApplicationContext';
+import { ActionType } from '../../actions/ActionType';
 
 export const Workspace = () => {
-  const history = useHistory();
+  const { user } = useContext(ApplicationContext);
 
-  const user = useSelector(selectUser);
-  const view = useSelector(selectView);
   const connectionState = useSelector(selectConnectionState);
+  const view = useSelector(selectWorkspaceView);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    if (!user.token) {
-      history.push('/offline');
+    const init = async () => {
+      let configuration;
+
+      try {
+        configuration = await fetchUserConfiguration(user);
+      } finally {
+        dispatch({
+          type: ActionType.PHONE_CONFIGURATION_UPDATED,
+          payload: { configuration: configuration },
+        });
+      }
+    };
+
+    if (view == 'FETCH_CONFIGURATION_VIEW' && connectionState == UserConnectionState.Open) {
+      init();
     }
-  }, [user.token, history]);
+  }, [view, connectionState]);
+
+  const getWorkspaceView = (view: WorkspaceView) => {
+    switch (view) {
+      case 'SETUP_VIEW':
+        return (
+          <PhoneConfigurationContainer>
+            <PhoneConfigurationView />
+          </PhoneConfigurationContainer>
+        );
+
+      case 'PHONE_VIEW':
+        return (
+          <PhoneContainer>
+            <PhoneParent />
+          </PhoneContainer>
+        );
+
+      case 'CALL_HISTORY_VIEW':
+        return <CallListView />;
+
+      case 'FETCH_CONFIGURATION_VIEW':
+        return <InititializeView />;
+    }
+  };
 
   return (
     <div className="page-body">
       <div className="workspace">
         {connectionState === UserConnectionState.Closed && <ConnectionLostAlertBadge />}
 
-        {view === 'SETUP' ? <SetupHeader /> : <Header />}
+        <HeaderThemeProvider>
+          <Header />
+        </HeaderThemeProvider>
 
-        {view === 'SETUP' ? (
-          <PhoneConfigurationContainer>
-            <PhoneConfigurationParent>
-              <PhoneConfigurationView />
-            </PhoneConfigurationParent>
-          </PhoneConfigurationContainer>
-        ) : (
-          <PhoneContainer>
-            <PhoneParent />
-          </PhoneContainer>
-        )}
+        {getWorkspaceView(view)}
       </div>
     </div>
   );

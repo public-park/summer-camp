@@ -66,6 +66,7 @@ export const LoginView = ({ isVisible }: LoginProps) => {
   };
 
   const handleChange = (name: string) => (event: any) => {
+    console.log('handle change');
     setValues({ ...values, [name]: event.target.value });
   };
 

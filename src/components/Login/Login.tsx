@@ -4,7 +4,7 @@ import { version } from '../../../package.json';
 import { LoginView } from './LoginView';
 import { RegisterView } from './RegisterView';
 
-export const LoginPage = () => {
+export const Login = () => {
   const [title, setTitle] = useState('Already signed up?');
   const [tab, setTab] = useState('login');
 

@@ -10,12 +10,13 @@ import { TokenExpiredView } from './TokenExpiredView';
 import { ConnectView } from './ConnectView';
 import { PhoneContext } from './PhoneContext';
 import { useSelector } from 'react-redux';
-import { selectPhoneState } from '../../../store/Store';
+import { selectPhoneState, selectConfiguration } from '../../../store/Store';
 
 export const PhoneView = () => {
   const phoneState = useSelector(selectPhoneState);
+  const configuration = useSelector(selectConfiguration);
 
-  const { error, hasConfiguration, isFetching } = useContext(PhoneContext);
+  const { error, isFetching } = useContext(PhoneContext);
 
   const getView = (state: PhoneState | string): JSX.Element => {
     switch (state) {
@@ -36,6 +37,10 @@ export const PhoneView = () => {
     }
   };
 
+  if (!configuration) {
+    return <div style={{ padding: '25px' }}>the phone is not configured yet, please go to setup</div>;
+  }
+
   if (error) {
     return <div style={{ padding: '25px' }}>The phone reported an error: {error.message}</div>;
   }
@@ -43,10 +48,5 @@ export const PhoneView = () => {
   if (isFetching) {
     return <ConnectView text="Fetching Token ..." />;
   }
-
-  if (!hasConfiguration) {
-    return <div style={{ padding: '25px' }}>the phone is not configured yet, please go to setup</div>;
-  }
-
   return getView(phoneState);
 };

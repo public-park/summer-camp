@@ -1,6 +1,5 @@
 import React, { useContext } from 'react';
 import { OutboundCanvas } from './OutboundCanvas';
-
 import { InboundCanvas } from './InboundCanvas';
 import { PhoneConfigurationContext } from './PhoneConfigurationContext';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -9,11 +8,10 @@ import { Typography, Card, CardContent } from '@material-ui/core';
 import { LoadIndicator } from './LoadIndicator';
 import Alert from '@material-ui/lab/Alert';
 import { useFetchPhoneNumbers } from './hooks/useFetchPhoneNumbers';
-import { useSelector } from 'react-redux';
-import { selectUser } from '../../../store/Store';
+import { ApplicationContext } from '../../../context/ApplicationContext';
 
 export const PhoneNumberConfiguration = () => {
-  const user = useSelector(selectUser);
+  const { user } = useContext(ApplicationContext); // TODO useUser()
 
   const { configuration, isSaving, enableInbound, disableInbound, enableOutbound, disableOutbound } = useContext(
     PhoneConfigurationContext

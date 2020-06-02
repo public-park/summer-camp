@@ -1,17 +1,15 @@
-import { createContext } from "react";
+import { createContext } from 'react';
 
 export const PhoneContext = createContext<PhoneContextInterface>({
   to: { value: '', isValidPhoneNumber: false },
   updateTo: (to: string) => {},
   isFetching: false,
   error: undefined,
-  hasConfiguration: false
 });
 
 export interface PhoneContextInterface {
   updateTo: (value: string) => void;
   to: { value: string; isValidPhoneNumber: boolean };
-  isFetching: boolean
-  error: Error | undefined,
-  hasConfiguration: boolean
+  isFetching: boolean;
+  error: Error | undefined;
 }

@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 
 import produce from 'immer';
 import { PhoneConfigurationContext, InitialConfiguration } from './PhoneConfigurationContext';
 import { ConfiguratonViewState } from './ConfigurationViewState';
 import { useValidateLocalConfiguration } from './hooks/useValidateLocalConfiguration';
-import { useSelector } from 'react-redux';
-import { selectUser } from '../../../store/Store';
 import { updateConfiguration } from './services/updateConfiguration';
 import { validateConfiguration } from './services/validateConfiguration';
-import { fetchConfiguration } from './services/fetchConfiguration';
+import { ApplicationContext } from '../../../context/ApplicationContext';
+import { ActionType } from '../../../actions/ActionType';
+import { useDispatch } from 'react-redux';
+import { fetchAccountConfiguration } from './services/fetchAccountConfiguration';
 
 export const PhoneConfigurationContainer = (props: any) => {
-  const user = useSelector(selectUser);
+  const { user } = useContext(ApplicationContext);
+
+  const dispatch = useDispatch();
 
   const [view, setView] = useState<ConfiguratonViewState>('FETCHING');
 
@@ -102,6 +105,13 @@ export const PhoneConfigurationContainer = (props: any) => {
   };
 
   const save = async () => {
+    dispatch({
+      type: ActionType.USER_CONFIGURATION_CHANGED,
+      payload: {},
+    });
+
+    return;
+
     setIsSaving(true);
 
     try {
@@ -151,7 +161,7 @@ export const PhoneConfigurationContainer = (props: any) => {
       try {
         setView('FETCHING');
 
-        const configuration = await fetchConfiguration(user);
+        const configuration = await fetchAccountConfiguration(user);
 
         if (!configuration) {
           setView('BASIC_SETUP');

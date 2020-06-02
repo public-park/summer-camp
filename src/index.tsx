@@ -2,8 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Application from './components/Application/Application';
 import * as serviceWorker from './serviceWorker';
-import reducer from './reducers/ApplicationReducer';
-
+import reducer from './reducers/RootReducer';
+import '@material/react-icon-button/dist/icon-button.css';
+import 'typeface-roboto';
 import { Provider } from 'react-redux';
 import logger from 'redux-logger';
 import { createStore, applyMiddleware } from 'redux';

@@ -27,13 +27,13 @@ export const ApplicationProvider = (props: any) => {
     user.onConnectionStateChanged((state: UserConnectionState) => {
       console.log(`connection state changed to: ${state}`);
 
-      dispatch(setActivity(user));
+      dispatch(setConnectionState(user));
     });
 
     user.onActivityChanged((activity: UserActivity) => {
       console.log(`activity changed to: ${activity}`);
 
-      dispatch(setConnectionState(user));
+      dispatch(setActivity(user));
     });
 
     phone.onIncomingCall((call) => {
@@ -66,8 +66,10 @@ export const ApplicationProvider = (props: any) => {
     dispatch(setLogin(token));
   };
 
-  const logout = (reason?: string) => {
-    user.logout();
+  const logout = async (reason?: string) => {
+    await user.logout();
+
+    phone.destroy();
 
     dispatch(setLogout(reason));
   };

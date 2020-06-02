@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../../../models/User';
-import { fetchConfiguration } from '../services/fetchConfiguration';
 import { AccountConfiguration } from '../../../../models/AccountConfiguration';
+import { fetchUserConfiguration } from '../services/fetchUserConfiguration';
 
 export const useFetchConfiguration = (user: User) => {
   const [isFetching, setIsFetching] = useState(false);
@@ -12,13 +12,15 @@ export const useFetchConfiguration = (user: User) => {
       try {
         setIsFetching(true);
 
-        const configuration = await fetchConfiguration(user);
+        const configuration = await fetchUserConfiguration(user);
 
-        if (!configuration) throw new Error('config is empty');
+        if (!configuration) {
+          throw new Error('config is empty');
+        }
 
         setConfiguration(configuration);
       } catch (error) {
-        console.log(error)
+        console.log(error);
         // TODO implement
       } finally {
         setIsFetching(false);

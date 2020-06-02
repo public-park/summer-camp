@@ -1,11 +1,9 @@
 import React, { useContext } from 'react';
 import { PhoneContext } from '../PhoneContext';
-
-import { useSelector } from 'react-redux';
-import { selectPhone } from '../../../../store/Store';
+import { ApplicationContext } from '../../../../context/ApplicationContext';
 
 export const CallButton = () => {
-  const phone = useSelector(selectPhone);
+  const { phone } = useContext(ApplicationContext);
 
   const { to } = useContext(PhoneContext);
 

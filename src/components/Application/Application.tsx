@@ -1,10 +1,10 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { selectPage } from '../../store/Store';
-import { ApplicationProvider } from '../ApplicationProvider/ApplicationContainer';
-import { LoginPage } from '../LoginPage/LoginPage';
-import { LogoutPage } from '../LogoutPage/LogoutPage';
-import { WorkspacePage } from '../Workspace/WorkspacePage';
+import { ApplicationProvider } from '../ApplicationProvider/ApplicationProvider';
+import { Login } from '../Login/Login';
+import { Logout } from '../Logout/Logout';
+import { Workspace } from '../Workspace/Workspace';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core';
 import { blue, green } from '@material-ui/core/colors';
 import { ApplicationPage } from '../../actions/PageAction';
@@ -22,11 +22,11 @@ function Application() {
   const getPage = (page: ApplicationPage | undefined) => {
     switch (page) {
       case 'WORKSPACE_PAGE':
-        return <WorkspacePage />;
+        return <Workspace />;
       case 'LOGIN_PAGE':
-        return <LoginPage />;
+        return <Login />;
       case 'LOGOUT_PAGE':
-        return <LogoutPage />;
+        return <Logout />;
       default:
         return '';
     }

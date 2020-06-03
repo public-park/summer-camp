@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { CardContent, Typography, Paper, Tabs, Tab } from '@material-ui/core';
 import { version } from '../../../package.json';
-import { LoginView } from './LoginView';
-import { RegisterView } from './RegisterView';
+import { LoginForm } from './LoginForm';
+import { RegisterForm } from './RegisterForm';
 
 export const Login = () => {
   const [title, setTitle] = useState('Already signed up?');
@@ -32,8 +32,8 @@ export const Login = () => {
               <Tab value="register" label="Register" />
             </Tabs>
 
-            <LoginView isVisible={tab === 'login'} />
-            <RegisterView isVisible={tab === 'register'} />
+            <LoginForm isVisible={tab === 'login'} />
+            <RegisterForm isVisible={tab === 'register'} />
           </Paper>
 
           <span

@@ -17,12 +17,19 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
         break;
 
       case 'PHONE_STATE_CHANGED':
-        if (action.payload.state === 'TOKEN_EXPIRED') {
+        if (action.payload.state === 'EXPIRED') {
           draft.phone.token = undefined;
         }
         if (action.payload.state === 'IDLE') {
           draft.call = undefined;
         }
+
+        if (action.payload.state === 'ERROR') {
+          draft.phone.error = action.payload.error;
+        } else {
+          draft.phone.error = undefined;
+        }
+
         draft.phone.state = action.payload.state;
         break;
 

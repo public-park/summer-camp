@@ -64,9 +64,6 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  overflow: hidden;
-  border-radius: 5px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 2px 1px -1px rgba(0, 0, 0, 0.12);
 }
 
 .page-body-login {
@@ -91,16 +88,22 @@ button {
   flex: auto;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 2px 1px -1px rgba(0, 0, 0, 0.12);
 }
 
 .workspace > .header {
-  height: 90px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
   background-color: rgb(33, 150, 243);
   color: white;
   padding-left: 15px;
+}
+
+.workspace > .header > div {
+  display: flex;
+  flex-direction: row;
+  height: 80px;
+  align-items: center;
 }
 
 .workspace > .header .name {
@@ -218,7 +221,7 @@ button {
   background-size: auto 26px;
   display: block;
   height: 15%;
-  min-height: 40px;
+  min-height: 70px;
   border-radius: 2px;
 }
 
@@ -232,7 +235,7 @@ button {
   display: block;
   height: 15%;
   position: relative;
-  min-height: 40px;
+  min-height: 70px;
   border-radius: 2px;
   overflow: hidden;
 }
@@ -339,7 +342,7 @@ button {
   background-size: auto 26px;
   display: block;
   height: 15%;
-  min-height: 40px;
+  min-height: 70px;
   border-radius: 2px;
 }
 
@@ -377,4 +380,58 @@ button {
 .you-are-offline {
   text-align: center;
   padding: 20px;
+}
+
+.history {
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+  background-color: #fafafa;
+  overflow: auto;
+}
+
+.history .item {
+  border-bottom: 1px solid #dcdcdc;
+  padding: 20px;
+  cursor: pointer;
+}
+
+.history .item > div {
+  display: flex;
+  flex-direction: row;
+}
+
+.history .item:hover {
+  background-color: #dcdcdc;
+}
+
+.history .item .detail {
+  padding-left: 15px;
+}
+
+.history .item .detail .status-text {
+  font-weight: 200;
+}
+
+.history .item .detail .duration {
+  font-weight: 200;
+  line-height: 1.8em;
+}
+
+.history .item .status {
+  padding-top: 4px;
+}
+
+.history .item .status .completed {
+  background-color: #00c853;
+  border-radius: 8px;
+  width: 16px;
+  height: 16px;
+}
+
+.history .item .status > div {
+  background-color: #e53935;
+  border-radius: 8px;
+  width: 16px;
+  height: 16px;
 }

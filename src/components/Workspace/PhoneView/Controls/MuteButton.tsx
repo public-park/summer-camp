@@ -14,7 +14,9 @@ export const MuteButton = () => {
 
     setIsMuted(state);
 
-    if (call) call.mute(state);
+    if (call) {
+      call.mute(state);
+    }
   };
 
   return <button onClick={() => toggleMute()} className={isMuted ? 'unmute-button' : 'mute-button'}></button>;

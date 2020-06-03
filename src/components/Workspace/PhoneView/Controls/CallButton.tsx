@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
-import { PhoneContext } from '../PhoneContext';
 import { ApplicationContext } from '../../../../context/ApplicationContext';
+import { PhoneContext } from '../context/PhoneContext';
 
 export const CallButton = () => {
   const { phone } = useContext(ApplicationContext);

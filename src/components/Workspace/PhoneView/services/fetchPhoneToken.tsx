@@ -1,5 +1,4 @@
 import { User } from '../../../../models/User';
-
 import { getUrl } from '../../../../helpers/UrlHelper';
 import { request } from '../../../../helpers/api/RequestHelper';
 

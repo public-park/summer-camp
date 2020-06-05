@@ -25,11 +25,17 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
   getById = async (id: string) => {
     const user = this.users.get(id);
 
-    return Promise.resolve(this.getCopy(user));
+    if (user) {
+      return Promise.resolve(this.getCopy(user));
+    }
   };
 
   getAll = async () => {
-    const list = Array.from(this.users.values());
+    const list: User[] = [];
+
+    for (const user of this.users.values()) {
+      list.push(this.getCopy(user));
+    }
 
     return Promise.resolve(list);
   };
@@ -50,7 +56,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
 
     if (existingUser && existingUser.name !== user.name) {
       if (await this.getByName(user.name)) {
-        throw new Error();
+        throw new Error(); // TODO, implement error code
       }
     }
 
@@ -87,13 +93,11 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     }
   };
 
-  protected getCopy(user: User | undefined) {
-    if (user) {
-      return this.fromPlainObject(this.toPlainObject(user));
-    }
+  protected getCopy(user: User) {
+    return this.fromPlainObject(this.toPlainObject(user));
   }
 
-  protected toPlainObjects(): Array<any> {
+  protected toPlainObjects(): Array<User> {
     return Array.from(this.users.values()).map((user) => {
       return this.toPlainObject(user);
     });

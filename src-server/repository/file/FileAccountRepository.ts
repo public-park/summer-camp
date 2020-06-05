@@ -18,11 +18,19 @@ export class FileAccountRepository extends FileBaseRepository<Account>
   }
 
   getById = async (id: string) => {
-    return Promise.resolve(this.accounts.get(id));
+    const account = this.accounts.get(id);
+
+    if (account) {
+      return Promise.resolve(this.getCopy(account));
+    }
   };
 
   getAll = async () => {
-    const list = Array.from(this.accounts.values());
+    const list: Account[] = [];
+
+    for (const user of this.accounts.values()) {
+      list.push(this.getCopy(user));
+    }
 
     return Promise.resolve(list);
   };
@@ -33,18 +41,22 @@ export class FileAccountRepository extends FileBaseRepository<Account>
     const existingAccount = await this.getById(account.id);
 
     if (existingAccount && existingAccount.name !== account.name) {
-      if (await this.getByName(account.name)) throw new Error();
+      if (await this.getByName(account.name)) {
+        throw new Error(); // TODO add error code
+      }
     }
 
     this.accounts.set(account.id, account);
 
     await this.persist(this.toPlainObjects());
 
-    return account;
+    return this.getCopy(account);
   };
 
   delete = async (account: Account) => {
-    if (!(await this.getById(account.id))) throw new AccountNotFoundError();
+    if (!(await this.getById(account.id))) {
+      throw new AccountNotFoundError();
+    }
 
     this.accounts.delete(account.id);
 
@@ -52,8 +64,13 @@ export class FileAccountRepository extends FileBaseRepository<Account>
   };
 
   create = async (name: string) => {
-    if (name === '') throw new AccountNameError();
-    if (await this.getByName(name)) throw new AccountNotFoundException();
+    if (name === '') {
+      throw new AccountNameError();
+    }
+
+    if (await this.getByName(name)) {
+      throw new AccountNotFoundException();
+    }
 
     const account = new Account(uuidv4(), name);
 
@@ -61,14 +78,41 @@ export class FileAccountRepository extends FileBaseRepository<Account>
 
     await this.persist(this.toPlainObjects());
 
-    return Promise.resolve(account);
+    return Promise.resolve(this.getCopy(account));
   };
 
-  protected toPlainObjects(): Array<any> {
-    return Array.from(this.accounts.values()).map((account) => {
-      return {
-        ...account,
+  protected getCopy(account: Account) {
+    return this.fromPlainObject(this.toPlainObject(account));
+  }
+
+  protected toPlainObject(account: Account): any {
+    const item: any = {
+      id: account.id,
+      name: account.name,
+      createdAt: account.createdAt,
+    };
+
+    if (account.configuration) {
+      item.configuration = {
+        ...account.configuration,
       };
+      item.configuration = {
+        ...account.configuration,
+        inbound: { ...account.configuration.inbound },
+        outbound: { ...account.configuration.outbound },
+      };
+    }
+
+    return item;
+  }
+
+  protected fromPlainObject(item: any): Account {
+    return new Account(item.id, item.name, item.configuration, item.createdAt);
+  }
+
+  protected toPlainObjects(): Array<Account> {
+    return Array.from(this.accounts.values()).map((account) => {
+      return this.toPlainObject(account);
     });
   }
 
@@ -85,7 +129,7 @@ export class FileAccountRepository extends FileBaseRepository<Account>
   getByName = async (name: string) => {
     for (const account of this.accounts.values()) {
       if (account.name === name) {
-        return Promise.resolve(account);
+        return Promise.resolve(this.getCopy(account));
       }
     }
   };

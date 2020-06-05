@@ -12,7 +12,8 @@ export class Account {
     configuration: AccountConfiguration | undefined = undefined,
     createdAt: Date = new Date()
   ) {
-    (this.id = id), (this.name = name);
+    this.id = id;
+    this.name = name;
     this.configuration = configuration;
     this.createdAt = createdAt;
   }

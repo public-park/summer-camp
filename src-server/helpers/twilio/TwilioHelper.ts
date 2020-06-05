@@ -106,7 +106,9 @@ export const createVoiceToken = (account: Account, user: User, lifetime: number 
     account.configuration.accountSid,
     account.configuration.key,
     account.configuration.secret,
-    { ttl: lifetime }
+    {
+      ttl: lifetime,
+    }
   );
 
   log.info(`create phone token for  ${user.id} (${user.name})`);
@@ -126,5 +128,5 @@ export const createVoiceToken = (account: Account, user: User, lifetime: number 
 };
 
 export const getIdentity = (user: User): string => {
-  return user.id.replace('-', '_');
+  return user.id.split('-').join('_');
 };

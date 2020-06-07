@@ -7,7 +7,7 @@ export class User {
   id: string | undefined;
   token: string | undefined;
   name: string | undefined;
-  profileUrl: string | undefined;
+  profileImageUrl: string | undefined;
   accountId: string | undefined;
   private _labels: Set<string>;
   private _isAvailable: boolean;
@@ -23,7 +23,7 @@ export class User {
 
     this.id = undefined;
     this.name = undefined;
-    this.profileUrl = undefined;
+    this.profileImageUrl = undefined;
     this.token = undefined;
     this.accountId = undefined;
     this._labels = new Set();
@@ -54,10 +54,19 @@ export class User {
     this._setConnectionState(UserConnectionState.Connecting);
 
     this.token = token;
+
     this.connection.socket = new WebSocket(`${url}?t=${token}`);
+
+    this.connection.socket.onerror = (event: Event) => {
+      console.log('socket has error');
+      // TODO should delete token
+      console.log(event);
+    };
 
     this.connection.socket.onopen = (event: Event) => {
       console.log('socket is open');
+
+      // TODO, this should be used as a success event?
     };
 
     this.connection.socket.onmessage = (message: MessageEvent) => {
@@ -73,7 +82,7 @@ export class User {
         if ('user' in payload) {
           this.id = payload.user.id;
           this.name = payload.user.name;
-          this.profileUrl = payload.user.profileUrl;
+          this.profileImageUrl = payload.user.profileImageUrl;
           this.accountId = payload.user.accountId;
           this._labels = new Set(payload.user.labels);
 
@@ -85,17 +94,32 @@ export class User {
       }
     };
 
-    this.connection.socket.onclose = () => {
+    this.connection.socket.onclose = (event: Event) => {
       console.log('socket closed ');
+      console.log(event); // TODO, publish reason to listener
 
       this._setConnectionState(UserConnectionState.Closed);
     };
   }
 
-  logout() {
-    if (this.connection.socket) {
-      this.connection.socket.close();
-    }
+  logout(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const onConnectionStateClosed = (state: UserConnectionState) => {
+        if (state === UserConnectionState.Closed) {
+          resolve();
+
+          this.eventEmitter.off('connection_state', onConnectionStateClosed);
+        }
+      };
+
+      if (this.connection.socket && this.connection.state !== UserConnectionState.Closed) {
+        this.onConnectionStateChanged(onConnectionStateClosed);
+
+        this.connection.socket.close();
+      } else {
+        return resolve();
+      }
+    });
   }
 
   set activity(activity: UserActivity) {

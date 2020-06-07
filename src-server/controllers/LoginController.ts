@@ -4,11 +4,6 @@ import { userRepository, authenticationProvider } from '../worker';
 import { UserNotFoundError } from '../repository/UserNotFoundError';
 import { log } from '../logger';
 
-export interface LoginResponseInterface {
-  token: string;
-  userId: string;
-}
-
 const login = async (req: Request, res: Response, next: any) => {
   log.info(`get user by name: ${req.body.name}`);
 
@@ -24,8 +19,8 @@ const login = async (req: Request, res: Response, next: any) => {
     const isValidPassword = await authenticationProvider.authenticate(user, req.body.password);
 
     if (isValidPassword) {
-      const payload: LoginResponseInterface = {
-        token: TokenHelper.createJwt(user, 18000),
+      const payload = {
+        token: TokenHelper.createJwt(user, 14400),
         userId: user.id,
       };
 

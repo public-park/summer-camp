@@ -30,6 +30,7 @@ export const Workspace = () => {
 
       try {
         configuration = await fetchUserConfiguration(user);
+      } catch {
       } finally {
         dispatch({
           type: ActionType.PHONE_CONFIGURATION_UPDATED,

@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
 import { PhoneNumberSelect } from './PhoneNumberSelect';
-import { PhoneConfigurationContext } from './PhoneConfigurationContext';
+import { ConfigurationContext } from './ConfigurationContext';
 
 export const InboundCanvas = (props: any) => {
-  const { configuration, setInboundPhoneNumber } = useContext(PhoneConfigurationContext);
+  const { configuration, setInboundPhoneNumber } = useContext(ConfigurationContext);
 
   return (
     <div style={{ backgroundColor: '#f7f7f7', marginBottom: '10px', padding: '10px 10px 10px 35px' }}>

@@ -1,10 +1,10 @@
 import React, { useContext } from 'react';
-import { PhoneConfigurationContext } from './PhoneConfigurationContext';
 import Button from '@material-ui/core/Button';
 import { Typography, Card, CardContent } from '@material-ui/core';
+import { ConfigurationContext } from './ConfigurationContext';
 
-export const ResetAccount = () => {
-  const { setView, isSaving } = useContext(PhoneConfigurationContext);
+export const AccountResetForm = () => {
+  const { setView, isSaving } = useContext(ConfigurationContext);
 
   return (
     <Card variant="outlined">

@@ -1,12 +1,12 @@
 import React, { useContext } from 'react';
 import { PhoneNumberSelect } from './PhoneNumberSelect';
-import { PhoneConfigurationContext } from './PhoneConfigurationContext';
+import { ConfigurationContext } from './ConfigurationContext';
 import { FormControlLabel, Radio } from '@material-ui/core';
 
 export const OutboundCanvas = (props: any) => {
   const { callerIds, phoneNumbers } = props;
 
-  const { configuration, isSaving, setMode, setOutboundPhoneNumber } = useContext(PhoneConfigurationContext);
+  const { configuration, isSaving, setMode, setOutboundPhoneNumber } = useContext(ConfigurationContext);
 
   return (
     <div style={{ backgroundColor: '#f7f7f7', padding: '10px 10px 10px 35px' }}>

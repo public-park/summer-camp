@@ -1,17 +1,9 @@
 import { createContext } from 'react';
-import { AccountConfiguration } from '../../../models/AccountConfiguration';
 import { ConfiguratonViewState } from './ConfigurationViewState';
+import { DefaultConfiguration } from './DefaultConfiguration';
 
-export const InitialConfiguration: AccountConfiguration = {
-  key: undefined,
-  secret: undefined,
-  accountSid: undefined,
-  inbound: { isEnabled: false, phoneNumber: undefined },
-  outbound: { isEnabled: false, mode: undefined, phoneNumber: undefined },
-};
-
-export const PhoneConfigurationContext = createContext({
-  configuration: InitialConfiguration,
+const DefaultConfigurationContext = {
+  configuration: DefaultConfiguration,
   setMode: (mode: string) => {},
   setInboundPhoneNumber: (phoneNumber: string) => {},
   setBaseConfiguration: (key: string, secret: string, accountSid: string) => {},
@@ -23,6 +15,9 @@ export const PhoneConfigurationContext = createContext({
   save: () => {
     return Promise.resolve();
   },
+  saveBasic: () => {
+    return Promise.resolve();
+  },
   getView: (): ConfiguratonViewState => {
     return 'FETCHING';
   },
@@ -32,4 +27,6 @@ export const PhoneConfigurationContext = createContext({
   hasError: false,
   setIsSaving: (isSaving: boolean) => {},
   error: '',
-});
+};
+
+export const ConfigurationContext = createContext(DefaultConfigurationContext);

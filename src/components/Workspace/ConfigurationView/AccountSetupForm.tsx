@@ -2,14 +2,15 @@ import React, { useState, useContext, useEffect } from 'react';
 
 import { Typography, CardContent, Card, TextField, FormControl, Button } from '@material-ui/core';
 import { LoadIndicator } from './LoadIndicator';
-import { InitialConfiguration, PhoneConfigurationContext } from './PhoneConfigurationContext';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { validateConfiguration } from './services/validateConfiguration';
+import { ConfigurationContext } from './ConfigurationContext';
+import { DefaultConfiguration } from './DefaultConfiguration';
 
-export const AccountForm = (props: any) => {
+export const AccountSetupForm = (props: any) => {
   const { user } = useContext(ApplicationContext);
 
-  const { configuration, setView, save, isSaving, setBaseConfiguration } = useContext(PhoneConfigurationContext);
+  const { configuration, setView, saveBasic, isSaving, setBaseConfiguration } = useContext(ConfigurationContext);
 
   const [key, setKey] = useState(configuration.key);
   const [secret, setSecret] = useState(configuration.secret);
@@ -27,7 +28,7 @@ export const AccountForm = (props: any) => {
     setIsLoading(true);
 
     const configuration = {
-      ...InitialConfiguration,
+      ...DefaultConfiguration,
       key: key,
       secret: secret,
       accountSid: accountSid,
@@ -45,7 +46,7 @@ export const AccountForm = (props: any) => {
 
   const saveBasicSetup = async () => {
     try {
-      await save();
+      await saveBasic();
 
       setView('PHONE_SETUP');
     } catch (error) {

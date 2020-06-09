@@ -1,7 +1,6 @@
 import React, { useContext } from 'react';
 import { OutboundCanvas } from './OutboundCanvas';
 import { InboundCanvas } from './InboundCanvas';
-import { PhoneConfigurationContext } from './PhoneConfigurationContext';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import { Typography, Card, CardContent } from '@material-ui/core';
@@ -9,12 +8,13 @@ import { LoadIndicator } from './LoadIndicator';
 import Alert from '@material-ui/lab/Alert';
 import { useFetchPhoneNumbers } from './hooks/useFetchPhoneNumbers';
 import { ApplicationContext } from '../../../context/ApplicationContext';
+import { ConfigurationContext } from './ConfigurationContext';
 
-export const PhoneNumberConfiguration = () => {
+export const PhoneNumberConfigurationPanel = () => {
   const { user } = useContext(ApplicationContext); // TODO useUser()
 
   const { configuration, isSaving, enableInbound, disableInbound, enableOutbound, disableOutbound } = useContext(
-    PhoneConfigurationContext
+    ConfigurationContext
   );
 
   const { isFetching, callerIds, phoneNumbers } = useFetchPhoneNumbers(user);

@@ -1,10 +1,10 @@
 import React, { useContext } from 'react';
 import { Alert } from '@material-ui/lab';
 import { LoadIndicator } from './LoadIndicator';
-import { AccountForm } from './AccountForm';
-import { PhoneNumberForm } from './PhoneNumberForm';
-import { PhoneConfigurationContext } from './PhoneConfigurationContext';
+import { AccountSetupForm } from './AccountSetupForm';
+import { PhoneSetupForm } from './PhoneSetupForm';
 import { ConfiguratonViewState } from './ConfigurationViewState';
+import { ConfigurationContext } from './ConfigurationContext';
 
 const getPhoneView = (view: ConfiguratonViewState) => {
   switch (view) {
@@ -19,9 +19,9 @@ const getPhoneView = (view: ConfiguratonViewState) => {
     case 'VALIDATING':
       return <LoadIndicator />;
     case 'BASIC_SETUP':
-      return <AccountForm />;
+      return <AccountSetupForm />;
     case 'PHONE_SETUP':
-      return <PhoneNumberForm />;
+      return <PhoneSetupForm />;
     default:
       // TODO implement
       break;
@@ -29,7 +29,7 @@ const getPhoneView = (view: ConfiguratonViewState) => {
 };
 
 export const ConfigurationView = () => {
-  const { getView, error } = useContext(PhoneConfigurationContext);
+  const { getView, error } = useContext(ConfigurationContext);
 
   return (
     <div className="setup" style={{ backgroundColor: '#f7f7f7', flex: 'auto', padding: '10px' }}>

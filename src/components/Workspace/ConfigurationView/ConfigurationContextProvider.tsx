@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 
 import produce from 'immer';
-import { PhoneConfigurationContext, InitialConfiguration } from './PhoneConfigurationContext';
 import { ConfiguratonViewState } from './ConfigurationViewState';
 import { useValidateLocalConfiguration } from './hooks/useValidateLocalConfiguration';
 import { updateConfiguration } from './services/updateConfiguration';
@@ -10,8 +9,10 @@ import { ApplicationContext } from '../../../context/ApplicationContext';
 import { ActionType } from '../../../actions/ActionType';
 import { useDispatch } from 'react-redux';
 import { fetchAccountConfiguration } from './services/fetchAccountConfiguration';
+import { DefaultConfiguration } from './DefaultConfiguration';
+import { ConfigurationContext } from './ConfigurationContext';
 
-export const ConfigurationProvider = (props: any) => {
+export const ConfigurationContextProvider = (props: any) => {
   const { user } = useContext(ApplicationContext);
 
   const dispatch = useDispatch();
@@ -21,7 +22,7 @@ export const ConfigurationProvider = (props: any) => {
   const [isSaving, setIsSaving] = useState(false);
   const [hasError] = useState(false);
 
-  const [configuration, setConfiguration] = useState(InitialConfiguration);
+  const [configuration, setConfiguration] = useState(DefaultConfiguration);
 
   // TODO, should return error object
   const { isValid, error } = useValidateLocalConfiguration(configuration);
@@ -104,18 +105,30 @@ export const ConfigurationProvider = (props: any) => {
     setConfiguration(override);
   };
 
-  const save = async () => {
-    dispatch({
-      type: ActionType.USER_CONFIGURATION_CHANGED,
-      payload: {},
-    });
-
-    return;
-
+  const saveBasic = async () => {
     setIsSaving(true);
 
     try {
       await updateConfiguration(user, configuration);
+    } catch (error) {
+      console.log(error);
+
+      setView('FAILED');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const save = async () => {
+    setIsSaving(true);
+
+    try {
+      await updateConfiguration(user, configuration);
+
+      dispatch({
+        type: ActionType.USER_CONFIGURATION_CHANGED,
+        payload: {},
+      });
     } catch (error) {
       console.log(error);
 
@@ -153,7 +166,9 @@ export const ConfigurationProvider = (props: any) => {
       setView('BASIC_SETUP');
     }
 
-    if (getView() === 'VALIDATING') validate();
+    if (getView() === 'VALIDATING') {
+      validate();
+    }
   }, [view]);
 
   useEffect(() => {
@@ -179,7 +194,7 @@ export const ConfigurationProvider = (props: any) => {
   }, []);
 
   return (
-    <PhoneConfigurationContext.Provider
+    <ConfigurationContext.Provider
       value={{
         error,
         hasError,
@@ -193,6 +208,7 @@ export const ConfigurationProvider = (props: any) => {
         disableOutbound,
         setOutboundPhoneNumber,
         save,
+        saveBasic,
         getView,
         setView,
         isValid,
@@ -201,6 +217,6 @@ export const ConfigurationProvider = (props: any) => {
       }}
     >
       {props.children}
-    </PhoneConfigurationContext.Provider>
+    </ConfigurationContext.Provider>
   );
 };

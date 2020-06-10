@@ -3,7 +3,7 @@ import { PhoneNumberInput } from './PhoneNumberInput';
 import { Keypad } from './Keypad';
 import { CallButton } from '../Controls/CallButton';
 
-export const Idle = (props: any) => {
+export const Idle = () => {
   return (
     <div className="idle">
       <PhoneNumberInput />

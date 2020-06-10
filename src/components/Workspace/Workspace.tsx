@@ -1,20 +1,19 @@
 import React, { useEffect, useContext } from 'react';
 import { ConnectionLostAlert } from './NotificationLayer/ConnectionLostAlert';
 import { Header } from './Header/Header';
-import { ConfigurationProvider } from './ConfigurationView/ConfigurationProvider';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectWorkspaceView, selectConnectionState } from '../../store/Store';
 import { PhoneView } from './PhoneView/PhoneView';
-import { PhoneProvider } from './PhoneView/PhoneProvider';
 import { UserConnectionState } from '../../models/enums/UserConnectionState';
 import { HeaderThemeProvider } from './Header/HeaderThemeProvider';
 import { WorkspaceView } from '../../actions/WorkspaceViewAction';
 import { ApplicationContext } from '../../context/ApplicationContext';
-import { ActionType } from '../../actions/ActionType';
 import { fetchUserConfiguration } from './ConfigurationView/services/fetchUserConfiguration';
 import { ConnectView } from './ConnectView/ConnectView';
 import { CallHistoryView } from './CallHistoryView/CallHistoryView';
 import { ConfigurationView } from './ConfigurationView/ConfigurationView';
+import { ConfigurationContextProvider } from './ConfigurationView/ConfigurationContextProvider';
+import { setPhoneConfiguration } from '../../actions/PhoneAction';
 
 export const Workspace = () => {
   const { user } = useContext(ApplicationContext);
@@ -32,10 +31,7 @@ export const Workspace = () => {
         configuration = await fetchUserConfiguration(user);
       } catch {
       } finally {
-        dispatch({
-          type: ActionType.PHONE_CONFIGURATION_UPDATED,
-          payload: { configuration: configuration },
-        });
+        dispatch(setPhoneConfiguration(configuration));
       }
     };
 
@@ -48,17 +44,13 @@ export const Workspace = () => {
     switch (view) {
       case 'SETUP_VIEW':
         return (
-          <ConfigurationProvider>
+          <ConfigurationContextProvider>
             <ConfigurationView />
-          </ConfigurationProvider>
+          </ConfigurationContextProvider>
         );
 
       case 'PHONE_VIEW':
-        return (
-          <PhoneProvider>
-            <PhoneView />
-          </PhoneProvider>
-        );
+        return <PhoneView />;
 
       case 'CALL_HISTORY_VIEW':
         return <CallHistoryView />;

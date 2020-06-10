@@ -7,7 +7,7 @@ interface ConnectProps {
 
 export const Connect = (props: ConnectProps) => {
   return (
-    <div className="error-canvas" style={{ textAlign: 'center', marginTop: '10px' }}>
+    <div className="connect">
       {props.text}
       <LoadIndicator />
     </div>

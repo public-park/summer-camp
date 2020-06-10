@@ -5,30 +5,15 @@ import { MuteButton } from './Controls/MuteButton';
 import { useSelector } from 'react-redux';
 import { selectCall } from '../../../store/Store';
 import { useCallDuration } from './hooks/useCallDuration';
-
-let durationInterval: NodeJS.Timeout | undefined = undefined;
+import { useCallDurationFormat } from './hooks/useCallDurationFormat';
 
 export const InCall = () => {
   const call = useSelector(selectCall);
 
-  const [duration, setDuration] = useState(0);
-  const durationFormatted = useCallDuration(duration);
-
   const [showKeypad, setShowKeypad] = useState(false);
 
-  useEffect(() => {
-    let tick = 0;
-
-    durationInterval = setInterval(() => {
-      setDuration(tick++);
-    }, 1000);
-
-    return () => {
-      if (durationInterval) {
-        clearInterval(durationInterval);
-      }
-    };
-  }, []);
+  const duration = useCallDuration(call?.answeredAt);
+  const durationFormatted = useCallDurationFormat(duration);
 
   const endCall = () => {
     if (call) {
@@ -40,7 +25,6 @@ export const InCall = () => {
     <div className="call">
       <div className="display">
         <span className="duration">{durationFormatted}</span>
-
         <span className="phone-number">{call?.phoneNumber}</span>
       </div>
 

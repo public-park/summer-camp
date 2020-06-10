@@ -1,19 +1,29 @@
-const addLeadingZero = (value: number) => {
-  if (value < 10) {
-    return `0${value}`;
-  }
+import React, { useEffect, useState } from 'react';
 
-  return value;
-};
+let durationInterval: NodeJS.Timeout | undefined = undefined;
 
-export const useCallDuration = (duration: number) => {
-  const hours = Math.floor(duration / 3600);
-  const minutes = Math.floor((duration - hours * 3600) / 60);
-  const seconds = duration - hours * 3600 - minutes * 60;
+export const useCallDuration = (answeredAt?: Date) => {
+  const [duration, setDuration] = useState(0);
 
-  if (hours === 0) {
-    return `${addLeadingZero(minutes)}:${addLeadingZero(seconds)}`;
-  } else {
-    return `${hours}:${addLeadingZero(minutes)}:${addLeadingZero(seconds)}`;
-  }
+  useEffect(() => {
+    let tick: number = 0;
+
+    if (answeredAt) {
+      tick = Math.round((new Date().getTime() - answeredAt.getTime()) / 1000);
+    }
+
+    setDuration(tick);
+
+    durationInterval = setInterval(() => {
+      setDuration(tick++);
+    }, 1000);
+
+    return () => {
+      if (durationInterval) {
+        clearInterval(durationInterval);
+      }
+    };
+  }, []);
+
+  return duration;
 };

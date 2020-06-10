@@ -3,7 +3,7 @@ import { LoadIndicator } from '../ConfigurationView/LoadIndicator';
 
 export const Expired = () => {
   return (
-    <div style={{ textAlign: 'center', padding: '20px' }}>
+    <div className="expired">
       Phone token expired, requesting a new token .... <LoadIndicator />
     </div>
   );

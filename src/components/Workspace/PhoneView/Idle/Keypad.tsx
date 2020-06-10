@@ -1,8 +1,8 @@
-import React, { useContext } from 'react';
-import { PhoneContext } from '../context/PhoneContext';
+import React from 'react';
 import { KeypadButton } from './KeypadButton';
-import { useSelector } from 'react-redux';
-import { selectCall } from '../../../../store/Store';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectCall, selectPhoneDisplay } from '../../../../store/Store';
+import { setPhoneDisplayValue } from '../../../../actions/PhoneAction';
 
 const keys = [
   { number: '1', letters: null },
@@ -20,7 +20,9 @@ const keys = [
 ];
 
 export const Keypad = (props: any) => {
-  const { to, updateTo } = useContext(PhoneContext);
+  const phoneDisplay = useSelector(selectPhoneDisplay);
+
+  const dispatch = useDispatch();
 
   const call = useSelector(selectCall);
 
@@ -28,7 +30,7 @@ export const Keypad = (props: any) => {
     if (call) {
       call.sendDigits(digit);
     } else {
-      updateTo(to.value + digit);
+      dispatch(setPhoneDisplayValue(phoneDisplay.value + digit));
     }
 
     console.log('add: ' + digit);

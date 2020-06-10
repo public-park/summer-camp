@@ -1,8 +1,13 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 
-import { useSelector } from 'react-redux';
-import { selectPhoneState, selectPhoneError, selectConfiguration } from '../../../store/Store';
-import { PhoneContext } from './context/PhoneContext';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  selectPhoneState,
+  selectPhoneError,
+  selectConfiguration,
+  selectConnectionState,
+  selectPhoneToken,
+} from '../../../store/Store';
 import { IncomingCall } from './IncomingCall';
 import { InCall } from './InCall';
 import { Idle } from './Idle/Idle';
@@ -10,13 +15,56 @@ import { Offline } from './Offline';
 import { Expired } from './Expired';
 import { Connect } from './Connect';
 import { PhoneException } from './PhoneException';
+import { ApplicationContext } from '../../../context/ApplicationContext';
+import { UserConnectionState } from '../../../models/enums/UserConnectionState';
+import { fetchPhoneToken } from './services/fetchPhoneToken';
+import { setPhoneToken, setPhoneConfiguration } from '../../../actions/PhoneAction';
 
 export const PhoneView = () => {
   const phoneState = useSelector(selectPhoneState);
   const phoneError = useSelector(selectPhoneError);
+  const phoneToken = useSelector(selectPhoneToken);
   const configuration = useSelector(selectConfiguration);
+  const connectionState = useSelector(selectConnectionState);
 
-  const { isFetching } = useContext(PhoneContext);
+  const dispatch = useDispatch();
+
+  const [isFetching, setIsFetching] = useState(false);
+
+  const { phone, user } = useContext(ApplicationContext);
+
+  useEffect(() => {
+    if (phoneToken && ['OFFLINE', 'EXPIRED'].includes(phoneState)) {
+      console.log(`device init with token: ${phoneToken?.substr(0, 10)} state was:  ${phoneState}`);
+      phone.init(phoneToken);
+    }
+  }, [phoneToken, phoneState]);
+
+  useEffect(() => {
+    const initiate = async () => {
+      /* user is offline, do not fetch a new token, destroy phone instead */
+      if (connectionState === UserConnectionState.Closed) {
+        phone.destroy();
+        return;
+      }
+
+      try {
+        setIsFetching(true);
+
+        const token = await fetchPhoneToken(user);
+
+        dispatch(setPhoneToken(token));
+      } catch (error) {
+        dispatch(setPhoneConfiguration());
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
+    if (!phoneToken && configuration) {
+      initiate();
+    }
+  }, [phoneToken, configuration]);
 
   const getPhoneView = (): JSX.Element => {
     if (!configuration) {

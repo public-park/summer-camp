@@ -9,6 +9,9 @@ export class TwilioCall implements Call {
   isMuted: boolean;
   isOnHold: boolean;
   readonly direction: CallDirection;
+  readonly createdAt: Date;
+  answeredAt: Date | undefined;
+
   private eventEmitter: EventEmitter;
 
   constructor(phoneNumber: string, direction: CallDirection, connection: any) {
@@ -17,8 +20,10 @@ export class TwilioCall implements Call {
     this.phoneNumber = phoneNumber;
     this.isConnected = false;
     this.isMuted = false;
-    this.direction = direction;
     this.isOnHold = false;
+    this.direction = direction;
+    this.createdAt = new Date();
+    this.answeredAt = undefined;
 
     this.eventEmitter = new EventEmitter();
 
@@ -67,6 +72,8 @@ export class TwilioCall implements Call {
   }
 
   answer() {
+    this.answeredAt = new Date();
+
     this.connection.accept();
 
     return Promise.resolve();

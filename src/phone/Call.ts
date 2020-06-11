@@ -4,6 +4,8 @@ export interface Call {
   isMuted: boolean;
   isOnHold: boolean;
   direction: CallDirection;
+  createdAt: Date;
+  answeredAt: Date | undefined;
   answer: () => Promise<void>;
   end: () => Promise<void>;
   reject: () => Promise<void>;
@@ -13,4 +15,4 @@ export interface Call {
   onConnectionStateChange: (listener: (state: boolean) => void) => void;
 }
 
-export type CallDirection = 'INBOUND' | 'OUTBOUND';
+export type CallDirection = 'inbound' | 'outbound';

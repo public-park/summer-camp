@@ -6,7 +6,7 @@ import { init, corporations, accountRepository } from '../test/test-environment'
 
 init();
 
-describe('create an account', () => {
+describe('Account Repository create', () => {
   test('should create an account ', async (done) => {
     const account = await accountRepository.create(corporations.acme);
 
@@ -24,14 +24,14 @@ describe('create an account', () => {
     done();
   });
 
-  test('should fail to create an account without name', async (done) => {
+  test('should fail to create an account with an empty name', async (done) => {
     await expect(accountRepository.create('')).rejects.toThrow(AccountNameError);
 
     done();
   });
 });
 
-describe('read, update and delete an account', () => {
+describe('Account Repository read, update and delete an account', () => {
   let id: string;
   let name: string;
 
@@ -44,7 +44,7 @@ describe('read, update and delete an account', () => {
     done();
   });
 
-  test('should read the account by id', async (done) => {
+  test('should read an account by id', async (done) => {
     const account = <Account>await accountRepository.getById(id);
 
     expect(account).toBeInstanceOf(Account);
@@ -55,7 +55,7 @@ describe('read, update and delete an account', () => {
     done();
   });
 
-  test('should read the account by name', async (done) => {
+  test('should read an account by unique name', async (done) => {
     const account = await accountRepository.getByName(name);
 
     expect(account).toBeInstanceOf(Account);
@@ -66,7 +66,7 @@ describe('read, update and delete an account', () => {
     done();
   });
 
-  test('update the account returns the account object with update name', async (done) => {
+  test('should save the account and return the updated object', async (done) => {
     let account = <Account>await accountRepository.getById(id);
 
     account.name = corporations.wonka;
@@ -79,7 +79,7 @@ describe('read, update and delete an account', () => {
     done();
   });
 
-  test('reading an update account returns the update value', async (done) => {
+  test('should read the account and has updated name', async (done) => {
     let account = <Account>await accountRepository.getById(id);
 
     expect(account).toBeInstanceOf(Account);
@@ -96,7 +96,7 @@ describe('read, update and delete an account', () => {
     done();
   });
 
-  test('should throw on deleting an non existing account', async (done) => {
+  test('should fail to delete a account that does not exist', async (done) => {
     const account = await accountRepository.getById(id);
 
     await expect(accountRepository.delete(<Account>account)).rejects.toThrow();
@@ -104,20 +104,20 @@ describe('read, update and delete an account', () => {
     done();
   });
 
-  test('read an non existing account should return undefined', async (done) => {
+  test('should fail to read an account that does not exist and return undefined', async (done) => {
     await expect(accountRepository.getById(id)).resolves.toBeUndefined();
 
     done();
   });
 
-  test('read all users from database', async () => {
+  test('should read all previously created accounts from the repository', async () => {
     await accountRepository.create(corporations.wonka);
     await accountRepository.create(corporations.good);
 
     expect(await accountRepository.getAll()).toHaveLength(3);
   });
 
-  test('delete two accounts', async () => {
+  test('should delete two accounts and return the remaining list with one account', async () => {
     await accountRepository.delete(<Account>await accountRepository.getByName(corporations.wonka));
     await accountRepository.delete(<Account>await accountRepository.getByName(corporations.good));
 

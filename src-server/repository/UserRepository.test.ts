@@ -14,7 +14,7 @@ import {
 
 init();
 
-describe('create an user', () => {
+describe('User Repository create', () => {
   let account: any;
   let authentication: any;
 
@@ -25,7 +25,7 @@ describe('create an user', () => {
     done();
   });
 
-  test('should create a user ', async (done) => {
+  test('should create a new user ', async (done) => {
     const user = await userRepository.create(
       personas.alice,
       undefined,
@@ -52,7 +52,7 @@ describe('create an user', () => {
     done();
   });
 
-  test('should fail to create an user with the same name', async (done) => {
+  test('should fail to create a user with the same name', async (done) => {
     await expect(
       userRepository.create(personas.alice, undefined, new Set(['es', 'jp']), account.id, new Set([]), authentication)
     ).rejects.toThrow();
@@ -60,7 +60,7 @@ describe('create an user', () => {
     done();
   });
 
-  test('should fail to create an user without name', async (done) => {
+  test('should fail to create a user without name', async (done) => {
     await expect(
       userRepository.create('', undefined, new Set(['es', 'jp']), account.id, new Set([]), authentication)
     ).rejects.toThrow(UserNameError);
@@ -68,7 +68,7 @@ describe('create an user', () => {
     done();
   });
 
-  test('should fail to create an user without accountId', async (done) => {
+  test('should fail to create a user without accountId', async (done) => {
     await expect(
       userRepository.create(personas.bob, undefined, new Set(['es', 'jp']), '', new Set([]), authentication)
     ).rejects.toThrow();
@@ -76,22 +76,7 @@ describe('create an user', () => {
     done();
   });
 
-  test('should fail to create an user without valid accountId', async (done) => {
-    await expect(
-      userRepository.create(
-        personas.bob,
-        undefined,
-        new Set(['es', 'jp']),
-        account.id.substr(0, 1),
-        new Set([]),
-        authentication
-      )
-    ).rejects.toThrow();
-
-    done();
-  });
-
-  test('should fail to create an user without valid accountId', async (done) => {
+  test('should fail to create a user without valid accountId', async (done) => {
     await expect(
       userRepository.create(
         personas.bob,
@@ -107,7 +92,7 @@ describe('create an user', () => {
   });
 });
 
-describe('read, update a user', () => {
+describe('User Repository read, update and delete a user', () => {
   let id: string;
   let name: string;
 
@@ -130,7 +115,7 @@ describe('read, update a user', () => {
     done();
   });
 
-  test('should read the account by id', async (done) => {
+  test('should read a user by id', async (done) => {
     const user = <User>await userRepository.getById(id);
 
     expect(user).toBeInstanceOf(User);
@@ -150,7 +135,7 @@ describe('read, update a user', () => {
     done();
   });
 
-  test('should read the user by name', async (done) => {
+  test('should read the a user by name', async (done) => {
     const account = await userRepository.getByName(name);
 
     expect(account).toBeInstanceOf(User);
@@ -158,7 +143,7 @@ describe('read, update a user', () => {
     done();
   });
 
-  test('update the user returns the user object with update properties', async (done) => {
+  test('should update the user and return the updated object', async (done) => {
     let user = <User>await userRepository.getById(id);
 
     user.name = personas.max;
@@ -183,7 +168,7 @@ describe('read, update a user', () => {
     done();
   });
 
-  test('update the user, remove all labels and permissions', async (done) => {
+  test("should remove the user's labels and permissions", async (done) => {
     let user = <User>await userRepository.getById(id);
 
     user.labels.clear();
@@ -198,7 +183,7 @@ describe('read, update a user', () => {
     done();
   });
 
-  test('update the user name checks if name is unique', async (done) => {
+  test('should fail to set the user name if a user with the same name already exists', async (done) => {
     let alice = <User>await userRepository.getById(id);
 
     alice.name = personas.alice;
@@ -208,7 +193,7 @@ describe('read, update a user', () => {
     done();
   });
 
-  test("update the user's accountSid checks for valid account", async (done) => {
+  test('should validate the accountSid', async (done) => {
     let alice = <User>await userRepository.getById(id);
 
     alice.accountId = alice.accountId.substr(0, 1);
@@ -218,7 +203,7 @@ describe('read, update a user', () => {
     done();
   });
 
-  test("update the user's name to an empty value", async (done) => {
+  test('should fail to set the user name to an empty value', async (done) => {
     let alice = <User>await userRepository.getById(id);
 
     alice.name = '';
@@ -229,8 +214,8 @@ describe('read, update a user', () => {
   });
 });
 
-describe('read, users from database', () => {
-  test('should return all users', async (done) => {
+describe('User Repository read users', () => {
+  test('should return all users from the repository', async (done) => {
     let users = await userRepository.getAll();
 
     expect(users).toHaveLength(2);
@@ -240,7 +225,7 @@ describe('read, users from database', () => {
   });
 });
 
-describe('delete a user', () => {
+describe('User Repository delete', () => {
   let id: string;
 
   beforeAll(async (done) => {
@@ -269,14 +254,14 @@ describe('delete a user', () => {
     done();
   });
 
-  test('read an non existing user should return undefined', async (done) => {
+  test('should faild to read a user that does not exist an return undefined', async (done) => {
     await expect(userRepository.getById(id)).resolves.toBeUndefined();
 
     done();
   });
 });
 
-describe('set and update activites on a user', () => {
+describe('user activities', () => {
   let user: any;
 
   beforeAll(async (done) => {
@@ -285,13 +270,13 @@ describe('set and update activites on a user', () => {
     done();
   });
 
-  test('should have a default activity', async (done) => {
+  test('should find the default activity', async (done) => {
     expect(user.activity).toBe(UserActivity.Unknown);
 
     done();
   });
 
-  test('should update activity', async (done) => {
+  test('should set activity', async (done) => {
     user.activity = UserActivity.WaitingForWork;
 
     await userRepository.update(user);

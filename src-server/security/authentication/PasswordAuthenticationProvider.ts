@@ -1,4 +1,4 @@
-import { AuthenticationProviderInterface } from './AuthenticationProviderInterface';
+import { AuthenticationProvider } from './AuthenticationProvider';
 import { compare, hash } from 'bcrypt';
 import { User, UserAuthentication } from '../../models/User';
 import { InvalidAuthenticationRecordException } from './exceptions/InvalidAuthenticationRecordException';
@@ -8,7 +8,7 @@ export interface PasswordUserAuthentication extends UserAuthentication {
   secret: string;
 }
 
-export class PasswordAuthenticationProvider implements AuthenticationProviderInterface {
+export class PasswordAuthenticationProvider implements AuthenticationProvider {
   authenticate = async (user: User, password: string): Promise<boolean> => {
     if (!user.authentication) {
       throw new AuthenticationRecordNotFoundException();

@@ -55,6 +55,7 @@ export const PhoneView = () => {
 
         dispatch(setPhoneToken(token));
       } catch (error) {
+        // TODO, if fetch failed set error instead of reset the configuration
         dispatch(setPhoneConfiguration());
       } finally {
         setIsFetching(false);

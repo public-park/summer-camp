@@ -1,8 +1,9 @@
 import * as Client from 'twilio-client';
-import { PhoneControl, PhoneState } from '../PhoneController';
+import { PhoneControl } from '../PhoneControl';
 import { Call } from '../Call';
 import { TwilioCall } from './TwilioCall';
 import { EventEmitter } from 'events';
+import { PhoneState } from '../PhoneState';
 
 interface DelayedState {
   state: PhoneState;
@@ -89,11 +90,11 @@ export class TwilioPhone implements PhoneControl {
 
         this.setState('RINGING', connection.parameters.From);
 
-        this.eventEmitter.emit('incoming', new TwilioCall(connection.parameters.From, 'INBOUND', connection));
+        this.eventEmitter.emit('incoming', new TwilioCall(connection.parameters.From, 'inbound', connection));
       });
 
       this.device.on('ready', () => {
-        console.log('ON READY EVENT');
+        console.log(`Twilio Device 'onReady' event`);
 
         this.setState('IDLE');
       });
@@ -103,23 +104,22 @@ export class TwilioPhone implements PhoneControl {
 
         switch (error.code) {
           case 31205:
-            state = 'TOKEN_EXPIRED';
+            state = 'EXPIRED';
             break;
           default:
             state = 'ERROR';
-            this.eventEmitter.emit('error', error);
             break;
         }
 
         /* do not push this states while on the call */
         if (this.getState() === 'IN_CALL' || this.getState() === 'RINGING') {
-          this.setDelayedState(state, error.message);
+          this.setDelayedState(state, error);
         } else {
-          this.setState(state, error.message);
+          this.setState(state, error);
         }
       });
     } catch (error) {
-      console.log(error);
+      this.setState('ERROR', error);
     }
   }
 
@@ -128,7 +128,7 @@ export class TwilioPhone implements PhoneControl {
 
     this.registerConnectionListener(connection);
 
-    const call = new TwilioCall(phoneNumber, 'OUTBOUND', connection);
+    const call = new TwilioCall(phoneNumber, 'outbound', connection);
 
     this.eventEmitter.emit('outgoing', call);
 
@@ -136,6 +136,8 @@ export class TwilioPhone implements PhoneControl {
   }
 
   destroy() {
+    this.setState('OFFLINE');
+
     this.device.destroy();
   }
 

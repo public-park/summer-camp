@@ -16,6 +16,10 @@ export const DefaultStore: Store = {
     token: undefined,
     configuration: undefined,
     error: undefined,
+    display: {
+      value: '',
+      isValidPhoneNumber: false,
+    },
   },
   call: undefined,
   workspace: {

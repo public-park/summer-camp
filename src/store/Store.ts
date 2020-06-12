@@ -20,9 +20,13 @@ export const selectToken = (store: Store) => store.token;
 export const selectPage = (store: Store) => store.page;
 export const selectLogoutReason = (store: Store) => store.logout.reason;
 export const selectPhoneError = (store: Store) => store.phone.error;
+export const selectPhoneDisplay = (store: Store) => store.phone.display;
+export const selectPhoneDisplayIsValidPhoneNumber = (store: Store) => store.phone.display.isValidPhoneNumber;
+export const selectPhoneDisplayValue = (store: Store) => store.phone.display.value;
 
 export const selectStore = (store: Store) => store;
 
+// TODO, implement call object
 export interface Store {
   call: Call | undefined;
   user: {
@@ -38,6 +42,10 @@ export interface Store {
     token: string | undefined;
     configuration: Configuration | undefined;
     error: string | undefined;
+    display: {
+      value: string;
+      isValidPhoneNumber: any;
+    };
   };
   workspace: {
     view: WorkspaceView;

@@ -4,6 +4,9 @@ import { Action } from '../actions/ActionType';
 import { DefaultStore } from '../store/DefaultStore';
 
 const reducer = (state: Store = DefaultStore, action: Action): Store => {
+  const isPhoneNumberExpression = /^\+\d+$/g;
+  const isNumberExpression = /^\d+$/g;
+
   return produce(state, (draft) => {
     switch (action.type) {
       case 'USER_CONNECTION_STATE_CHANGED':
@@ -12,6 +15,30 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
 
       case 'USER_ACTIVITY_CHANGED':
         draft.user = action.payload.user;
+        break;
+
+      case 'PHONE_DISPLAY_UPDATE':
+        if (isNumberExpression.test(action.payload)) {
+          action.payload = `+${action.payload}`;
+        }
+
+        draft.phone.display = {
+          value: action.payload,
+          isValidPhoneNumber: isPhoneNumberExpression.test(action.payload),
+        };
+        break;
+
+      case 'PHONE_DISPLAY_UPDATE_WITH_FOCUS':
+        if (isNumberExpression.test(action.payload)) {
+          action.payload = `+${action.payload}`;
+        }
+
+        draft.phone.display = {
+          value: action.payload,
+          isValidPhoneNumber: isPhoneNumberExpression.test(action.payload),
+        };
+
+        draft.workspace.view = 'PHONE_VIEW';
         break;
 
       case 'PHONE_STATE_CHANGED':
@@ -40,7 +67,7 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
         break;
 
       case 'PHONE_TOKEN_UPDATED':
-        draft.phone.token = action.payload.token;
+        draft.phone.token = action.payload;
 
         if (action.payload.error) {
           draft.phone.error = action.payload.error;
@@ -51,7 +78,7 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
         break;
 
       case 'PHONE_CONFIGURATION_UPDATED':
-        draft.phone.configuration = action.payload.configuration;
+        draft.phone.configuration = action.payload;
         draft.workspace.view = 'PHONE_VIEW';
         break;
 

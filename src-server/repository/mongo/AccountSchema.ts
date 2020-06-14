@@ -17,7 +17,6 @@ const AccountSchema = new Schema(
   {
     _id: { type: String, default: uuidv4 },
     name: { type: String, required: true, unique: true },
-    labels: [String],
     configuration: Schema.Types.Mixed,
     createdAt: { type: Date, default: Date.now, required: true },
   },

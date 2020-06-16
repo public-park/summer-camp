@@ -52,7 +52,9 @@ export class TwilioCall implements Call {
   }
 
   reject() {
-    return Promise.reject('not implemented');
+    this.connection.reject();
+
+    return Promise.resolve();
   }
 
   hold() {

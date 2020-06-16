@@ -1,5 +1,10 @@
-import { UserPermissions } from './UserPermissions';
+import { Permission } from './roles/Permission';
 import { UserActivity } from './UserActivity';
+import { OwnerRole } from './roles/OwnerRole';
+import { Role } from './roles/Role';
+import { UserRoleNotFoundException } from '../exceptions/UserRoleNotFoundException';
+import { UserRole } from './UserRole';
+import { AgentRole } from './roles/AgentRole';
 
 export interface UserAuthentication {
   provider: string;
@@ -9,51 +14,58 @@ export class User {
   id: string;
   name: string;
   profileImageUrl: string | undefined;
-  labels: Set<string>;
+  tags: Set<string>;
   activity: UserActivity;
   accountId: string;
   authentication: UserAuthentication;
   createdAt: Date;
-  permissions: Set<UserPermissions>;
+  role: UserRole;
 
   constructor(
     id: string,
     name: string,
     profileImageUrl: string | undefined,
-    labels: Set<string>,
+    tags: Set<string>,
     activity: UserActivity,
     accountId: string,
-    permissions: Set<UserPermissions>,
     authentication: UserAuthentication,
+    role: UserRole,
     createdAt: Date = new Date()
   ) {
     this.id = id;
     this.name = name;
     this.profileImageUrl = profileImageUrl;
-    this.labels = labels;
+    this.tags = tags;
     this.activity = activity;
     this.accountId = accountId;
     this.authentication = authentication;
+    this.role = role;
     this.createdAt = createdAt;
-    this.permissions = permissions;
   }
 
-  hasPermission(name: UserPermissions): boolean {
-    return this.permissions.has(name);
-  }
+  hasPermission(name: Permission): boolean {
+    let role: Role | undefined;
+    switch (this.role) {
+      case UserRole.Owner:
+        role = new OwnerRole();
+        break;
+      case UserRole.Agent:
+        role = new AgentRole();
+        break;
+      default:
+        throw new UserRoleNotFoundException();
+    }
 
-  get isAvailable(): boolean {
-    return this.activity === UserActivity.WaitingForWork;
+    return role.hasPermission(name);
   }
 
   toApiResponse(): any {
     return {
       ...this,
-      labels: Array.from(this.labels),
+      tags: Array.from(this.tags),
       authentication: {
         provider: this.authentication.provider,
       },
-      permissions: Array.from(this.permissions),
     };
   }
 }

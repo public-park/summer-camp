@@ -49,12 +49,7 @@ const fetch = async (req: Request, res: Response, next: NextFunction) => {
       outgoingCallerIds: await fetchAllOutgoingCallerIds(client),
     };
 
-    // payload.incomingPhoneNumbers =[]
-    // payload.outgoingCallerIds =[]
-
-    //  setTimeout(() => {
     return res.status(200).json(payload);
-    //  }, 1000)
   } catch (error) {
     return next(error);
   }

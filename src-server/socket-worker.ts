@@ -1,30 +1,26 @@
 import * as http from 'http';
 import { TokenHelper } from './helpers/TokenHelper';
-import { User } from './models/User';
 import * as WebSocket from 'ws';
-import { UserRepository } from './repository/UserRepository';
-import { SocketWorkerContext } from './SocketWorkerContext';
 import { WebSocketWithKeepAlive } from './WebSocketWithKeepAlive';
 import { log } from './logger';
+import { UserPool } from './pool/UserPool';
 
 export class SocketWorker {
-  context: SocketWorkerContext;
-  server: WebSocket.Server | null;
+  options: any;
+  pool: UserPool;
+
+  server: WebSocket.Server | undefined;
   keepAliveInterval: NodeJS.Timeout | undefined;
 
-  constructor(options: WebSocket.ServerOptions, repository: UserRepository) {
-    this.context = {
-      options: options,
-      users: new Map<string, User>(),
-      repository: repository,
-    };
-
-    this.server = null;
+  constructor(options: WebSocket.ServerOptions, pool: UserPool) {
+    this.pool = pool;
+    this.options = options;
+    this.server = undefined;
     this.keepAliveInterval = undefined;
   }
 
   run() {
-    this.server = new WebSocket.Server(this.context.options, () => {
+    this.server = new WebSocket.Server(this.options, () => {
       // is not triggered in noServer mode
       log.info(`${this.constructor.name}: ready: ${Date.now()}`);
     });
@@ -35,22 +31,25 @@ export class SocketWorker {
     });
 
     this.server.on('connection', async (socket: WebSocketWithKeepAlive, req: http.IncomingMessage) => {
-      const context = this.context;
+      //const context = this.context;
 
       if (!req.headers.id || !req.headers.token) {
         throw new Error('invalid http header provided');
       }
 
       try {
-        const user = await this.context.repository.getById(<string>req.headers.id);
+        // TODO, if user is already connected, disconnect existing sockets with reason
+        const user = await this.pool.getUserById(<string>req.headers.id);
 
         if (!user) {
           throw Error('user is null');
         }
 
-        context.users.set(user.id, user);
+        user.isOnline = true;
 
-        log.info(`add ${user.id} pool users, new size is ${this.context.users.size}`);
+        this.pool.users.set(user.id, user);
+
+        log.info(`add user ${user.id} to pool, new size is ${this.pool.users.size}`);
 
         socket.isAlive = true;
         socket.token = <string>req.headers.token;
@@ -76,12 +75,12 @@ export class SocketWorker {
 
             user.activity = payload.activity;
 
-            context.repository.update(user);
+            this.pool.repository.update(user);
           }
         });
 
         socket.on('close', (code: number, reason: string) => {
-          context.users.delete(user.id);
+          this.pool.users.delete(user.id);
 
           log.debug(`${user.id} closed socket with code ${code}, message: ${reason}`);
         });
@@ -115,10 +114,6 @@ export class SocketWorker {
     }, 30 * 1000);
   };
 
-  getUserById(id: string): User | undefined {
-    return this.context.users.get(id);
-  }
-
   closeSocketByUserId(id: string) {
     if (!this.server) {
       return;
@@ -131,10 +126,6 @@ export class SocketWorker {
     });
   }
 
-  isOnline(id: string): boolean {
-    return this.context.users.has(id);
-  }
-
   ping(socket: WebSocketWithKeepAlive) {
     if (!socket.isAlive) {
       log.debug(`${socket.user.id} socket ${socket.remoteAddress} terminated, no pong received`);
@@ -145,7 +136,7 @@ export class SocketWorker {
       TokenHelper.verifyJwt((socket as WebSocketWithKeepAlive).token);
     } catch (error) {
       log.debug(`${socket.user.id} socket ${socket.remoteAddress} - ${error.name}`);
-      socket.close();
+      socket.close(); // TODO, add reason
     }
 
     socket.isAlive = false;

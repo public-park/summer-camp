@@ -1,27 +1,20 @@
 import { Response, NextFunction } from 'express';
 import VoiceResponse = require('twilio/lib/twiml/VoiceResponse');
-import { accountRepository, socketWorker, userRepository } from '../worker';
-import { RequestWithUser } from '../requests/RequestWithUser';
-import { AccountNotFoundException } from '../exceptions/AccountNotFoundException';
+import { callRepository, pool } from '../worker';
 import { InvalidConfigurationException } from '../exceptions/InvalidConfigurationException';
 import { ConfigurationNotFoundException } from '../exceptions/ConfigurationNotFoundException';
 import { getIdentity } from '../helpers/twilio/TwilioHelper';
-import { InvalidRequestBodyException } from '../exceptions/InvalidRequestBodyException';
 import { log } from '../logger';
 import { UserNotFoundException } from '../exceptions/UserNotFoundException';
 import { User } from '../models/User';
+import { Account } from '../models/Account';
+import { CallDirection } from '../models/CallDirection';
+import { RequestWithAccount } from '../requests/RequestWithAccount';
+import { CallStatus } from '../models/CallStatus';
+import { CallData } from '../repository/CallRepository';
+import { StatusCallbackHelper } from './helpers/StatusCallbackHelper';
 
-const getTrackerUrl = (request: RequestWithUser) => {
-  return `${request.protocol}://${request.hostname}/api/callback/users/${request.user.id}/phone/status-event`;
-};
-
-const getCallerId = async (user: User): Promise<string> => {
-  const account = await accountRepository.getById(user.accountId);
-
-  if (!account) {
-    throw new AccountNotFoundException();
-  }
-
+const getCallerId = async (account: Account): Promise<string> => {
   if (!account.configuration) {
     throw new ConfigurationNotFoundException();
   }
@@ -39,10 +32,10 @@ const getCallerId = async (user: User): Promise<string> => {
   return callerId;
 };
 
-const rejectInboundToUser = (req: RequestWithUser) => {
+const rejectInboundToUser = (req: RequestWithAccount, user: User) => {
   let twiml = new VoiceResponse();
 
-  const say = twiml.say(
+  twiml.say(
     {
       language: 'en-US',
       voice: 'Polly.Salli-Neural',
@@ -53,7 +46,7 @@ const rejectInboundToUser = (req: RequestWithUser) => {
   return twiml;
 };
 
-const connectInboundToUser = (req: RequestWithUser) => {
+const connectInboundToUser = (req: RequestWithAccount, user: User) => {
   let twiml = new VoiceResponse();
 
   const dial = twiml.dial();
@@ -62,35 +55,35 @@ const connectInboundToUser = (req: RequestWithUser) => {
     {
       statusCallbackEvent: ['ringing', 'answered', 'completed'],
       statusCallbackMethod: 'POST',
-      statusCallback: getTrackerUrl(req),
+      statusCallback: StatusCallbackHelper.getStatusEventUrl(req, CallDirection.Inbound),
     },
-    getIdentity(req.user)
+    getIdentity(user)
   );
 
   return twiml;
 };
 
-const handleOutgoing = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+const handleOutgoing = async (req: RequestWithAccount, res: Response, next: NextFunction) => {
   try {
-    const user = await userRepository.getById(<string>req.headers.userId);
+    const user = await pool.getOneByAccount(req.account);
 
     if (!user) {
       throw new UserNotFoundException();
     }
 
-    req.user = user;
-
     let twiml = new VoiceResponse();
 
-    const callerId = await getCallerId(user);
+    const callerId = await getCallerId(req.account);
 
     const dial = twiml.dial({ callerId: callerId });
 
+    //console.log('X: set user to busy');
+
     dial.number(
       {
-        statusCallbackEvent: ['ringing', 'answered', 'completed'],
+        statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
         statusCallbackMethod: 'POST',
-        statusCallback: getTrackerUrl(req),
+        statusCallback: StatusCallbackHelper.getStatusEventUrl(req, CallDirection.Outbound),
       },
       req.body.PhoneNumber
     );
@@ -101,29 +94,42 @@ const handleOutgoing = async (req: RequestWithUser, res: Response, next: NextFun
   }
 };
 
-const handleIncoming = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+const handleIncoming = async (req: RequestWithAccount, res: Response, next: NextFunction) => {
   try {
-    if (!req.body.To) {
-      throw new InvalidRequestBodyException("request is missing the 'To' parameter");
-    }
-
     log.info(`${req.body.To} called`);
 
-    const user = await userRepository.getById(<string>req.headers.userId);
+    //  const users = pool.getOnlineUsersByAccount(req.account).filter((user) => user.tags.includes(req.body.tag));
+
+    const user = await pool.getOneByAccount(req.account);
 
     if (!user) {
       throw new UserNotFoundException();
     }
 
-    req.user = user;
-
     let twiml: VoiceResponse;
+    let status: CallStatus;
 
-    if (user.isAvailable && socketWorker.isOnline(user.id)) {
-      twiml = connectInboundToUser(req);
+    if (user.isAvailable && user.isOnline) {
+      twiml = connectInboundToUser(req, user);
+      status = StatusCallbackHelper.fetchStatus(req);
     } else {
-      twiml = rejectInboundToUser(req);
+      twiml = rejectInboundToUser(req, user);
+      status = CallStatus.NoAnswer;
     }
+
+    const data: CallData = {
+      callSid: req.body.CallSid,
+      from: req.body.From,
+      to: req.body.To,
+      accountId: req.account.id,
+      userId: user.id,
+      status: status,
+      direction: CallDirection.Inbound,
+    };
+
+    await callRepository.create(data);
+
+    user.isOnACall = true;
 
     res.status(200).send(twiml.toString());
   } catch (error) {
@@ -131,8 +137,55 @@ const handleIncoming = async (req: RequestWithUser, res: Response, next: NextFun
   }
 };
 
-const handleStatusEvent = async (req: RequestWithUser, res: Response) => {
-  res.status(200).end();
+const handleStatusEvent = async (request: RequestWithAccount, res: Response, next: NextFunction) => {
+  try {
+    const user = await pool.getOneByAccount(request.account);
+
+    if (!user) {
+      throw new UserNotFoundException();
+    }
+
+    let callSid;
+
+    if (request.params.direction === CallDirection.Inbound.toLocaleLowerCase()) {
+      callSid = request.body.ParentCallSid;
+    } else {
+      callSid = request.body.CallSid;
+    }
+
+    if (
+      request.params.direction === CallDirection.Outbound.toLocaleLowerCase() &&
+      request.body.CallStatus === CallStatus.Initiated.toLocaleLowerCase()
+    ) {
+      const data: CallData = {
+        callSid: callSid,
+        from: request.body.From,
+        to: request.body.To,
+        accountId: request.account.id,
+        userId: user.id,
+        status: StatusCallbackHelper.fetchStatus(request),
+        direction: CallDirection.Outbound,
+      };
+
+      user.isOnACall = true;
+
+      await callRepository.create(data);
+    } else {
+      await callRepository.updateStatus(
+        callSid,
+        StatusCallbackHelper.fetchStatus(request),
+        StatusCallbackHelper.fetchDuration(request)
+      );
+
+      if (['no-answer', 'completed', 'failed', 'busy'].includes(StatusCallbackHelper.fetchStatus(request))) {
+        user.isOnACall = false;
+      }
+    }
+
+    res.status(200).end();
+  } catch (error) {
+    return next(error);
+  }
 };
 
 export const PhoneCallbackController = {

@@ -1,15 +1,15 @@
 import { BaseRepository } from './BaseRepository';
 import { User, UserAuthentication } from '../models/User';
-import { UserPermissions } from '../models/UserPermissions';
+import { UserRole } from '../models/UserRole';
 
 export interface UserRepository extends BaseRepository<User> {
   create: (
     name: string,
     profileImageUrl: string | undefined,
-    labels: Set<string>,
+    tags: Set<string>,
     accountId: string,
-    permissions: Set<UserPermissions>,
-    authentication: UserAuthentication
+    authentication: UserAuthentication,
+    role: UserRole
   ) => Promise<User>;
   getByName: (name: string) => Promise<User | undefined>;
   getOneByAccountId: (id: string) => Promise<User | undefined>;

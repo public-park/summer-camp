@@ -3,12 +3,13 @@ import { BaseRepository } from '../BaseRepository';
 import { User, UserAuthentication } from '../../models/User';
 import { UserRepository } from '../UserRepository';
 import { FileBaseRepository } from './FileBaseRepository';
-import { UserPermissions } from '../../models/UserPermissions';
 import { UserActivity } from '../../models/UserActivity';
 import { UserNotFoundError } from '../UserNotFoundError';
 import { UserNameError } from '../UserNameError';
 import { AccountRepository } from '../AccountRepository';
 import { AccountNotFoundError } from '../AccountNotFoundError';
+import { UserRole } from '../../models/UserRole';
+import { UserAlreadyExistsException } from '../../exceptions/UserAlreadyExistsException';
 
 export class FileUserRepository extends FileBaseRepository<User> implements UserRepository, BaseRepository<User> {
   users: Map<string, User>;
@@ -56,7 +57,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
 
     if (existingUser && existingUser.name !== user.name) {
       if (await this.getByName(user.name)) {
-        throw new Error(); // TODO, implement error code
+        throw new UserAlreadyExistsException();
       }
     }
 
@@ -105,9 +106,15 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
 
   protected toPlainObject(user: User): any {
     return {
-      ...user,
-      labels: Array.from(user.labels.values()),
-      permissions: Array.from(user.permissions.values()),
+      id: user.id,
+      name: user.name,
+      profileImageUrl: user.profileImageUrl,
+      tags: Array.from(user.tags.values()),
+      activity: user.activity,
+      accountId: user.accountId,
+      authentication: user.authentication,
+      role: user.role,
+      createdAt: user.createdAt,
     };
   }
 
@@ -126,11 +133,11 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
       item.id,
       item.name,
       item.profileImageUrl,
-      new Set(item.labels),
+      new Set(item.tags),
       item.activity,
       item.accountId,
-      new Set(item.permissions),
       item.authentication,
+      item.role,
       item.createdAt
     );
   }
@@ -138,10 +145,10 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
   create = async (
     name: string,
     profileImageUrl: string | undefined,
-    labels: Set<string>,
+    tags: Set<string>,
     accountId: string,
-    permissions: Set<UserPermissions>,
-    authentication: UserAuthentication
+    authentication: UserAuthentication,
+    role: UserRole
   ) => {
     if (name === '') {
       throw new UserNameError();
@@ -159,16 +166,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
       throw new AccountNotFoundError();
     }
 
-    const user = new User(
-      uuidv4(),
-      name,
-      profileImageUrl,
-      labels,
-      UserActivity.Unknown,
-      accountId,
-      permissions,
-      authentication
-    );
+    const user = new User(uuidv4(), name, profileImageUrl, tags, UserActivity.Unknown, accountId, authentication, role);
 
     this.users.set(user.id, user);
 

@@ -1,21 +1,22 @@
 import { UserRepository } from '../UserRepository';
 import { BaseRepository } from '../BaseRepository';
 import { User, UserAuthentication } from '../../models/User';
-import { UserPermissions } from '../../models/UserPermissions';
+import { Permission } from '../../models/roles/Permission';
 import UserModel from './UserSchema';
 import { UserActivity } from '../../models/UserActivity';
 import { UserNotFoundError } from '../UserNotFoundError';
 import { UserNameError } from '../UserNameError';
 import AccountModel from './AccountSchema';
+import { UserRole } from '../../models/UserRole';
 
 export class MongoUserRepository implements UserRepository, BaseRepository<User> {
   async create(
     name: string,
     profileImageUrl: string | undefined,
-    labels: Set<string>,
+    tags: Set<string>,
     accountId: string,
-    permissions: Set<UserPermissions>,
-    authentication: UserAuthentication
+    authentication: UserAuthentication,
+    role: UserRole
   ) {
     if (name === '') {
       throw new UserNameError();
@@ -26,11 +27,11 @@ export class MongoUserRepository implements UserRepository, BaseRepository<User>
     const model = new UserModel({
       name: name,
       profileImageUrl: profileImageUrl,
-      labels: Array.from(labels.values()),
+      tags: Array.from(tags.values()),
       accountId: accountId,
-      permissions: Array.from(permissions.values()),
       activity: UserActivity.Unknown,
       authentication: authentication,
+      role: role,
     });
 
     const document = await model.save();
@@ -76,8 +77,7 @@ export class MongoUserRepository implements UserRepository, BaseRepository<User>
       { _id: entity.id },
       {
         ...entity,
-        labels: Array.from(entity.labels.values()),
-        permissions: Array.from(entity.permissions.values()),
+        tags: Array.from(entity.tags.values()),
       },
       {
         new: true,

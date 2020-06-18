@@ -4,16 +4,17 @@ import { Document, Schema } from 'mongoose';
 import { User, UserAuthentication } from '../../models/User';
 import { v4 as uuidv4 } from 'uuid';
 import { UserActivity } from '../../models/UserActivity';
+import { UserRole } from '../../models/UserRole';
 
 export interface UserDocument extends Document {
   _id: string;
   name: string;
   profileImageUrl: string | undefined;
-  labels: Array<string>;
+  tags: Array<string>;
   activity: UserActivity;
   accountId: string;
-  permissions: Array<string>;
   authentication: UserAuthentication;
+  role: UserRole;
   createdAt: Date;
   toUser: () => User;
 }
@@ -21,13 +22,13 @@ export interface UserDocument extends Document {
 const UserSchema = new Schema(
   {
     _id: { type: String, default: uuidv4 },
-    name: { type: String, required: true, unique: true },
+    name: { type: String, required: true, unique: true, index: true },
     profileImageUrl: { type: String, required: false },
-    labels: [String],
-    activity: { type: String, required: true },
+    tags: [String],
+    activity: { type: String, required: true, index: true },
     accountId: { type: String, required: true },
-    permissions: [String],
     authentication: Schema.Types.Mixed,
+    role: { type: String, required: true },
     createdAt: { type: Date, default: Date.now, required: true },
   },
   { versionKey: false, collection: 'users' }
@@ -38,11 +39,11 @@ UserSchema.methods.toUser = function (): User {
     this._id,
     this.name,
     this.profileImageUrl,
-    new Set(this.labels),
+    new Set(this.tags),
     this.activity,
     this.accountId,
-    new Set(this.permissions),
     this.authentication,
+    this.role,
     this.createdAt
   );
 };

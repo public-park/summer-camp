@@ -3,6 +3,7 @@ require('dotenv').config();
 import { User } from '../models/User';
 import { UserNameError } from './UserNameError';
 import { UserActivity } from '../models/UserActivity';
+import { UserRole } from '../models/UserRole';
 import {
   init,
   personas,
@@ -31,22 +32,21 @@ describe('User Repository create', () => {
       undefined,
       new Set(['es', 'jp']),
       account.id,
-      new Set([]),
-      authentication
+      authentication,
+      UserRole.Owner
     );
 
     expect(user).toBeInstanceOf(User);
     expect(user.id).toHaveLength(36);
     expect(user.name).toBe(personas.alice);
     expect(user.profileImageUrl).toBeUndefined();
-    expect(user.labels).toBeInstanceOf(Set);
-    expect(user.labels.size).toBe(2);
-    expect(user.labels.has('es')).toBeTruthy();
-    expect(user.labels.has('jp')).toBeTruthy();
+    expect(user.tags).toBeInstanceOf(Set);
+    expect(user.tags.size).toBe(2);
+    expect(user.tags.has('es')).toBeTruthy();
+    expect(user.tags.has('jp')).toBeTruthy();
     expect(user.accountId).toHaveLength(36);
-    expect(user.permissions).toBeInstanceOf(Set);
-    expect(user.permissions.size).toBe(0);
     expect(user.authentication).toBeDefined();
+    expect(user.role).toBe(UserRole.Owner);
     expect(user.createdAt).toBeInstanceOf(Date);
 
     done();
@@ -54,7 +54,14 @@ describe('User Repository create', () => {
 
   test('should fail to create a user with the same name', async (done) => {
     await expect(
-      userRepository.create(personas.alice, undefined, new Set(['es', 'jp']), account.id, new Set([]), authentication)
+      userRepository.create(
+        personas.alice,
+        undefined,
+        new Set(['es', 'jp']),
+        account.id,
+        authentication,
+        UserRole.Owner
+      )
     ).rejects.toThrow();
 
     done();
@@ -62,7 +69,7 @@ describe('User Repository create', () => {
 
   test('should fail to create a user without name', async (done) => {
     await expect(
-      userRepository.create('', undefined, new Set(['es', 'jp']), account.id, new Set([]), authentication)
+      userRepository.create('', undefined, new Set(['es', 'jp']), account.id, authentication, UserRole.Owner)
     ).rejects.toThrow(UserNameError);
 
     done();
@@ -70,7 +77,7 @@ describe('User Repository create', () => {
 
   test('should fail to create a user without accountId', async (done) => {
     await expect(
-      userRepository.create(personas.bob, undefined, new Set(['es', 'jp']), '', new Set([]), authentication)
+      userRepository.create(personas.bob, undefined, new Set(['es', 'jp']), '', authentication, UserRole.Owner)
     ).rejects.toThrow();
 
     done();
@@ -83,8 +90,8 @@ describe('User Repository create', () => {
         undefined,
         new Set(['es', 'jp']),
         account.id.substr(0, 1),
-        new Set([]),
-        authentication
+        authentication,
+        UserRole.Owner
       )
     ).rejects.toThrow();
 
@@ -105,8 +112,8 @@ describe('User Repository read, update and delete a user', () => {
       undefined,
       new Set(['es', 'jp']),
       account.id,
-      new Set([]),
-      authentication
+      authentication,
+      UserRole.Owner
     );
 
     id = user.id;
@@ -122,14 +129,13 @@ describe('User Repository read, update and delete a user', () => {
     expect(user.id).toHaveLength(36);
     expect(user.name).toBe(personas.joe);
     expect(user.profileImageUrl).toBeUndefined();
-    expect(user.labels).toBeInstanceOf(Set);
-    expect(user.labels.size).toBe(2);
-    expect(user.labels.has('es')).toBeTruthy();
-    expect(user.labels.has('jp')).toBeTruthy();
+    expect(user.tags).toBeInstanceOf(Set);
+    expect(user.tags.size).toBe(2);
+    expect(user.tags.has('es')).toBeTruthy();
+    expect(user.tags.has('jp')).toBeTruthy();
     expect(user.accountId).toHaveLength(36);
-    expect(user.permissions).toBeInstanceOf(Set);
-    expect(user.permissions.size).toBe(0);
     expect(user.authentication).toBeDefined();
+    expect(user.role).toBe(UserRole.Owner);
     expect(user.createdAt).toBeInstanceOf(Date);
 
     done();
@@ -148,37 +154,30 @@ describe('User Repository read, update and delete a user', () => {
 
     user.name = personas.max;
     user.profileImageUrl = 'joe.png';
-    user.labels.add('engineer');
-    user.labels.add('de');
-    user.permissions.add('user.create');
-    user.permissions.add('user.update');
+    user.tags.add('engineer');
+    user.tags.add('de');
 
     user = <User>await userRepository.update(user);
 
     expect(user).toBeInstanceOf(User);
     expect(user.name).toBe(personas.max);
     expect(user.profileImageUrl).toBe('joe.png');
-    expect(user.labels.size).toBe(4);
-    expect(user.labels.has('engineer')).toBeTruthy();
-    expect(user.labels.has('de')).toBeTruthy();
-    expect(user.permissions.size).toBe(2);
-    expect(user.permissions.has('user.create')).toBeTruthy();
-    expect(user.permissions.has('user.update')).toBeTruthy();
+    expect(user.tags.size).toBe(4);
+    expect(user.tags.has('engineer')).toBeTruthy();
+    expect(user.tags.has('de')).toBeTruthy();
 
     done();
   });
 
-  test("should remove the user's labels and permissions", async (done) => {
+  test("should remove the user's tags", async (done) => {
     let user = <User>await userRepository.getById(id);
 
-    user.labels.clear();
-    user.permissions.clear();
+    user.tags.clear();
 
     user = <User>await userRepository.update(user);
 
     expect(user.name).toBe(personas.max);
-    expect(user.labels.size).toBe(0);
-    expect(user.permissions.size).toBe(0);
+    expect(user.tags.size).toBe(0);
 
     done();
   });
@@ -237,8 +236,8 @@ describe('User Repository delete', () => {
       undefined,
       new Set(['es', 'jp']),
       account.id,
-      new Set([]),
-      authentication
+      authentication,
+      UserRole.Owner
     );
 
     id = user.id;

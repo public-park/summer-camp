@@ -2,7 +2,7 @@ import React from 'react';
 import { KeypadButton } from './KeypadButton';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectCall, selectPhoneDisplay } from '../../../../store/Store';
-import { setPhoneDisplayValue } from '../../../../actions/PhoneAction';
+import { updatePhoneDisplay } from '../../../../actions/PhoneAction';
 
 const keys = [
   { number: '1', letters: null },
@@ -30,7 +30,7 @@ export const Keypad = (props: any) => {
     if (call) {
       call.sendDigits(digit);
     } else {
-      dispatch(setPhoneDisplayValue(phoneDisplay.value + digit));
+      dispatch(updatePhoneDisplay(phoneDisplay.value + digit));
     }
 
     console.log('add: ' + digit);

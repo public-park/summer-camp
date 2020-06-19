@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCallDurationFormat } from '../PhoneView/hooks/useCallDurationFormat';
 import Moment from 'react-moment';
-import { setPhoneDisplayValueWithFocus } from '../../../actions/PhoneAction';
+import { updatePhoneDisplayWithFocus } from '../../../actions/PhoneAction';
 import { useDispatch } from 'react-redux';
 import { CallDirection } from '../../../phone/Call';
 
@@ -30,7 +30,7 @@ export const CallItem = (props: CallItemProps) => {
       value = to;
     }
 
-    dispatch(setPhoneDisplayValueWithFocus(value));
+    dispatch(updatePhoneDisplayWithFocus(value));
   };
 
   return (

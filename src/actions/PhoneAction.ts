@@ -5,14 +5,14 @@ export interface PhoneDisplayAction {
   payload: string;
 }
 
-export const setPhoneDisplayValue = (value: string): PhoneDisplayAction => {
+export const updatePhoneDisplay = (value: string): PhoneDisplayAction => {
   return {
     type: ActionType.PHONE_DISPLAY_UPDATE,
     payload: value,
   };
 };
 
-export const setPhoneDisplayValueWithFocus = (value: string): PhoneDisplayAction => {
+export const updatePhoneDisplayWithFocus = (value: string): PhoneDisplayAction => {
   return {
     type: ActionType.PHONE_DISPLAY_UPDATE_WITH_FOCUS,
     payload: value,

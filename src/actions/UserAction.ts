@@ -2,6 +2,7 @@ import { ActionType } from './ActionType';
 import { User } from '../models/User';
 import { UserActivity } from '../models/enums/UserActivity';
 import { UserConnectionState } from '../models/enums/UserConnectionState';
+import { UserRole } from '../models/enums/UserRole';
 
 export interface UserAction {
   type: ActionType;
@@ -9,14 +10,13 @@ export interface UserAction {
 }
 
 interface UserActionPayload {
-  user: {
-    id: string | undefined;
-    name: string | undefined;
-    profileImageUrl: string | undefined;
-    labels: string[];
-    activity: UserActivity;
-    connectionState: UserConnectionState;
-  };
+  id: string | undefined;
+  name: string | undefined;
+  profileImageUrl: string | undefined;
+  tags: string[];
+  activity: UserActivity;
+  role: UserRole | undefined;
+  connectionState: UserConnectionState;
 }
 
 const toPlainObject = (user: User) => {
@@ -24,8 +24,9 @@ const toPlainObject = (user: User) => {
     id: user.id,
     name: user.name,
     profileImageUrl: user.profileImageUrl,
-    labels: Array.from(user.labels),
+    tags: Array.from(user.tags),
     activity: user.activity,
+    role: user.role,
     connectionState: user.connection.state,
   };
 };
@@ -33,18 +34,14 @@ const toPlainObject = (user: User) => {
 export const setActivity = (user: User): UserAction => {
   return {
     type: ActionType.USER_ACTIVITY_CHANGED,
-    payload: {
-      user: toPlainObject(user),
-    },
+    payload: toPlainObject(user),
   };
 };
 
 export const setConnectionState = (user: User): UserAction => {
   return {
     type: ActionType.USER_CONNECTION_STATE_CHANGED,
-    payload: {
-      user: toPlainObject(user),
-    },
+    payload: toPlainObject(user),
   };
 };
 

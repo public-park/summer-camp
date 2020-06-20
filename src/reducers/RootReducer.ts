@@ -10,11 +10,12 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
   return produce(state, (draft) => {
     switch (action.type) {
       case 'USER_CONNECTION_STATE_CHANGED':
-        draft.user = action.payload.user;
+        console.log(action.payload);
+        draft.user = action.payload;
         break;
 
       case 'USER_ACTIVITY_CHANGED':
-        draft.user = action.payload.user;
+        draft.user = action.payload;
         break;
 
       case 'PHONE_DISPLAY_UPDATE':

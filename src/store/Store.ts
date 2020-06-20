@@ -4,8 +4,10 @@ import { UserConnectionState } from '../models/enums/UserConnectionState';
 import { ApplicationPage } from '../actions/PageAction';
 import { WorkspaceView } from '../actions/WorkspaceViewAction';
 import { PhoneState } from '../phone/PhoneState';
+import { UserRole } from '../models/enums/UserRole';
 
 export const selectUser = (store: Store) => store.user;
+export const selectUserRole = (store: Store) => store.user.role;
 export const selectPhone = (store: Store) => store.phone;
 export const selectConfiguration = (store: Store) => store.phone.configuration;
 export const selectActivity = (store: Store) => store.user.activity;
@@ -33,8 +35,9 @@ export interface Store {
     id: string;
     name: string;
     profileImageUrl: string | undefined;
-    labels: Array<string>;
+    tags: Array<string>;
     activity: UserActivity;
+    role: UserRole | undefined;
     connectionState: UserConnectionState;
   };
   phone: {

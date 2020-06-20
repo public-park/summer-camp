@@ -25,6 +25,6 @@ export const AccountConfigurationRequestSchema = {
       additionalProperties: false,
     },
   },
-  required: ['key', 'secret', 'accountSid', 'inbound', 'outbound'],
+  required: ['key', 'accountSid', 'inbound', 'outbound'],
   additionalProperties: false,
 };

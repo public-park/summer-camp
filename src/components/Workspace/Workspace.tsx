@@ -35,7 +35,7 @@ export const Workspace = () => {
       }
     };
 
-    if (view == 'FETCH_CONFIGURATION_VIEW' && connectionState == UserConnectionState.Open) {
+    if (view === 'FETCH_CONFIGURATION_VIEW' && connectionState === UserConnectionState.Open) {
       init();
     }
   }, [view, connectionState]);

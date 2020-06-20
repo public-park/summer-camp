@@ -8,6 +8,7 @@ import { ApplicationContext } from '../../../context/ApplicationContext';
 import { UserConnectionState } from '../../../models/enums/UserConnectionState';
 import { setWorkspaceView } from '../../../actions/WorkspaceViewAction';
 import { ActivityPanel } from './ActivityPanel';
+import { HistoryButton } from './Navigation/HistoryButton';
 import { PhoneButton } from './Navigation/PhoneButton';
 
 export const Header = () => {
@@ -25,19 +26,20 @@ export const Header = () => {
         <Avatar src={profileImageUrl} alt={user.name?.toString()}>
           {name?.toUpperCase().substr(0, 1)}
         </Avatar>
-
         <div className="name">{name}</div>
 
         <div className="user-status-toggle">{connectionState === UserConnectionState.Open && <ActivityPanel />}</div>
-
         <div>
           <PhoneButton onClick={() => dispatch(setWorkspaceView('PHONE_VIEW'))} color="secondary" />
         </div>
-
         <div>
-          <SetupButton onClick={() => dispatch(setWorkspaceView('SETUP_VIEW'))} color="secondary" />
+          <HistoryButton onClick={() => dispatch(setWorkspaceView('CALL_HISTORY_VIEW'))} color="secondary" />
         </div>
-
+        {user.role === 'owner' && (
+          <div>
+            <SetupButton onClick={() => dispatch(setWorkspaceView('SETUP_VIEW'))} color="secondary" />
+          </div>
+        )}
         <div className="setup-button">
           <IconButton
             color="secondary"

@@ -7,8 +7,6 @@ import { UserNotFoundException } from '../exceptions/UserNotFoundException';
 const validate = async (req: Request, res: Response) => {
   log.info(`get user by name: ${req.body.name}`);
 
-  res.header('Access-Control-Allow-Origin: *');
-
   try {
     const payload = TokenHelper.verifyJwt(req.body.token);
 

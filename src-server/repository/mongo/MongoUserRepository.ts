@@ -16,7 +16,8 @@ export class MongoUserRepository implements UserRepository, BaseRepository<User>
     tags: Set<string>,
     accountId: string,
     authentication: UserAuthentication,
-    role: UserRole
+    role: UserRole,
+    activity: UserActivity = UserActivity.Unknown
   ) {
     if (name === '') {
       throw new UserNameError();
@@ -29,7 +30,7 @@ export class MongoUserRepository implements UserRepository, BaseRepository<User>
       profileImageUrl: profileImageUrl,
       tags: Array.from(tags.values()),
       accountId: accountId,
-      activity: UserActivity.Unknown,
+      activity: activity,
       authentication: authentication,
       role: role,
     });

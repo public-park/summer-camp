@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { TokenHelper } from '../helpers/TokenHelper';
 import { authenticationProvider, userRepository, accountRepository } from '../worker';
 import { isValidName } from './UserControllerValidator';
+import { UserRole } from '../models/UserRole';
 import { log } from '../logger';
 
 const register = async (req: Request, res: Response, next: any) => {
@@ -20,8 +21,8 @@ const register = async (req: Request, res: Response, next: any) => {
       undefined,
       new Set(['none']),
       account.id,
-      new Set(['account.configuration.update', 'account.configuration.read', 'self.token.create', 'user.read']),
-      authentication
+      authentication,
+      UserRole.Owner
     );
 
     const payload = {

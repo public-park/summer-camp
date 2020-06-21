@@ -148,7 +148,8 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     tags: Set<string>,
     accountId: string,
     authentication: UserAuthentication,
-    role: UserRole
+    role: UserRole,
+    activity: UserActivity = UserActivity.Unknown
   ) => {
     if (name === '') {
       throw new UserNameError();
@@ -166,7 +167,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
       throw new AccountNotFoundError();
     }
 
-    const user = new User(uuidv4(), name, profileImageUrl, tags, UserActivity.Unknown, accountId, authentication, role);
+    const user = new User(uuidv4(), name, profileImageUrl, tags, activity, accountId, authentication, role);
 
     this.users.set(user.id, user);
 

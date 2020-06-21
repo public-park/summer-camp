@@ -6,9 +6,12 @@ export class OwnerRole extends Role {
       new Set([
         'account.configuration.update',
         'account.configuration.read',
+        'account.read',
         'user.phone.create',
         'user.read',
         'user.create',
+        'user.update',
+        'user.delete',
         'user.calls.read',
       ])
     );

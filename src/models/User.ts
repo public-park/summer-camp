@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import { UserActivity } from './enums/UserActivity';
 import { UserConnectionState } from './enums/UserConnectionState';
 import { WebSocketNotInStateOpenException } from '../exceptions/WebSocketNotInStateOpenException';
+import { UserRole } from './enums/UserRole';
 
 export class User {
   id: string | undefined;
@@ -9,9 +10,10 @@ export class User {
   name: string | undefined;
   profileImageUrl: string | undefined;
   accountId: string | undefined;
-  private _labels: Set<string>;
+  private _tags: Set<string>;
   private _isAvailable: boolean;
   private _activity: UserActivity;
+  role: UserRole | undefined;
   connection: {
     socket: WebSocket | undefined;
     state: UserConnectionState;
@@ -26,9 +28,10 @@ export class User {
     this.profileImageUrl = undefined;
     this.token = undefined;
     this.accountId = undefined;
-    this._labels = new Set();
+    this._tags = new Set();
     this._isAvailable = false;
     this._activity = UserActivity.Unknown;
+    this.role = undefined;
     this.connection = {
       socket: undefined,
       state: UserConnectionState.Closed,
@@ -84,7 +87,8 @@ export class User {
           this.name = payload.user.name;
           this.profileImageUrl = payload.user.profileImageUrl;
           this.accountId = payload.user.accountId;
-          this._labels = new Set(payload.user.labels);
+          this._tags = new Set(payload.user.tags);
+          this.role = payload.user.role;
 
           this._setActivity(payload.user.activity);
           this._setConnectionState(UserConnectionState.Open);
@@ -142,20 +146,20 @@ export class User {
     return this._isAvailable;
   }
 
-  set labels(labels: Set<string>) {
+  set tags(tags: Set<string>) {
     if (!this.connection.socket || this.connection.socket.readyState !== WebSocket.OPEN) {
       throw new WebSocketNotInStateOpenException();
     }
 
     this.connection.socket.send(
       JSON.stringify({
-        labels: labels.values(),
+        tags: tags.values(),
       })
     );
   }
 
-  get labels(): Set<string> {
-    return this._labels;
+  get tags(): Set<string> {
+    return this._tags;
   }
 
   onActivityChanged(listener: (activity: UserActivity) => void) {

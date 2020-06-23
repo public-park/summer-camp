@@ -2,22 +2,18 @@ import { Response, NextFunction } from 'express';
 import { accountRepository } from '../worker';
 import { RequestWithUser } from '../requests/RequestWithUser';
 import { createVoiceToken } from '../helpers/twilio/TwilioHelper';
-import { InvalidConfigurationException } from '../exceptions/InvalidConfigurationException';
-
-export interface CreateTokenResponseInterface {
-  token: string;
-}
+import { AccountNotFoundError } from '../repository/AccountNotFoundError';
 
 export const createToken = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
-    const account = await accountRepository.getById(req.user.accountId);
+    const account = await accountRepository.getById(req.user.accountId); // TODO rename to accounts
 
     if (!account) {
-      throw new InvalidConfigurationException();
+      throw new AccountNotFoundError();
     }
 
-    const payload: CreateTokenResponseInterface = {
-      token: createVoiceToken(account, req.user, 600),
+    const payload = {
+      token: createVoiceToken(account, req.user, 3600),
     };
 
     return res.json(payload);
@@ -26,6 +22,6 @@ export const createToken = async (req: RequestWithUser, res: Response, next: Nex
   }
 };
 
-export const UserPhoneController = {
+export const PhoneController = {
   createToken,
 };

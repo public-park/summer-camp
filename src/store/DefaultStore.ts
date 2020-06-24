@@ -7,8 +7,9 @@ export const DefaultStore: Store = {
     id: '',
     name: '',
     profileImageUrl: '',
-    labels: [],
+    tags: [],
     activity: UserActivity.Unknown,
+    role: undefined,
     connectionState: UserConnectionState.Closed,
   },
   phone: {

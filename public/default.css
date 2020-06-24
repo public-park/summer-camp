@@ -346,6 +346,13 @@ button {
   border-radius: 2px;
 }
 
+.phone .error,
+.phone .expired,
+.phone .connect {
+  text-align: center;
+  padding: 40px;
+}
+
 .login {
   margin-top: 10px;
   flex: auto;

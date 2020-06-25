@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { ApplicationContext } from './context/ApplicationContext';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Action, ActionType } from './actions/ActionType';
 import { UserActivity } from './models/enums/UserActivity';
 import { UserConnectionState } from './models/enums/UserConnectionState';
@@ -11,9 +11,18 @@ import { User } from './models/User';
 import { TwilioPhone } from './phone/twilio/TwilioPhone';
 import { setActivity, setConnectionState, setLogout, setLogin } from './actions/UserAction';
 import { PhoneState } from './phone/PhoneState';
+import { usePageLifecycle } from './hooks/usePageLifecycle';
+import { selectToken, selectConnectionState, selectCall, selectPhoneState } from './store/Store';
 
 export const ApplicationContextProvider = (props: any) => {
+  const call = useSelector(selectCall);
+  const phoneState = useSelector(selectPhoneState);
+
   const persistetToken = usePersistentToken();
+  const { isResume } = usePageLifecycle();
+
+  const token = useSelector(selectToken);
+  const connectionState = useSelector(selectConnectionState);
 
   const [user] = useState(new User());
   const [phone] = useState(new TwilioPhone());
@@ -23,6 +32,22 @@ export const ApplicationContextProvider = (props: any) => {
   const login = (token: string) => {
     user.login(getWebSocketUrl(), token);
 
+    dispatch(setLogin(token));
+  };
+
+  const logout = async (reason?: string) => {
+    await user.logout();
+
+    dispatch(setLogout(reason));
+
+    if (phoneState === 'RINGING' && call) {
+      call.reject();
+    }
+
+    phone.destroy();
+  };
+
+  useEffect(() => {
     user.onConnectionStateChanged((state: UserConnectionState) => {
       console.log(`connection state changed to: ${state}`);
 
@@ -71,23 +96,19 @@ export const ApplicationContextProvider = (props: any) => {
     phone.onError((error: Error) => {
       console.log(error);
     });
-
-    dispatch(setLogin(token));
-  };
-
-  const logout = async (reason?: string) => {
-    await user.logout();
-
-    phone.destroy();
-
-    dispatch(setLogout(reason));
-  };
+  }, []);
 
   useEffect(() => {
     if (persistetToken) {
       login(persistetToken);
     }
   }, [persistetToken]);
+
+  useEffect(() => {
+    if (isResume && token && connectionState === UserConnectionState.Closed) {
+      user.login(getWebSocketUrl(), token);
+    }
+  }, [isResume]);
 
   return (
     <ApplicationContext.Provider

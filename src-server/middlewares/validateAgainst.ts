@@ -14,7 +14,13 @@ export const validateAgainst = (schema: {}) => {
     if (isValid) {
       return next();
     } else {
-      log.debug(`json validation failed ${validate.errors?.toString()}`);
+      let message = '';
+
+      if (validate.errors) {
+        message = validate.errors.map((error) => JSON.stringify(error)).toString();
+      }
+
+      log.debug(`JSON schema validation failed ${message}`);
       return next(new InvalidRequestBodyException());
     }
   };

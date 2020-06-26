@@ -2,7 +2,7 @@
 openapi: 3.0.2
 info:
   title: Summer Camp
-  version: '0.6'
+  version: '0.7.0'
   license:
     name: GNU General Public License v3.0 or later
     url: https://github.com/public-park/summer-camp/LICENSE
@@ -80,6 +80,43 @@ paths:
         '200':
           description: OK
           $ref: '#/components/responses/ValidateTokenResponse'
+        '400':
+          description: the server did not understand the request
+          $ref: '#/components/responses/BadRequest'
+        5XX:
+          description: Unexpected error.
+          $ref: '#/components/responses/ServerError'
+  /users:
+    post:
+      security:
+        - AuthenticationToken: []
+      description: create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                password:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                activity:
+                  $ref: '#/components/schemas/Activity'
+                role:
+                  $ref: '#/components/schemas/Role'
+              required:
+                - name
+                - password
+      responses:
+        '200':
+          description: OK
+          $ref: '#/components/responses/UserResponse'
         '400':
           description: the server did not understand the request
           $ref: '#/components/responses/BadRequest'
@@ -332,7 +369,7 @@ components:
         name:
           type: string
           readOnly: true
-        labels:
+        tags:
           type: array
           items:
             type: string
@@ -341,10 +378,8 @@ components:
         accountId:
           type: string
           readOnly: true
-        permissions:
-          type: array
-          items:
-            type: string
+        role:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -388,9 +423,14 @@ components:
     Activity:
       type: string
       enum:
-        - Away
-        - DoNotDisturb
-        - WaitingForWork
+        - away
+        - do-not-disturb
+        - waiting-for-work
+    Role:
+      type: string
+      enum:
+        - owner
+        - agent
     Account:
       type: object
       properties:
@@ -408,6 +448,7 @@ components:
           type: string
         secret:
           type: string
+          writeOnly: true
         accountSid:
           type: string
         inbound:
@@ -514,13 +555,13 @@ components:
           schema:
             $ref: '#/components/schemas/AccountConfiguration'
     UserResponse:
-      description: an user
+      description: a user
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/User'
     UserPresenceResponse:
-      description: a user's precense details
+      description: a user's presence details
       content:
         application/json:
           schema:
@@ -550,6 +591,8 @@ components:
               token:
                 type: string
               userId:
+                type: string
+              accountId:
                 type: string
     RegisterResponse:
       description: response to a valid register request

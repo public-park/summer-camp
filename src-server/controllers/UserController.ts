@@ -1,24 +1,32 @@
 import { Request, Response, NextFunction } from 'express';
-import { userRepository, accountRepository, authenticationProvider, socketWorker } from '../worker';
+import {
+  userRepository,
+  accountRepository,
+  authenticationProvider,
+  callRepository,
+  pool,
+  socketWorker,
+} from '../worker';
 import { UserActivity } from '../models/UserActivity';
 import { AccountNotFoundException } from '../exceptions/AccountNotFoundException';
 import { RequestWithUser } from '../requests/RequestWithUser';
 import { UserNotFoundException } from '../exceptions/UserNotFoundException';
-import { isValidName, isValidLabelList, isValidActivity } from './UserControllerValidator';
+import { isValidName, isValidTagList, isValidActivity, isValidRole } from './UserControllerValidator';
 import { ConfigurationNotFoundException } from '../exceptions/ConfigurationNotFoundException';
-import { InvalidUserPropertyException } from '../exceptions/InvalidUserPropertyException';
+import { UserRole } from '../models/UserRole';
 
 const create = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
     await isValidName(req.body.name);
 
-    let labels = new Set<string>();
+    let tags = new Set<string>();
     let activity = UserActivity.Unknown;
+    let role = UserRole.Agent;
 
-    if (req.body.labels) {
-      isValidLabelList(req.body.labels);
+    if (req.body.tags) {
+      isValidTagList(req.body.tags);
 
-      labels = new Set(req.body.labels);
+      tags = new Set(req.body.tags);
     }
 
     if (req.body.activity) {
@@ -27,13 +35,23 @@ const create = async (req: RequestWithUser, res: Response, next: NextFunction) =
       activity = req.body.activity;
     }
 
-    if (req.body.accountId !== req.user.accountId) {
-      throw new InvalidUserPropertyException('accountId is not valid');
+    if (req.body.role) {
+      isValidRole(req.body.role);
+
+      role = req.body.role;
     }
 
     const authentication = await authenticationProvider.create(req.body.password);
 
-    const user = await userRepository.create(name, undefined, labels, req.body.accountId, new Set(), authentication);
+    const user = await userRepository.create(
+      req.body.name,
+      undefined,
+      tags,
+      req.user.accountId,
+      authentication,
+      role,
+      activity
+    );
 
     res.json(user.toApiResponse());
   } catch (error) {
@@ -57,22 +75,28 @@ const fetch = async (req: RequestWithUser, res: Response, next: any) => {
 
 const update = async (req: RequestWithUser, res: Response, next: any) => {
   try {
-    const user = await userRepository.getById(req.params.userId);
+    const user = await userRepository.getById(req.params.userId); // TODO, should update pool and repository
 
     if (!user) {
       throw new UserNotFoundException();
     }
 
-    if (req.body.labels) {
-      isValidLabelList(req.body.labels);
+    if (req.body.tags) {
+      isValidTagList(req.body.tags);
 
-      user.labels = new Set(req.body.labels);
+      user.tags = new Set(req.body.tags);
     }
 
     if (req.body.activity) {
       isValidActivity(req.body.activity);
 
       user.activity = req.body.activity;
+    }
+
+    if (req.body.role) {
+      isValidRole(req.body.role);
+
+      user.role = req.body.role;
     }
 
     await userRepository.update(user);
@@ -85,7 +109,7 @@ const update = async (req: RequestWithUser, res: Response, next: any) => {
 
 const remove = async (req: Request, res: Response, next: any) => {
   try {
-    const user = await userRepository.getById(req.params.userId);
+    const user = await userRepository.getById(req.params.userId); // TODO, should remove socket, pool and repository
 
     if (!user) {
       throw new UserNotFoundException();
@@ -93,7 +117,7 @@ const remove = async (req: Request, res: Response, next: any) => {
 
     await userRepository.delete(user);
 
-    socketWorker.closeSocketByUserId(user.id);
+    socketWorker.closeSocketByUserId(user.id); // TODO, rename to sockets
 
     res.status(204).end();
   } catch (error) {
@@ -103,19 +127,29 @@ const remove = async (req: Request, res: Response, next: any) => {
 
 const getPresence = async (req: RequestWithUser, res: Response, next: any) => {
   try {
-    const user = await userRepository.getById(req.params.userId);
+    const user = await pool.getUserById(req.params.userId); // TODO, create PoolUserRepository
 
     if (!user) {
       throw new UserNotFoundException();
     }
 
     const payload = {
-      isOnline: socketWorker.isOnline(user.id),
+      isOnline: user.isOnline,
       isAvailable: user.isAvailable,
       activity: user.activity,
     };
 
     res.json(payload);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const getCalls = async (req: RequestWithUser, res: Response, next: any) => {
+  try {
+    const calls = await callRepository.getCallsByUser(req.user);
+
+    res.json(calls);
   } catch (error) {
     return next(error);
   }
@@ -145,6 +179,7 @@ export const getConfiguration = async (req: RequestWithUser, res: Response, next
 export const UserController = {
   getPresence,
   getConfiguration,
+  getCalls,
   fetch,
   update,
   remove,

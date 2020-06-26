@@ -111,12 +111,19 @@ export const createVoiceToken = (account: Account, user: User, lifetime: number 
     }
   );
 
-  log.info(`create phone token for  ${user.id} (${user.name})`);
+  log.info(`create phone token for ${user.id} (${user.name})`);
 
-  const grant = new AccessToken.VoiceGrant({
-    incomingAllow: true,
-    outgoingApplicationSid: account.configuration.applicationSid,
-  });
+  const options: AccessToken.VoiceGrantOptions = {};
+
+  if (account.configuration.inbound.isEnabled) {
+    options.incomingAllow = true;
+  }
+
+  if (account.configuration.outbound.isEnabled) {
+    options.outgoingApplicationSid = account.configuration.applicationSid;
+  }
+
+  const grant = new AccessToken.VoiceGrant(options);
 
   const token = accessToken as VoiceAccessToken;
 

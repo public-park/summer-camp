@@ -3,12 +3,12 @@ import { CallDirection } from './CallDirection';
 
 export class Call {
   id: string;
-  callSid: string;
+  callSid: string | undefined;
   from: string;
   to: string;
   accountId: string;
   userId: string | undefined;
-  status: CallStatus;
+  status: CallStatus | undefined;
   direction: CallDirection;
   duration: number | undefined;
   createdAt: Date;
@@ -16,12 +16,12 @@ export class Call {
 
   constructor(
     id: string,
-    callSid: string,
+    callSid: string | undefined,
     from: string,
     to: string,
     accountId: string,
     userId: string | undefined,
-    status: CallStatus,
+    status: CallStatus | undefined,
     direction: CallDirection,
     createdAt: Date = new Date(),
     duration?: number,

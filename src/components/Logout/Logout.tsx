@@ -7,14 +7,14 @@ export const Logout = () => {
   const { logout } = useContext(ApplicationContext);
   const reason = useSelector(selectLogoutReason);
 
-  const handleClick = () => {
+  const logoutUser = () => {
     logout();
   };
 
   return (
     <div className="you-are-offline">
       You are offline: {reason}
-      <a href="#" onClick={handleClick}>
+      <a href="#" onClick={logoutUser}>
         back to login
       </a>
     </div>

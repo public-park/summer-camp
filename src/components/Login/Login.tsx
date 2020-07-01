@@ -8,7 +8,7 @@ export const Login = () => {
   const [title, setTitle] = useState('Already signed up?');
   const [tab, setTab] = useState('login');
 
-  const handleTabChange = () => {
+  const changeTab = () => {
     if (tab === 'login') {
       setTitle('New here?');
       setTab('register');
@@ -27,7 +27,7 @@ export const Login = () => {
           </Typography>
 
           <Paper variant="outlined" style={{ marginTop: '25px' }}>
-            <Tabs value={tab} indicatorColor="primary" textColor="primary" onChange={handleTabChange}>
+            <Tabs value={tab} indicatorColor="primary" textColor="primary" onChange={changeTab}>
               <Tab value="login" label="Login" />
               <Tab value="register" label="Register" />
             </Tabs>

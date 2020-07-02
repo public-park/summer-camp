@@ -1,26 +1,33 @@
 import { userRepository } from '../worker';
 import { UserActivity } from '../models/UserActivity';
-import { UserAlreadyRegisteredException } from '../exceptions/UserAlreadyRegisteredException';
 import { InvalidUserPropertyException } from '../exceptions/InvalidUserPropertyException';
+import { UserAlreadyExistsException } from '../exceptions/UserAlreadyExistsException';
+import { UserRole } from '../models/UserRole';
 
-export const isValidLabelList = (labels: Array<any>) => {
-  if (!Array.isArray(labels)) {
-    throw new InvalidUserPropertyException('labels it not type array');
+export const isValidTagList = (tags: Array<any>) => {
+  if (!Array.isArray(tags)) {
+    throw new InvalidUserPropertyException('tags it not type array');
   }
 
-  if (labels.some((value) => !value)) {
-    throw new InvalidUserPropertyException('labels contains empty value');
+  if (tags.some((value) => !value)) {
+    throw new InvalidUserPropertyException('tags contains empty value');
   }
 };
 
 export const isValidName = async (name: string) => {
   if (await userRepository.getByName(name)) {
-    throw new UserAlreadyRegisteredException();
+    throw new UserAlreadyExistsException();
   }
 };
 
 export const isValidActivity = (activity: string) => {
-  if (!(activity in UserActivity)) {
+  if (!Object.values(UserActivity).includes(<UserActivity>activity)) {
     throw new InvalidUserPropertyException('activity is unknown');
+  }
+};
+
+export const isValidRole = (role: string) => {
+  if (!Object.values(UserRole).includes(<UserRole>role)) {
+    throw new InvalidUserPropertyException('role is unknown');
   }
 };

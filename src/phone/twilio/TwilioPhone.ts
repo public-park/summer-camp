@@ -4,6 +4,7 @@ import { Call } from '../Call';
 import { TwilioCall } from './TwilioCall';
 import { EventEmitter } from 'events';
 import { PhoneState } from '../PhoneState';
+import { User } from '../../models/User';
 
 interface DelayedState {
   state: PhoneState;
@@ -11,13 +12,15 @@ interface DelayedState {
 }
 
 export class TwilioPhone implements PhoneControl {
+  private user: User;
   private readonly device: any;
   private state: PhoneState;
   private delayedState: DelayedState | undefined;
   private isInitialized: boolean;
   private readonly eventEmitter: EventEmitter;
 
-  constructor() {
+  constructor(user: User) {
+    this.user = user;
     this.device = new Client.Device();
     this.state = 'OFFLINE';
     this.delayedState = undefined;
@@ -124,7 +127,7 @@ export class TwilioPhone implements PhoneControl {
   }
 
   call(phoneNumber: string) {
-    const connection = this.device.connect({ PhoneNumber: phoneNumber });
+    const connection = this.device.connect({ PhoneNumber: phoneNumber, userId: this.user.id });
 
     this.registerConnectionListener(connection);
 

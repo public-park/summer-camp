@@ -31,8 +31,8 @@ export class UserPool {
     }
   }
 
-  async getOneByAccount(account: Account): Promise<UserWithOnlineState | undefined> {
-    const users = this.getOnlineUsersByAccount(account);
+  async getFirstByAccount(account: Account): Promise<UserWithOnlineState | undefined> {
+    const users = this.getOnlineByAccount(account);
 
     if (users.length !== 0) {
       return Promise.resolve(users[0]);
@@ -47,7 +47,7 @@ export class UserPool {
     }
   }
 
-  getOnlineUsersByAccount(account: Account): Array<UserWithOnlineState> {
+  getOnlineByAccount(account: Account): Array<UserWithOnlineState> {
     const list = new Array<UserWithOnlineState>();
 
     for (let user of this.users.values()) {

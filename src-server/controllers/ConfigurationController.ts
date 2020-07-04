@@ -27,13 +27,14 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
     /* update phone number configuration on Twilio */
     if (account.configuration.inbound.isEnabled === true) {
-      const url = `${req.protocol}://${req.hostname}/api/callback/users/${req.user.id}/phone/incoming`;
+      const voiceUrl = `${req.protocol}://${req.hostname}/api/callback/accounts/${req.user.accountId}/phone/inbound`;
+      const statusCallbackUrl = `${req.protocol}://${req.hostname}/api/callback/accounts/${req.user.accountId}/phone/inbound/completed`;
 
-      await helper.configureInbound(account.configuration.inbound.phoneNumber as string, url);
+      await helper.configureInbound(account.configuration.inbound.phoneNumber as string, voiceUrl, statusCallbackUrl);
     }
 
     if (account.configuration.outbound.isEnabled === true) {
-      const url = `${req.protocol}://${req.hostname}/api/callback/users/${req.user.id}/phone/outgoing`;
+      const url = `${req.protocol}://${req.hostname}/api/callback/accounts/${req.user.accountId}/phone/outbound`;
 
       const applicationSid = await helper.configureOutbound(account.configuration.applicationSid, url);
 
@@ -49,7 +50,20 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
 };
 
 const validate = async (req: Request, res: Response, next: Function) => {
-  const { key, secret, accountSid } = req.body;
+  let { key, secret, accountSid } = req.body;
+
+  /* configuration secret is write-only; assign secret from existing configuration */
+  if (!req.body.secret) {
+    const account = await accountRepository.getById(req.params.accountId);
+
+    if (!account) {
+      throw new AccountNotFoundException();
+    }
+
+    if (account.configuration && account.configuration.secret) {
+      secret = account.configuration.secret;
+    }
+  }
 
   try {
     if (!key || key.length !== 34) {
@@ -102,7 +116,13 @@ const fetch = async (req: Request, res: Response, next: NextFunction) => {
       throw new AccountNotFoundError();
     }
 
-    res.json(account.configuration);
+    const payload = account.configuration;
+
+    if (payload) {
+      delete payload.secret;
+    }
+
+    res.json(payload);
   } catch (error) {
     return next(error);
   }

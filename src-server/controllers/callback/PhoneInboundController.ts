@@ -73,12 +73,10 @@ const handleConnectWithFilter = async (req: RequestWithAccount, res: Response, n
 
       const payload = {
         ...parseRequest(req),
-        userId: user.id,
-        accountId: req.account.id,
         direction: CallDirection.Inbound,
       };
 
-      const call = await calls.create(payload);
+      const call = await calls.create(payload, req.account, user);
 
       const statusEventUrl = getStatusEventUrl(req, req.account, call, CallDirection.Inbound);
 
@@ -110,12 +108,10 @@ const handleConnectToUser = async (req: RequestWithAccount, res: Response, next:
 
     const payload = {
       ...parseRequest(req, user),
-      userId: user.id,
-      accountId: req.account.id,
       direction: CallDirection.Inbound,
     };
 
-    const call = await calls.create(payload);
+    const call = await calls.create(payload, req.account, user);
 
     if (user.isOnline && user.isAvailable) {
       user.isOnACall = true;
@@ -160,13 +156,11 @@ const handleEnqueue = async (req: RequestWithAccount, res: Response, next: NextF
 
     const payload = {
       ...parseRequest(req),
-      userId: undefined,
-      accountId: req.account.id,
       direction: CallDirection.Inbound,
       status: CallStatus.Queued,
     };
 
-    const call = await calls.create(payload);
+    const call = await calls.create(payload, req.account);
 
     res.status(200).send(generateEnqueueTwiml(req, call));
   } catch (error) {

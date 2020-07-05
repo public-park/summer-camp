@@ -17,14 +17,14 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     this.calls = this.fromPlainObjects(this.load());
   }
 
-  async create(data: CallData) {
+  async create(data: CallData, account: Account, user?: User) {
     const call = new Call(
       uuidv4(),
       data.callSid,
       data.from,
       data.to,
-      data.accountId,
-      data.userId,
+      account.id,
+      user?.id,
       data.status,
       data.direction
     );

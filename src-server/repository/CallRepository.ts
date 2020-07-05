@@ -6,18 +6,16 @@ import { User } from '../models/User';
 import { Account } from '../models/Account';
 
 export interface CallData {
-  callSid: string;
+  callSid: string | undefined;
   from: string;
   to: string;
-  accountId: string;
-  userId: string;
-  status: CallStatus;
+  status: CallStatus | undefined;
   direction: CallDirection;
   duration?: number | undefined;
 }
 
 export interface CallRepository extends BaseRepository<Call> {
-  create: (data: CallData) => Promise<Call>;
+  create: (data: CallData, account: Account, user?: User) => Promise<Call>;
   getByCallSid: (callSid: string) => Promise<Call | undefined>;
   getCallsByUser: (user: User) => Promise<Array<Call>>;
   getCallsByAccount: (account: Account) => Promise<Array<Call>>;

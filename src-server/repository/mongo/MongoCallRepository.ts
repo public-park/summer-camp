@@ -8,16 +8,11 @@ import { User } from '../../models/User';
 import { Account } from '../../models/Account';
 
 export class MongoCallRepository implements CallRepository, BaseRepository<Call> {
-  async create(data: CallData) {
+  async create(data: CallData, account: Account, user?: User) {
     const model = new CallModel({
-      callSid: data.callSid,
-      from: data.from,
-      to: data.to,
-      accountId: data.accountId,
-      userId: data.userId,
-      status: data.status,
-      direction: data.direction,
-      duration: data.duration,
+      ...data,
+      accountId: account.id,
+      userId: user?.id,
     });
 
     const document = await model.save();
@@ -25,14 +20,14 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
     return document.toCall();
   }
 
-  async updateStatus(callSid: string, status: CallStatus, duration?: number) {
+  async updateStatus(id: string, callSid: string, status: CallStatus, duration?: number) {
     const updatedAt = new Date();
 
     const document = await CallModel.findOneAndUpdate(
       {
-        callSid: callSid,
+        _id: id,
       },
-      { status, duration, updatedAt },
+      { callSid: callSid, status, duration, updatedAt },
       {
         new: true,
         upsert: true,

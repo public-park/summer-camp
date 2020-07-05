@@ -40,9 +40,7 @@ const handle = async (req: RequestWithAccount, res: Response, next: NextFunction
 
     const callerId = getCallerId(req.account);
 
-    const payload = {
-      userId: user.id,
-      accountId: user.accountId,
+    const callData = {
       direction: CallDirection.Outbound,
       to: req.body.PhoneNumber,
       from: callerId,
@@ -50,7 +48,7 @@ const handle = async (req: RequestWithAccount, res: Response, next: NextFunction
       status: undefined,
     };
 
-    const call = await callRepository.create(payload);
+    const call = await callRepository.create(callData, req.account, user);
 
     const statusEventUrl = getStatusEventUrl(req, account, call, CallDirection.Outbound);
 

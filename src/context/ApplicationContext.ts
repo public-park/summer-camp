@@ -12,7 +12,7 @@ export interface ApplicationContextType {
 
 const DefaultApplicationContext: ApplicationContextType = {
   user: new User(),
-  phone: new TwilioPhone(),
+  phone: new TwilioPhone(new User()),
   login: () => {},
   logout: () => {},
 };

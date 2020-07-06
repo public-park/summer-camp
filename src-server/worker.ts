@@ -24,27 +24,27 @@ import { addUserToRequest } from './middlewares/addUserToRequest';
 import { verifyJwt } from './middlewares/verifyJwt';
 import { handleError } from './middlewares/handleError';
 import { setHeaders as setHeadersCallback } from './middlewares/callback/setHeaders';
-import { verifyUserId } from './middlewares/callback/verifyUserId';
 import { verifyJwtOnUpgrade } from './middlewares/verifyJwtOnUpgrade';
 import { verifyUserResourcePolicy } from './middlewares/verifyUserResourcePolicy';
 import { verifyAccountResourcePolicy } from './middlewares/verifyAccontResourcePolicy';
+import { addAccountToRequest } from './middlewares/callback/addAccountToRequest';
 
 // middlewares - schema validation
 import { RegisterRequestSchema } from './middlewares/schema-validation/RegisterRequestSchema';
 import { LoginRequestSchema } from './middlewares/schema-validation/LoginRequestSchema';
 import { AccountConfigurationRequestSchema } from './middlewares/schema-validation/AccountConfigurationRequestSchema';
-import { UserRequestSchema } from './middlewares/schema-validation/UserRequestSchema';
+import { UserCreateRequestSchema } from './middlewares/schema-validation/UserCreateRequestSchema';
+import { UserUpdateRequestSchema } from './middlewares/schema-validation/UserUpdateRequestSchema';
 import { ValidateTokenRequestSchema } from './middlewares/schema-validation/ValidateTokenRequestSchema';
 
 // controllers
 import { ConfigurationController } from './controllers/ConfigurationController';
 import { ConfigurationPhoneNumberController } from './controllers/ConfigurationPhoneNumberController';
 import { LoginController } from './controllers/LoginController';
-import { PhoneCallbackController } from './controllers/PhoneCallbackController';
 import { RegisterController } from './controllers/RegisterController';
 import { AccountController } from './controllers/AccountController';
 import { UserController } from './controllers/UserController';
-import { UserPhoneController } from './controllers/UserPhoneController';
+import { PhoneController } from './controllers/PhoneController';
 import { ValidateTokenController } from './controllers/ValidateTokenController';
 
 import { PasswordAuthenticationProvider } from './security/authentication/PasswordAuthenticationProvider';
@@ -54,9 +54,14 @@ import { FileAccountRepository } from './repository/file/FileAccountRepository';
 
 import { MongoUserRepository } from './repository/mongo/MongoUserRepository';
 import { MongoAccountRepository } from './repository/mongo/MongoAccountRepository';
+import { MongoCallRepository } from './repository/mongo/MongoCallRepository';
 import * as mongoose from 'mongoose';
+import { UserPool } from './pool/UserPool';
+import { PhoneOutboundController } from './controllers/callback/PhoneOutboundController';
+import { PhoneInboundController } from './controllers/callback/PhoneInboundController';
+import { StatusEventController } from './controllers/callback/StatusEventController';
 
-/* MongoDB Repository */
+/* MongoDB Repository  */
 if (!process.env.MONGODB_URI) {
   log.error(`env variable MONGODB_URI is not set, exiting worker ...`);
   process.exit();
@@ -64,6 +69,7 @@ if (!process.env.MONGODB_URI) {
 
 const mongoOptions = {
   connectTimeoutMS: 5000,
+  autoReconnect: true,
   useFindAndModify: false,
   useNewUrlParser: true,
   useCreateIndex: true,
@@ -77,29 +83,45 @@ mongoose
 
 export const userRepository = new MongoUserRepository();
 export const accountRepository = new MongoAccountRepository();
+export const callRepository = new MongoCallRepository();
 
 /* Local File Repository 
-export const accountRepository = new FileAccountRepository('./accounts.json')
-export const userRepository = new FileUserRepository('./users.json', accountRepository)
+export const accountRepository = new FileAccountRepository('./accounts.json');
+export const userRepository = new FileUserRepository('./users.json', accountRepository);
+export const callRepository = new FileCallRepository('calls.json');
 */
 
 export const authenticationProvider = new PasswordAuthenticationProvider();
+
+export const pool = new UserPool(userRepository);
 
 /* spinning up express */
 export const app = express();
 
 app.set('port', process.env.PORT || 5000);
-app.use(cors());
+
+let corsOptions: cors.CorsOptions = {
+  origin: '*',
+  methods: ['GET', 'POST', 'DELETE'],
+};
+
+/* enable CORS in production mode */
+if (process.env.NODE_ENV === 'production') {
+  corsOptions.origin = false;
+}
+
+app.use(cors(corsOptions));
 
 const callback = express.Router();
 
 callback.use(express.urlencoded({ extended: true }));
 callback.use(setHeadersCallback);
-callback.param('userId', verifyUserId);
+callback.param('accountId', addAccountToRequest);
 
-callback.route('/users/:userId/phone/incoming').post(PhoneCallbackController.handleIncoming);
-callback.route('/users/:userId/phone/outgoing').post(PhoneCallbackController.handleOutgoing);
-callback.route('/users/:userId/phone/status-event').post(PhoneCallbackController.handleStatusEvent);
+callback.route('/accounts/:accountId/phone/inbound').post(PhoneInboundController.handleConnectToUser);
+callback.route('/accounts/:accountId/phone/inbound/completed').post(PhoneInboundController.handleCompleted);
+callback.route('/accounts/:accountId/phone/outbound').post(PhoneOutboundController.handle);
+callback.route('/accounts/:accountId/calls/:callId/status-event/:direction').post(StatusEventController.handle);
 
 app.use('/api/callback', callback);
 
@@ -114,20 +136,28 @@ user.param('userId', verifyUserResourcePolicy);
 
 user
   .route('/')
-  .post(rejectIfContentTypeIsNot('application/json'), allowAccessWith('user.create'), UserController.create);
+  .post(
+    rejectIfContentTypeIsNot('application/json'),
+    allowAccessWith('user.create'),
+    validateAgainst(UserCreateRequestSchema),
+    UserController.create
+  );
+
 user.route('/:userId').get(allowAccessWith('user.read'), UserController.fetch);
 user
   .route('/:userId')
   .post(
     rejectIfContentTypeIsNot('application/json'),
     allowAccessWith('user.update'),
-    validateAgainst(UserRequestSchema),
+    validateAgainst(UserUpdateRequestSchema),
     UserController.update
   );
+
 user.route('/:userId').delete(allowAccessWith('user.delete'), UserController.remove);
-user.route('/:userId/phone/token').post(allowAccessWith('self.token.create'), UserPhoneController.createToken);
+user.route('/:userId/phone/token').post(allowAccessWith('user.phone.create'), PhoneController.createToken);
 user.route('/:userId/presence').get(allowAccessWith('user.read'), UserController.getPresence);
 user.route('/:userId/configuration').get(allowAccessWith('user.read'), UserController.getConfiguration);
+user.route('/:userId/calls').get(allowAccessWith('user.calls.read'), UserController.getCalls);
 
 app.use('/api/users', user);
 
@@ -220,7 +250,7 @@ const options = {
   noServer: true,
 };
 
-export const socketWorker = new SocketWorker(options, userRepository);
+export const socketWorker = new SocketWorker(options, pool);
 
 try {
   socketWorker.run();

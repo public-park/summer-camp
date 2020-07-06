@@ -7,4 +7,5 @@ export enum CallStatus {
   Busy = 'busy',
   Failed = 'failed',
   Canceled = 'canceled',
+  Queued = 'queued',
 }

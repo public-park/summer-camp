@@ -1,6 +1,6 @@
 {
   "name": "summer-camp",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/public-park/summer-camp"
@@ -37,14 +37,17 @@
     "ajv": "^6.12.2",
     "bcrypt": "^4.0.1",
     "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "events": "^3.1.0",
     "express": "^4.17.1",
     "immer": "^6.0.5",
     "jsonwebtoken": "^8.5.1",
+    "moment": "^2.26.0",
     "mongoose": "^5.9.12",
     "pino": "^6.2.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "react-moment": "^0.9.7",
     "react-redux": "^7.2.0",
     "react-scripts": "3.4.1",
     "redux": "^4.0.5",
@@ -57,8 +60,7 @@
     "typescript": "^3.8.3",
     "uuid": "^7.0.3",
     "validator": "^13.0.0",
-    "ws": "^7.2.5",
-    "dotenv": "^8.2.0"
+    "ws": "^7.2.5"
   },
   "scripts": {
     "start-server": "ts-node --project src-server/tsconfig.json src-server/worker.ts",

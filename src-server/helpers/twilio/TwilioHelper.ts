@@ -60,13 +60,15 @@ export class TwilioHelper {
     return application.sid;
   }
 
-  async configureInbound(phoneNumber: string, url: string): Promise<undefined> {
+  async configureInbound(phoneNumber: string, voiceUrl: string, statusCallbackUrl: string): Promise<undefined> {
     const phoneNumbers = await this.client.incomingPhoneNumbers.list({ phoneNumber: phoneNumber });
 
     if (phoneNumbers.length === 1) {
       await this.client.incomingPhoneNumbers(phoneNumbers[0].sid).update({
-        voiceUrl: url,
+        voiceUrl: voiceUrl,
         voiceMethod: 'POST',
+        statusCallback: statusCallbackUrl,
+        statusCallbackMethod: 'POST',
       });
 
       return;

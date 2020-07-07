@@ -25,7 +25,7 @@ export const ApplicationContextProvider = (props: any) => {
   const connectionState = useSelector(selectConnectionState);
 
   const [user] = useState(new User());
-  const [phone] = useState(new TwilioPhone());
+  const [phone] = useState(new TwilioPhone(user));
 
   const dispatch = useDispatch();
 

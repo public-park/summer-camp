@@ -6,8 +6,11 @@ import { MongoUserRepository } from '../repository/mongo/MongoUserRepository';
 import { PasswordAuthenticationProvider } from '../security/authentication/PasswordAuthenticationProvider';
 import { FileUserRepository } from '../repository/file/FileUserRepository';
 import { FileAccountRepository } from '../repository/file/FileAccountRepository';
+import { FileCallRepository } from '../repository/file/FileCallRepository';
+import { MongoCallRepository } from '../repository/mongo/MongoCallRepository';
+import CallModel from '../repository/mongo/CallSchema';
 
-/* MongoDB 
+/* MongoDB   */
 const uri = `mongodb://localhost:27017/summer-camp-test`;
 
 const mongoOptions = {
@@ -19,6 +22,7 @@ const mongoOptions = {
 
 export const accountRepository = new MongoAccountRepository();
 export const userRepository = new MongoUserRepository();
+export const callRepository = new MongoCallRepository();
 export const authenticationProvider = new PasswordAuthenticationProvider();
 
 export const init = () => {
@@ -31,27 +35,29 @@ export const init = () => {
   afterAll(async () => {
     await AccountModel.deleteMany({});
     await UserModel.deleteMany({});
+    await CallModel.deleteMany({});
 
     await connection.disconnect();
   });
-}; */
+};
 
-/* File Storage */
-export const accountRepository = new FileAccountRepository('./tests/accounts-test.json');
-export const userRepository = new FileUserRepository('./tests/users-test.json', accountRepository);
+/* File Storage
+export const accountRepository = new FileAccountRepository('./src-server/test/accounts-test.json');
+export const userRepository = new FileUserRepository('./src-server/test/users-test.json', accountRepository);
+export const callRepository = new FileCallRepository('./src-server/test/calls-test.json');
 
 export const authenticationProvider = new PasswordAuthenticationProvider();
 
 export const init = () => {
-  let connection: typeof mongoose;
-
   beforeAll(async () => {});
 
   afterAll(async () => {
     await accountRepository.empty();
     await userRepository.empty();
+    await callRepository.empty();
   });
 };
+ */
 
 export const corporations = {
   mom: 'MomCorp',

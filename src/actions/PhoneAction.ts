@@ -42,3 +42,57 @@ export const setPhoneConfiguration = (configuration?: any): PhoneConfigurationAc
     payload: configuration,
   };
 };
+
+export interface PhoneDeviceAction {
+  type: ActionType;
+  payload: string | undefined;
+}
+
+export const setPhoneInputDevice = (device: MediaDeviceInfo | string | undefined): PhoneDeviceAction => {
+  let deviceId;
+
+  if (device instanceof MediaDeviceInfo) {
+    deviceId = device.deviceId;
+  } else {
+    deviceId = device;
+  }
+
+  return {
+    type: ActionType.PHONE_INPUT_DEVICE_UPDATED,
+    payload: deviceId,
+  };
+};
+
+export const setPhoneOutputDevice = (device: MediaDeviceInfo | string | undefined): PhoneDeviceAction => {
+  let deviceId;
+
+  if (device instanceof MediaDeviceInfo) {
+    deviceId = device.deviceId;
+  } else {
+    deviceId = device;
+  }
+
+  return {
+    type: ActionType.PHONE_OUTPUT_DEVICE_UPDATED,
+    payload: deviceId,
+  };
+};
+
+export interface PhoneDeviceLostAction {
+  type: ActionType;
+  payload: string;
+}
+
+export const lostPhoneInputDevice = (notificaton: string): PhoneDeviceLostAction => {
+  return {
+    type: ActionType.PHONE_INPUT_DEVICE_LOST,
+    payload: notificaton,
+  };
+};
+
+export const lostPhoneOutputDevice = (notificaton: string): PhoneDeviceLostAction => {
+  return {
+    type: ActionType.PHONE_OUTPUT_DEVICE_LOST,
+    payload: notificaton,
+  };
+};

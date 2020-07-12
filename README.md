@@ -140,7 +140,7 @@ You are all set, open your app, you can now register your user and follow the in
 
 ### Register and Configure after Installation
 
-Open the **https://<your-server-url>/** and click on register. After registering you are automatically logged in. Click on the setup button and provide your Twilio API credentials, and configure your inbound and outbound setting.
+Open your Heroku app root **https://\<heroku-app-url\>/** and click on register. After registering you are automatically logged in. Click on the setup button and provide your Twilio API credentials, and configure your inbound and outbound setting.
 
 ## Development
 
@@ -167,6 +167,10 @@ Controls wether the REST API endpoint is active.
 The API endpoint for the REST API and the WebSocket server. If this parameter is not set, the UI will connect to `/api` one the same location the frontend running on.
 
 `SESSION_SECRET`, the secret to encrypt the JWT session, it should be a large unguessable string
+
+## Guides
+
+[Manage Users](docs/manage-users.md)
 
 ## Testing
 

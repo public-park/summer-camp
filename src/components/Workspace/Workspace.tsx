@@ -2,7 +2,7 @@ import React, { useEffect, useContext } from 'react';
 import { ConnectionLostAlert } from './NotificationLayer/ConnectionLostAlert';
 import { Header } from './Header/Header';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectWorkspaceView, selectConnectionState } from '../../store/Store';
+import { selectWorkspaceView, selectConnectionState, selectWorkspaceNotification } from '../../store/Store';
 import { PhoneView } from './PhoneView/PhoneView';
 import { UserConnectionState } from '../../models/enums/UserConnectionState';
 import { HeaderThemeProvider } from './Header/HeaderThemeProvider';
@@ -14,12 +14,15 @@ import { CallHistoryView } from './CallHistoryView/CallHistoryView';
 import { ConfigurationView } from './ConfigurationView/ConfigurationView';
 import { ConfigurationContextProvider } from './ConfigurationView/ConfigurationContextProvider';
 import { setPhoneConfiguration } from '../../actions/PhoneAction';
+import { AudioDeviceView } from './AudioDeviceView/AudioDeviceView';
+import { NotificationLayer } from './NotificationLayer/NotificationLayer';
 
 export const Workspace = () => {
   const { user } = useContext(ApplicationContext);
 
   const connectionState = useSelector(selectConnectionState);
   const view = useSelector(selectWorkspaceView);
+  const notification = useSelector(selectWorkspaceNotification);
 
   const dispatch = useDispatch();
 
@@ -55,6 +58,9 @@ export const Workspace = () => {
       case 'CALL_HISTORY_VIEW':
         return <CallHistoryView />;
 
+      case 'AUDIO_DEVICE_VIEW':
+        return <AudioDeviceView />;
+
       case 'FETCH_CONFIGURATION_VIEW':
         return <ConnectView />;
     }
@@ -64,6 +70,7 @@ export const Workspace = () => {
     <div className="page-body">
       <div className="workspace">
         {connectionState === UserConnectionState.Closed && <ConnectionLostAlert />}
+        {notification && <NotificationLayer />}
 
         <HeaderThemeProvider>
           <Header />

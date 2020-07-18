@@ -24,7 +24,7 @@ export interface CallDocument extends Document {
 const CallSchema = new Schema(
   {
     _id: { type: String, default: uuidv4 },
-    callSid: { type: String, unique: true, index: true },
+    callSid: { type: String, index: true },
     from: { type: String },
     to: { type: String },
     accountId: { type: String, required: true, index: true },
@@ -53,6 +53,8 @@ CallSchema.methods.toCall = function (): Call {
     this.updatedAt === null ? undefined : this.updatedAt
   );
 };
+
+CallSchema.index({ callSid: 1 }, { unique: true, partialFilterExpression: { callSid: { $ne: null } } });
 
 const CallModel = mongoose.model<CallDocument>('CallModel', CallSchema);
 

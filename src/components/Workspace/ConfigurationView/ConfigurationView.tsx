@@ -32,7 +32,7 @@ export const ConfigurationView = () => {
   const { getView, error } = useContext(ConfigurationContext);
 
   return (
-    <div className="setup" style={{ backgroundColor: '#f7f7f7', flex: 'auto', padding: '10px' }}>
+    <div className="configuration">
       {getPhoneView(getView())}
 
       {getView() === 'PHONE_SETUP' && error ? (

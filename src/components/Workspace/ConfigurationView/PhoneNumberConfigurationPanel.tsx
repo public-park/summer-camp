@@ -36,7 +36,7 @@ export const PhoneNumberConfigurationPanel = () => {
   };
 
   return (
-    <Card style={{ marginBottom: '10px', marginTop: '10px' }} variant="outlined">
+    <Card className="phone-number-configuration-panel" variant="outlined">
       <CardContent>
         {isFetching ? (
           <LoadIndicator />
@@ -68,7 +68,7 @@ export const PhoneNumberConfigurationPanel = () => {
               <InboundCanvas phoneNumbers={phoneNumbers} />
             )}
 
-            <Typography style={{ marginTop: '10px' }} variant="h5" gutterBottom>
+            <Typography className="outbound-title" variant="h5" gutterBottom>
               Outbound
             </Typography>
 

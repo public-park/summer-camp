@@ -9,7 +9,7 @@ export const OutboundCanvas = (props: any) => {
   const { configuration, isSaving, setMode, setOutboundPhoneNumber } = useContext(ConfigurationContext);
 
   return (
-    <div style={{ backgroundColor: '#f7f7f7', padding: '10px 10px 10px 35px' }}>
+    <div className="outbound-canvas">
       <div>
         <FormControlLabel
           value="end"

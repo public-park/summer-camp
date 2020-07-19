@@ -6,7 +6,7 @@ export const InboundCanvas = (props: any) => {
   const { configuration, setInboundPhoneNumber } = useContext(ConfigurationContext);
 
   return (
-    <div style={{ backgroundColor: '#f7f7f7', marginBottom: '10px', padding: '10px 10px 10px 35px' }}>
+    <div className="inbound-canvas">
       <PhoneNumberSelect
         style={{ marginBottom: '15px 0px 15px 0px' }}
         key="phone-number-select-inbound"

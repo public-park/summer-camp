@@ -277,32 +277,46 @@ button {
 }
 
 .phone .call .control {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   grid-gap: 10px;
   display: grid;
   padding: 15px;
 }
 
 .phone .call .control div {
-  height: 60px;
   align-self: center;
   justify-self: center;
+}
+
+.phone .call .control button {
+  height: 60px;
+  width: 60px;
+  background-repeat: no-repeat;
+  opacity: 0.9;
 }
 
 .phone .call .control .mute-button {
   background-image: url(images/icon-microphone-on.svg);
   background-position: center center;
   background-size: auto 32px;
-  background-repeat: no-repeat;
-  opacity: 0.9;
 }
 
 .phone .call .control .unmute-button {
   background-image: url(images/icon-microphone-off.svg);
   background-position: center center;
   background-size: auto 32px;
-  background-repeat: no-repeat;
-  opacity: 0.9;
+}
+
+.phone .call .control .hold-button {
+  background-image: url(images/icon-hold-on.svg);
+  background-position: center center;
+  background-size: auto 48px;
+}
+
+.phone .call .control .unhold-button {
+  background-image: url(images/icon-hold-off.svg);
+  background-position: center center;
+  background-size: auto 48px;
 }
 
 .phone .call .control .keypad-button {
@@ -384,6 +398,10 @@ button {
   border-radius: 0;
 }
 
+.connection-lost-alert-badge > div a {
+  color: white;
+}
+
 .you-are-offline {
   text-align: center;
   padding: 20px;
@@ -441,4 +459,54 @@ button {
   border-radius: 8px;
   width: 16px;
   height: 16px;
+}
+
+.configuration {
+  background-color: #f7f7f7;
+  flex: auto;
+  padding: 10px;
+}
+
+.configuration .phone-number-configuration-panel {
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.configuration .phone-number-configuration-panel {
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.configuration .inbound-canvas,
+.outbound-canvas {
+  background-color: #f7f7f7;
+  margin-bottom: 10px;
+  padding: 10px 10px 10px 35px;
+}
+
+.configuration .outbound-title {
+  margin-top: 10px;
+}
+
+.configuration .phone-number-configuration-panel {
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.audio-device {
+  background-color: #f7f7f7;
+  flex: auto;
+  padding: 10px;
+}
+
+.load-indicator {
+  padding: 10px;
+  justify-content: center;
+  display: flex;
+}
+
+.connect {
+  padding: 10px;
+  justify-content: center;
+  display: flex;
 }

@@ -16,7 +16,10 @@ export const selectName = (store: Store) => store.user.name;
 export const selectCall = (store: Store) => store.call;
 export const selectPhoneState = (store: Store) => store.phone.state;
 export const selectPhoneToken = (store: Store) => store.phone.token;
+export const selectPhoneInputDevice = (store: Store) => store.phone.devices.input;
+export const selectPhoneOutputDevice = (store: Store) => store.phone.devices.output;
 export const selectWorkspaceView = (store: Store) => store.workspace.view;
+export const selectWorkspaceNotification = (store: Store) => store.workspace.notification;
 export const selectConnectionState = (store: Store) => store.user.connectionState;
 export const selectToken = (store: Store) => store.token;
 export const selectPage = (store: Store) => store.page;
@@ -49,9 +52,14 @@ export interface Store {
       value: string;
       isValidPhoneNumber: any;
     };
+    devices: {
+      input: string | undefined;
+      output: string | undefined;
+    };
   };
   workspace: {
     view: WorkspaceView;
+    notification: string | undefined;
   };
   logout: {
     reason: string;

@@ -10,7 +10,6 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
   return produce(state, (draft) => {
     switch (action.type) {
       case 'USER_CONNECTION_STATE_CHANGED':
-        console.log(action.payload);
         draft.user = action.payload;
         break;
 
@@ -83,8 +82,34 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
         draft.workspace.view = 'PHONE_VIEW';
         break;
 
+      case 'PHONE_INPUT_DEVICE_UPDATED':
+        draft.phone.devices.input = action.payload;
+        break;
+
+      case 'PHONE_OUTPUT_DEVICE_UPDATED':
+        draft.phone.devices.output = action.payload;
+        break;
+
+      case 'PHONE_INPUT_DEVICE_LOST':
+        draft.phone.devices.input = undefined;
+        draft.workspace.notification = action.payload;
+        break;
+
+      case 'PHONE_OUTPUT_DEVICE_LOST':
+        draft.phone.devices.output = undefined;
+        draft.workspace.notification = action.payload;
+        break;
+
       case 'WORKSPACE_VIEW':
         draft.workspace.view = action.payload.view;
+        break;
+
+      case 'WORKSPACE_NOTIFICATION_SHOW':
+        draft.workspace.notification = action.payload;
+        break;
+
+      case 'WORKSPACE_NOTIFICATION_HIDE':
+        draft.workspace.notification = undefined;
         break;
 
       case 'USER_CONFIGURATION_CHANGED':

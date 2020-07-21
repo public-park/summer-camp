@@ -21,10 +21,15 @@ export const DefaultStore: Store = {
       value: '',
       isValidPhoneNumber: false,
     },
+    devices: {
+      input: undefined,
+      output: undefined,
+    },
   },
   call: undefined,
   workspace: {
     view: 'FETCH_CONFIGURATION_VIEW',
+    notification: undefined,
   },
   logout: {
     reason: '',

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 let durationInterval: NodeJS.Timeout | undefined = undefined;
 
@@ -23,7 +23,7 @@ export const useCallDuration = (answeredAt?: Date) => {
         clearInterval(durationInterval);
       }
     };
-  }, []);
+  }, [answeredAt]);
 
   return duration;
 };

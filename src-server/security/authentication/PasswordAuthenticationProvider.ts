@@ -1,4 +1,4 @@
-import { AuthenticationProvider } from './AuthenticationProvider';
+import { AuthenticationProvider, AuthenticationProviderType } from './AuthenticationProvider';
 import { compare, hash } from 'bcrypt';
 import { User, UserAuthentication } from '../../models/User';
 import { InvalidAuthenticationRecordException } from './exceptions/InvalidAuthenticationRecordException';
@@ -9,6 +9,8 @@ export interface PasswordUserAuthentication extends UserAuthentication {
 }
 
 export class PasswordAuthenticationProvider implements AuthenticationProvider {
+  provider = AuthenticationProviderType.LocalPassword;
+
   authenticate = async (user: User, password: string): Promise<boolean> => {
     if (!user.authentication) {
       throw new AuthenticationRecordNotFoundException();
@@ -16,7 +18,7 @@ export class PasswordAuthenticationProvider implements AuthenticationProvider {
 
     const authenticate = user.authentication as PasswordUserAuthentication;
 
-    if (authenticate.provider !== 'local-password') {
+    if (authenticate.provider !== this.provider) {
       throw new InvalidAuthenticationRecordException();
     }
 
@@ -31,7 +33,7 @@ export class PasswordAuthenticationProvider implements AuthenticationProvider {
     const secret = await hash(password, 10);
 
     const payload = {
-      provider: 'local-password',
+      provider: this.provider,
       secret: secret,
     };
     return payload;

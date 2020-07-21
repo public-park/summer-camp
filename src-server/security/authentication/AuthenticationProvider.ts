@@ -1,4 +1,9 @@
+export enum AuthenticationProviderType {
+  SAML = 'saml',
+  LocalPassword = 'local-password',
+}
+
 export interface AuthenticationProvider {
-  authenticate: (...params: any) => Promise<boolean>;
+  provider: AuthenticationProviderType;
   create(...params: any): any;
 }

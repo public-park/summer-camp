@@ -9,6 +9,14 @@ export interface UserAction {
   payload: UserActionPayload;
 }
 
+export interface UserConnectionStateAction {
+  type: ActionType;
+  payload: {
+    state: UserConnectionState;
+    code: number | undefined;
+  };
+}
+
 interface UserActionPayload {
   id: string | undefined;
   name: string | undefined;
@@ -16,7 +24,6 @@ interface UserActionPayload {
   tags: string[];
   activity: UserActivity;
   role: UserRole | undefined;
-  connectionState: UserConnectionState;
 }
 
 const toPlainObject = (user: User) => {
@@ -38,10 +45,10 @@ export const setActivity = (user: User): UserAction => {
   };
 };
 
-export const setConnectionState = (user: User): UserAction => {
+export const setConnectionState = (state: UserConnectionState, code: number | undefined): UserConnectionStateAction => {
   return {
     type: ActionType.USER_CONNECTION_STATE_CHANGED,
-    payload: toPlainObject(user),
+    payload: { state, code },
   };
 };
 

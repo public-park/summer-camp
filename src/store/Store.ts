@@ -20,7 +20,7 @@ export const selectPhoneInputDevice = (store: Store) => store.phone.devices.inpu
 export const selectPhoneOutputDevice = (store: Store) => store.phone.devices.output;
 export const selectWorkspaceView = (store: Store) => store.workspace.view;
 export const selectWorkspaceNotification = (store: Store) => store.workspace.notification;
-export const selectConnectionState = (store: Store) => store.user.connectionState;
+export const selectConnectionState = (store: Store) => store.connection.state;
 export const selectToken = (store: Store) => store.token;
 export const selectPage = (store: Store) => store.page;
 export const selectLogoutReason = (store: Store) => store.logout.reason;
@@ -41,7 +41,9 @@ export interface Store {
     tags: Array<string>;
     activity: UserActivity;
     role: UserRole | undefined;
-    connectionState: UserConnectionState;
+  };
+  connection: {
+    state: UserConnectionState | undefined;
   };
   phone: {
     state: PhoneState;

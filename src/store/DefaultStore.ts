@@ -1,6 +1,5 @@
 import { Store } from './Store';
 import { UserActivity } from '../models/enums/UserActivity';
-import { UserConnectionState } from '../models/enums/UserConnectionState';
 
 export const DefaultStore: Store = {
   user: {
@@ -10,7 +9,9 @@ export const DefaultStore: Store = {
     tags: [],
     activity: UserActivity.Unknown,
     role: undefined,
-    connectionState: UserConnectionState.Closed,
+  },
+  connection: {
+    state: undefined,
   },
   phone: {
     state: 'OFFLINE',

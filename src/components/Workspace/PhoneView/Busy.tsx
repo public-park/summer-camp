@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Keypad } from './Idle/Keypad';
 import { MuteButton } from './Controls/MuteButton';
@@ -6,8 +6,9 @@ import { useSelector } from 'react-redux';
 import { selectCall } from '../../../store/Store';
 import { useCallDuration } from './hooks/useCallDuration';
 import { useCallDurationFormat } from './hooks/useCallDurationFormat';
+import { HoldButton } from './Controls/HoldButton';
 
-export const InCall = () => {
+export const Busy = () => {
   const call = useSelector(selectCall);
 
   const [showKeypad, setShowKeypad] = useState(false);
@@ -29,11 +30,15 @@ export const InCall = () => {
       </div>
 
       <div className="control">
-        <div>&nbsp; </div>
-        <MuteButton />
-
-        <button onClick={() => setShowKeypad(!showKeypad)} className="keypad-button"></button>
-        <div>&nbsp;</div>
+        <div>
+          <MuteButton />
+        </div>
+        <div>
+          <HoldButton />
+        </div>
+        <div>
+          <button onClick={() => setShowKeypad(!showKeypad)} className="keypad-button"></button>
+        </div>
       </div>
 
       {showKeypad ? <Keypad /> : <div className="blank"></div>}

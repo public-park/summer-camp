@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 
-export const Offline = (props: any) => {
+export const Offline = () => {
   const [showOfflineNotification, setShowOfflineNotification] = useState(false);
   const [timer, setTimer] = useState<NodeJS.Timeout>();
 

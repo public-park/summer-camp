@@ -10,6 +10,7 @@ import { setWorkspaceView } from '../../../actions/WorkspaceViewAction';
 import { ActivityPanel } from './ActivityPanel';
 import { HistoryButton } from './Navigation/HistoryButton';
 import { PhoneButton } from './Navigation/PhoneButton';
+import { AudioDeviceButton } from './Navigation/AudioDeviceButton';
 
 export const Header = () => {
   const { logout, user } = useContext(ApplicationContext);
@@ -34,6 +35,9 @@ export const Header = () => {
         </div>
         <div>
           <HistoryButton onClick={() => dispatch(setWorkspaceView('CALL_HISTORY_VIEW'))} color="secondary" />
+        </div>
+        <div>
+          <AudioDeviceButton onClick={() => dispatch(setWorkspaceView('AUDIO_DEVICE_VIEW'))} color="secondary" />
         </div>
         {user.role === 'owner' && (
           <div>

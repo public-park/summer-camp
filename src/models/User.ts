@@ -3,6 +3,7 @@ import { UserActivity } from './enums/UserActivity';
 import { UserConnectionState } from './enums/UserConnectionState';
 import { WebSocketNotInStateOpenException } from '../exceptions/WebSocketNotInStateOpenException';
 import { UserRole } from './enums/UserRole';
+import { v4 as uuidv4 } from 'uuid';
 
 export class User {
   id: string | undefined;
@@ -17,6 +18,7 @@ export class User {
   connection: {
     socket: WebSocket | undefined;
     state: UserConnectionState;
+    url: string | undefined;
   };
   private eventEmitter: EventEmitter;
 
@@ -35,6 +37,7 @@ export class User {
     this.connection = {
       socket: undefined,
       state: UserConnectionState.Closed,
+      url: undefined,
     };
   }
 
@@ -46,30 +49,27 @@ export class User {
     this.eventEmitter.emit('activity', activity);
   }
 
-  private _setConnectionState(state: UserConnectionState) {
-    console.log('set connection state to:' + state);
+  private _setConnectionState(state: UserConnectionState, ...args: any) {
+    console.log(`set connection state to: ${state}`);
     this.connection.state = state;
 
-    this.eventEmitter.emit('connection_state', state);
+    this.eventEmitter.emit('connection_state', state, ...args);
   }
 
   login(url: string, token: string) {
     this._setConnectionState(UserConnectionState.Connecting);
 
     this.token = token;
+    this.connection.url = url;
 
     this.connection.socket = new WebSocket(`${url}?t=${token}`);
 
     this.connection.socket.onerror = (event: Event) => {
-      console.log('socket has error');
-      // TODO should delete token
-      console.log(event);
+      this.eventEmitter.emit('connection_error', event);
     };
 
     this.connection.socket.onopen = (event: Event) => {
       console.log('socket is open');
-
-      // TODO, this should be used as a success event?
     };
 
     this.connection.socket.onmessage = (message: MessageEvent) => {
@@ -93,20 +93,30 @@ export class User {
           this._setActivity(payload.user.activity);
           this._setConnectionState(UserConnectionState.Open);
         }
+
+        if ('id' in payload) {
+          this.eventEmitter.emit(payload.id, payload);
+        }
       } catch (error) {
+        // TODO, publish
         console.log(error);
       }
     };
 
-    this.connection.socket.onclose = (event: Event) => {
-      console.log('socket closed ');
-      console.log(event); // TODO, publish reason to listener
+    this.connection.socket.onclose = (event: CloseEvent) => {
+      console.log(`socket closed with code ${event.code} reason ${event.reason}`);
 
-      this._setConnectionState(UserConnectionState.Closed);
+      if (event.code === 4001) {
+        this._setConnectionState(UserConnectionState.Expired, event.code);
+      } else {
+        this._setConnectionState(UserConnectionState.Closed, event.code);
+      }
     };
   }
 
   logout(): Promise<void> {
+    this.eventEmitter.removeAllListeners('connection_state');
+
     return new Promise((resolve, reject) => {
       const onConnectionStateClosed = (state: UserConnectionState) => {
         if (state === UserConnectionState.Closed) {
@@ -116,7 +126,10 @@ export class User {
         }
       };
 
-      if (this.connection.socket && this.connection.state !== UserConnectionState.Closed) {
+      if (
+        this.connection.socket &&
+        (this.connection.state === UserConnectionState.Open || this.connection.state === UserConnectionState.Connecting)
+      ) {
         this.onConnectionStateChanged(onConnectionStateClosed);
 
         this.connection.socket.close();
@@ -124,6 +137,22 @@ export class User {
         return resolve();
       }
     });
+  }
+
+  send(type: string, payload: any, callback: (...args: any) => any) {
+    if (!this.connection.socket || this.connection.socket.readyState !== WebSocket.OPEN) {
+      throw new WebSocketNotInStateOpenException();
+    }
+
+    const message: any = {
+      id: uuidv4(),
+    };
+
+    message[type] = payload;
+
+    this.eventEmitter.once(message.id, callback);
+
+    this.connection.socket.send(JSON.stringify(message));
   }
 
   set activity(activity: UserActivity) {
@@ -166,7 +195,11 @@ export class User {
     this.eventEmitter.on('activity', listener);
   }
 
-  onConnectionStateChanged(listener: (state: UserConnectionState) => void) {
+  onConnectionStateChanged(listener: (state: UserConnectionState, code: number | undefined) => void) {
     this.eventEmitter.on('connection_state', listener);
+  }
+
+  onConnectionError(listener: (event: Event) => void) {
+    this.eventEmitter.on('connection_error', listener);
   }
 }

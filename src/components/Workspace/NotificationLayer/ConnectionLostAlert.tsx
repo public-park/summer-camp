@@ -16,7 +16,7 @@ export const ConnectionLostAlert = () => {
       <Alert variant="filled" severity="error">
         You are not connected, incoming phone calls will not be connected to you anymore.
         <div>
-          <a href="#" onClick={handleLogout} style={{ color: 'white' }}>
+          <a href="#/" onClick={handleLogout}>
             return to login
           </a>
         </div>

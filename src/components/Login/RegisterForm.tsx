@@ -45,12 +45,15 @@ export const RegisterForm = ({ isVisible }: RegisterFormProps) => {
         case 409:
           setError('user is already registered');
           break;
+        case 400:
+          setError(error.response.body.description);
+          break;
         default:
           setError('unknown error');
           break;
       }
     } finally {
-      setIsFetching(true);
+      setIsFetching(false);
     }
   };
 

@@ -55,18 +55,16 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
         password: values.password,
       });
 
+      setIsFetching(true);
+
       login(response.body.token);
     } catch (error) {
-      console.log(error);
-      // TODO show error type to user
-      setHasError(true);
-    } finally {
       setIsFetching(true);
+      setHasError(true);
     }
   };
 
   const handleChange = (name: string) => (event: any) => {
-    console.log('handle change');
     setValues({ ...values, [name]: event.target.value });
   };
 

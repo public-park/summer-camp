@@ -3,7 +3,8 @@ import { User } from '../models/User';
 import { log } from '../logger';
 
 export interface TokenPayload {
-  id: string;
+  userId: string;
+  accountId: string;
   iat: number;
   exp: number;
 }
@@ -12,7 +13,8 @@ const createJwt = (user: User, ttl: number): string => {
   const payload: TokenPayload = {
     iat: Date.now(),
     exp: Math.floor(Date.now() / 1000) + ttl,
-    id: user.id,
+    userId: user.id,
+    accountId: user.account.id,
   };
 
   return jwt.sign(payload, <string>process.env.SESSION_SECRET);

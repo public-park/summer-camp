@@ -13,7 +13,8 @@ export const verifyJwt = (request: Request, response: Response, next: any) => {
   try {
     const payload = TokenHelper.verifyJwt(token);
 
-    request.headers.userId = payload.id;
+    request.headers.userId = payload.userId;
+    request.headers.accountId = payload.accountId;
 
     next();
   } catch (error) {

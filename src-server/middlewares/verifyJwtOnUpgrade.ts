@@ -16,9 +16,10 @@ export const verifyJwtOnUpgrade: WebSocket.VerifyClientCallbackSync = (info) => 
 
     const payload = TokenHelper.verifyJwt(<string>query.t);
 
-    log.info(`client ${payload.id} authenticated`);
+    log.info(`client ${payload.userId} authenticated`);
 
-    info.req.headers.id = payload.id;
+    info.req.headers.userId = payload.userId;
+    info.req.headers.accountId = payload.accountId;
     info.req.headers.token = query.t;
 
     return true;

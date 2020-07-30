@@ -18,7 +18,7 @@ export const verifyAccountResourcePolicy = async (
 
     const account = await accountRepository.getById(accountId);
 
-    if (!account || account.id !== request.user.accountId) {
+    if (!account || account.id !== request.user.account.id) {
       throw new AccountNotFoundException();
     }
 

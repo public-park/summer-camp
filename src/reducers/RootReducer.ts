@@ -2,6 +2,7 @@ import { Store } from '../store/Store';
 import produce from 'immer';
 import { Action } from '../actions/ActionType';
 import { DefaultStore } from '../store/DefaultStore';
+import { UserConnectionState } from '../models/enums/UserConnectionState';
 
 const reducer = (state: Store = DefaultStore, action: Action): Store => {
   const isPhoneNumberExpression = /^\+\d+$/g;
@@ -10,7 +11,8 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
   return produce(state, (draft) => {
     switch (action.type) {
       case 'USER_CONNECTION_STATE_CHANGED':
-        draft.user = action.payload;
+        draft.connection.state = action.payload.state;
+
         break;
 
       case 'USER_ACTIVITY_CHANGED':

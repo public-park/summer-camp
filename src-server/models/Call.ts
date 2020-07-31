@@ -1,6 +1,20 @@
 import { CallStatus } from './CallStatus';
 import { CallDirection } from './CallDirection';
 
+export interface CallResponse {
+  id: string;
+  callSid: string | undefined;
+  from: string;
+  to: string;
+  accountSid: string;
+  userId: string | undefined;
+  status: CallStatus | undefined;
+  direction: CallDirection;
+  createdAt: Date;
+  duration?: number;
+  updatedAt?: Date;
+}
+
 export class Call {
   id: string;
   callSid: string | undefined;
@@ -8,7 +22,7 @@ export class Call {
   to: string;
   accountId: string;
   userId: string | undefined;
-  status: CallStatus | undefined;
+  status: CallStatus;
   direction: CallDirection;
   duration: number | undefined;
   createdAt: Date;
@@ -21,7 +35,7 @@ export class Call {
     to: string,
     accountId: string,
     userId: string | undefined,
-    status: CallStatus | undefined,
+    status: CallStatus,
     direction: CallDirection,
     createdAt: Date = new Date(),
     duration?: number,
@@ -40,8 +54,12 @@ export class Call {
     this.updatedAt = updatedAt;
   }
 
-  toApiResponse(): any {
-    const payload: any = {
+  isActive(): boolean {
+    return [CallStatus.InProgress, CallStatus.Initiated, CallStatus.Queued, CallStatus.Ringing].includes(this.status);
+  }
+
+  toResponse(): CallResponse {
+    const payload: CallResponse = {
       id: this.id,
       callSid: this.callSid,
       from: this.from,

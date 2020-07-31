@@ -9,7 +9,7 @@ import {
   selectPhoneToken,
 } from '../../../store/Store';
 import { IncomingCall } from './IncomingCall';
-import { InCall } from './InCall';
+import { Busy } from './Busy';
 import { Idle } from './Idle/Idle';
 import { Offline } from './Offline';
 import { Expired } from './Expired';
@@ -38,7 +38,7 @@ export const PhoneView = () => {
       console.log(`device init with token: ${phoneToken?.substr(0, 10)} state was:  ${phoneState}`);
       phone.init(phoneToken);
     }
-  }, [phoneToken, phoneState]);
+  }, [phoneToken, phoneState, phone]);
 
   useEffect(() => {
     const initiate = async () => {
@@ -65,7 +65,7 @@ export const PhoneView = () => {
     if (!phoneToken && configuration) {
       initiate();
     }
-  }, [phoneToken, configuration]);
+  }, [phoneToken, configuration, phone]);
 
   const getPhoneView = (): JSX.Element => {
     if (!configuration) {
@@ -83,8 +83,8 @@ export const PhoneView = () => {
     switch (phoneState) {
       case 'RINGING':
         return <IncomingCall />;
-      case 'IN_CALL':
-        return <InCall />;
+      case 'BUSY':
+        return <Busy />;
       case 'IDLE':
         return <Idle />;
       case 'OFFLINE':

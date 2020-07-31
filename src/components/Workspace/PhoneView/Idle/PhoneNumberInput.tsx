@@ -1,5 +1,5 @@
-import React, { ChangeEvent, useContext } from 'react';
-import { selectPhoneDisplay, selectPhoneDisplayValue } from '../../../../store/Store';
+import React, { ChangeEvent } from 'react';
+import { selectPhoneDisplayValue } from '../../../../store/Store';
 import { useSelector, useDispatch } from 'react-redux';
 import { updatePhoneDisplay } from '../../../../actions/PhoneAction';
 

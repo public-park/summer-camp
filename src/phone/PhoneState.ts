@@ -1,1 +1,1 @@
-export type PhoneState = 'IDLE' | 'CONNECTING' | 'IN_CALL' | 'RINGING' | 'ERROR' | 'OFFLINE' | 'EXPIRED';
+export type PhoneState = 'IDLE' | 'CONNECTING' | 'BUSY' | 'RINGING' | 'ERROR' | 'OFFLINE' | 'EXPIRED';

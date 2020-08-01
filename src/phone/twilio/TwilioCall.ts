@@ -1,9 +1,12 @@
 import { Call, CallDirection } from '../Call';
 import { EventEmitter } from 'events';
+import { User } from '../../models/User';
 
 export class TwilioCall implements Call {
   private readonly connection: any;
 
+  readonly user: User;
+  readonly id: string;
   readonly phoneNumber: string;
   isConnected: boolean;
   isMuted: boolean;
@@ -14,9 +17,11 @@ export class TwilioCall implements Call {
 
   private eventEmitter: EventEmitter;
 
-  constructor(phoneNumber: string, direction: CallDirection, connection: any) {
+  constructor(id: string, user: User, phoneNumber: string, direction: CallDirection, connection: any) {
     this.connection = connection;
 
+    this.id = id;
+    this.user = user;
     this.phoneNumber = phoneNumber;
     this.isConnected = false;
     this.isMuted = false;
@@ -57,8 +62,19 @@ export class TwilioCall implements Call {
     return Promise.resolve();
   }
 
-  hold() {
-    return Promise.reject('not implemented');
+  hold(state: boolean): Promise<void> {
+    console.log(`call ${this.id}, set hold to ${state}`);
+
+    return new Promise((resolve, reject) => {
+      this.user.send(
+        'hold',
+        { id: this.id, state: state },
+
+        (payload: any) => {
+          resolve(payload.state);
+        }
+      );
+    });
   }
 
   sendDigits(digits: string) {

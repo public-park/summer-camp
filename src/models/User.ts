@@ -91,15 +91,18 @@ export class User {
           this.role = payload.user.role;
 
           this._setActivity(payload.user.activity);
-          this._setConnectionState(UserConnectionState.Open);
+          this._setConnectionState(UserConnectionState.Open); // TODO, introduce separate ready state
+        }
+
+        if ('call' in payload) {
+          this.eventEmitter.emit('call', payload);
         }
 
         if ('id' in payload) {
           this.eventEmitter.emit(payload.id, payload);
         }
       } catch (error) {
-        // TODO, publish
-        console.log(error);
+        this.eventEmitter.emit('error', error);
       }
     };
 
@@ -139,7 +142,7 @@ export class User {
     });
   }
 
-  send(type: string, payload: any, callback: (...args: any) => any) {
+  send(type: string, payload: any, callback?: (...args: any) => any) {
     if (!this.connection.socket || this.connection.socket.readyState !== WebSocket.OPEN) {
       throw new WebSocketNotInStateOpenException();
     }
@@ -150,21 +153,15 @@ export class User {
 
     message[type] = payload;
 
-    this.eventEmitter.once(message.id, callback);
+    if (callback) {
+      this.eventEmitter.once(message.id, callback);
+    }
 
     this.connection.socket.send(JSON.stringify(message));
   }
 
   set activity(activity: UserActivity) {
-    if (!this.connection.socket || this.connection.socket.readyState !== WebSocket.OPEN) {
-      throw new WebSocketNotInStateOpenException();
-    }
-
-    this.connection.socket.send(
-      JSON.stringify({
-        activity: activity,
-      })
-    );
+    this.send('activity', activity);
   }
 
   get activity(): UserActivity {
@@ -176,15 +173,7 @@ export class User {
   }
 
   set tags(tags: Set<string>) {
-    if (!this.connection.socket || this.connection.socket.readyState !== WebSocket.OPEN) {
-      throw new WebSocketNotInStateOpenException();
-    }
-
-    this.connection.socket.send(
-      JSON.stringify({
-        tags: tags.values(),
-      })
-    );
+    this.send('tags', tags.values());
   }
 
   get tags(): Set<string> {
@@ -201,5 +190,13 @@ export class User {
 
   onConnectionError(listener: (event: Event) => void) {
     this.eventEmitter.on('connection_error', listener);
+  }
+
+  onError(listener: (error: Error) => void) {
+    this.eventEmitter.on('error', listener);
+  }
+
+  onCall(listener: (call: any) => void) {
+    this.eventEmitter.on('call', listener);
   }
 }

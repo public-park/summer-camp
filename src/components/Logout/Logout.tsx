@@ -13,8 +13,8 @@ export const Logout = () => {
 
   return (
     <div className="you-are-offline">
-      You are offline: {reason}
-      <a href="#" onClick={logoutUser}>
+      You are offline: {reason} <br />
+      <a href="#/" onClick={logoutUser}>
         back to login
       </a>
     </div>

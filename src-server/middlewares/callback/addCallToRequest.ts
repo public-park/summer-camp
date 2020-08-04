@@ -1,29 +1,29 @@
 import { Response, NextFunction } from 'express';
 import isUUID from 'validator/lib/isUUID';
 import { InvalidUrlException } from '../../exceptions/InvalidUrlException';
-import { accountRepository } from '../../worker';
-import { AccountNotFoundException } from '../../exceptions/AccountNotFoundException';
+import { callRepository } from '../../worker';
 import { ServerException } from '../../exceptions/ServerException';
 import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
+import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 
-export const addAccountToRequest = async (
+export const addCallToRequest = async (
   request: StatusCallbackRequest,
   response: Response,
   next: NextFunction,
-  accountId: string
+  callId: string
 ) => {
   try {
-    if (!isUUID(accountId)) {
-      return next(new InvalidUrlException('accountId is not a valid UUID'));
+    if (!isUUID(callId)) {
+      return next(new InvalidUrlException('callId is not a valid UUID'));
     }
 
-    const account = await accountRepository.getById(accountId);
+    const call = await callRepository.getById(callId);
 
-    if (!account) {
-      return next(new AccountNotFoundException());
+    if (!call) {
+      return next(new CallNotFoundException());
     }
 
-    request.account = account;
+    request.call = call;
     return next();
   } catch (error) {
     return next(new ServerException());

@@ -16,13 +16,9 @@ export const verifyUserResourcePolicy = async (
   }
 
   try {
-    const user = await userRepository.getById(userId);
+    const user = await userRepository.getById(req.user.account, userId);
 
     if (!user) {
-      return next(new UserNotFoundException());
-    }
-
-    if (user.accountId !== req.user.accountId) {
       return next(new UserNotFoundException());
     }
 

@@ -1,14 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import {
-  userRepository,
-  accountRepository,
-  authenticationProvider,
-  callRepository,
-  pool,
-  socketWorker,
-} from '../worker';
+import { Response, NextFunction } from 'express';
+import { userRepository, authenticationProvider, pool, socketWorker } from '../worker';
 import { UserActivity } from '../models/UserActivity';
-import { AccountNotFoundException } from '../exceptions/AccountNotFoundException';
+
 import { RequestWithUser } from '../requests/RequestWithUser';
 import { UserNotFoundException } from '../exceptions/UserNotFoundException';
 import { isValidName, isValidTagList, isValidActivity, isValidRole } from './UserControllerValidator';
@@ -47,35 +40,35 @@ const create = async (req: RequestWithUser, res: Response, next: NextFunction) =
       req.body.name,
       undefined,
       tags,
-      req.user.accountId,
+      req.user.account,
       authentication,
       role,
       activity
     );
 
-    res.json(user.toApiResponse());
+    res.json(user.toResponse());
   } catch (error) {
     return next(error);
   }
 };
 
-const fetch = async (req: RequestWithUser, res: Response, next: any) => {
+const fetch = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
-    const user = await userRepository.getById(req.params.userId);
+    const user = await userRepository.getById(req.user.account, req.params.userId);
 
     if (!user) {
       throw new UserNotFoundException();
     }
 
-    res.json(user.toApiResponse());
+    res.json(user.toResponse());
   } catch (error) {
     return next(error);
   }
 };
 
-const update = async (req: RequestWithUser, res: Response, next: any) => {
+const update = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
-    const user = await userRepository.getById(req.params.userId); // TODO, should update pool and repository
+    const user = await userRepository.getById(req.user.account, req.params.userId);
 
     if (!user) {
       throw new UserNotFoundException();
@@ -99,25 +92,27 @@ const update = async (req: RequestWithUser, res: Response, next: any) => {
       user.role = req.body.role;
     }
 
-    await userRepository.update(user);
+    await userRepository.update(req.user.account, user);
 
-    res.json(user.toApiResponse());
+    pool.update(user);
+
+    res.json(user.toResponse());
   } catch (error) {
     return next(error);
   }
 };
 
-const remove = async (req: Request, res: Response, next: any) => {
+const remove = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
-    const user = await userRepository.getById(req.params.userId); // TODO, should remove socket, pool and repository
+    const user = await userRepository.getById(req.user.account, req.params.userId);
 
     if (!user) {
       throw new UserNotFoundException();
     }
 
-    await userRepository.delete(user);
+    await userRepository.delete(req.user.account, user);
 
-    socketWorker.closeSocketByUserId(user.id); // TODO, rename to sockets
+    socketWorker.closeSocketByUserId(user.id);
 
     res.status(204).end();
   } catch (error) {
@@ -125,43 +120,9 @@ const remove = async (req: Request, res: Response, next: any) => {
   }
 };
 
-const getPresence = async (req: RequestWithUser, res: Response, next: any) => {
-  try {
-    const user = await pool.getUserById(req.params.userId); // TODO, create PoolUserRepository
-
-    if (!user) {
-      throw new UserNotFoundException();
-    }
-
-    const payload = {
-      isOnline: user.isOnline,
-      isAvailable: user.isAvailable,
-      activity: user.activity,
-    };
-
-    res.json(payload);
-  } catch (error) {
-    return next(error);
-  }
-};
-
-const getCalls = async (req: RequestWithUser, res: Response, next: any) => {
-  try {
-    const calls = await callRepository.getCallsByUser(req.user);
-
-    res.json(calls);
-  } catch (error) {
-    return next(error);
-  }
-};
-
 export const getConfiguration = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
-    const account = await accountRepository.getById(req.user.accountId);
-
-    if (!account) {
-      throw new AccountNotFoundException();
-    }
+    const account = req.user.account;
 
     if (!account.configuration) {
       throw new ConfigurationNotFoundException();
@@ -177,9 +138,7 @@ export const getConfiguration = async (req: RequestWithUser, res: Response, next
 };
 
 export const UserController = {
-  getPresence,
   getConfiguration,
-  getCalls,
   fetch,
   update,
   remove,

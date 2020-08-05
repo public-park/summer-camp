@@ -4,7 +4,7 @@ import { InvalidUserPropertyException } from '../exceptions/InvalidUserPropertyE
 import { UserAlreadyExistsException } from '../exceptions/UserAlreadyExistsException';
 import { UserRole } from '../models/UserRole';
 
-export const isValidTagList = (tags: Array<any>) => {
+export const isValidTagList = (tags: Array<string>) => {
   if (!Array.isArray(tags)) {
     throw new InvalidUserPropertyException('tags it not type array');
   }

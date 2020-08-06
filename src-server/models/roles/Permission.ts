@@ -4,7 +4,9 @@ export type Permission =
   | 'user.read'
   | 'user.delete'
   | 'user.update'
-  | 'user.calls.read'
+  | 'call.read'
+  | 'call.create'
+  | 'call.update'
   | 'account.read'
   | 'account.configuration.update'
   | 'account.configuration.read';

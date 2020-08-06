@@ -12,7 +12,9 @@ export class OwnerRole extends Role {
         'user.create',
         'user.update',
         'user.delete',
-        'user.calls.read',
+        'call.read',
+        'call.create',
+        'call.update'
       ])
     );
   }

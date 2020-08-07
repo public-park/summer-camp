@@ -1,8 +1,6 @@
 import { RequestWithAccount } from '../../requests/RequestWithAccount';
 import { CallStatus } from '../../models/CallStatus';
 import { InvalidRequestBodyException } from '../../exceptions/InvalidRequestBodyException';
-import { CallDirection } from '../../models/CallDirection';
-import { User } from '../../models/User';
 
 export interface CallStatusEvent {
   callSid: string;
@@ -12,7 +10,7 @@ export interface CallStatusEvent {
   duration: number | undefined;
 }
 
-const getDuration = (request: RequestWithAccount) => {
+export const getDuration = (request: RequestWithAccount) => {
   if (request.body.CallStatus !== CallStatus.Completed.toLocaleLowerCase()) {
     return;
   }
@@ -22,7 +20,7 @@ const getDuration = (request: RequestWithAccount) => {
   }
 };
 
-const getStatus = (request: RequestWithAccount) => {
+export const getStatus = (request: RequestWithAccount) => {
   switch (request.body.CallStatus) {
     case 'initiated':
       return CallStatus.Initiated;
@@ -53,20 +51,10 @@ const getStatus = (request: RequestWithAccount) => {
   }
 };
 
-export const parseRequest = (request: RequestWithAccount, user: User | undefined = undefined): CallStatusEvent => {
-  let callSid;
-
-  if (request.params.direction === CallDirection.Inbound) {
-    callSid = request.body.ParentCallSid;
+export const getFinalInboundCallState = (previous: CallStatus, current: CallStatus) => {
+  if ([CallStatus.NoAnswer, CallStatus.Ringing, CallStatus.Queued, CallStatus.Canceled].includes(previous)) {
+    return CallStatus.NoAnswer;
   } else {
-    callSid = request.body.CallSid;
+    return current;
   }
-
-  return {
-    callSid: callSid,
-    from: request.body.From,
-    to: request.body.To,
-    status: getStatus(request),
-    duration: getDuration(request),
-  };
 };

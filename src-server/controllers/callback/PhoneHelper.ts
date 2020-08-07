@@ -3,18 +3,18 @@ import { CallDirection } from '../../models/CallDirection';
 import { ConfigurationNotFoundException } from '../../exceptions/ConfigurationNotFoundException';
 import { InvalidConfigurationException } from '../../exceptions/InvalidConfigurationException';
 import { Account } from '../../models/Account';
-import { User } from '../../models/User';
 import { Call } from '../../models/Call';
 
-export const getStatusEventUrl = (
-  request: RequestWithAccount,
-  account: Account,
-  call: Call,
-  direction: CallDirection
-) => {
+export const getCallStatusEventUrl = (request: RequestWithAccount, call: Call) => {
   const { protocol, hostname } = request;
 
-  return `${protocol}://${hostname}/api/callback/accounts/${account.id}/calls/${call.id}/status-event/${direction}`;
+  return `${protocol}://${hostname}/api/status-callback/accounts/${call.accountId}/calls/${call.id}/${call.direction}`;
+};
+
+export const getConferenceStatusEventUrl = (request: RequestWithAccount, call: Call) => {
+  const { protocol, hostname } = request;
+
+  return `${protocol}://${hostname}/api/status-callback/accounts/${call.accountId}/calls/${call.id}/conference/${call.direction}`;
 };
 
 export const getCallerId = (account: Account): string => {

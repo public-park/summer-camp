@@ -96,3 +96,15 @@ export const lostPhoneOutputDevice = (notificaton: string): PhoneDeviceLostActio
     payload: notificaton,
   };
 };
+
+export interface PhoneCallAction {
+  type: ActionType;
+  payload: string;
+}
+
+export const setPhoneCall = (call: string): PhoneCallAction => {
+  return {
+    type: ActionType.PHONE_CALL_UPDATE,
+    payload: call,
+  };
+};

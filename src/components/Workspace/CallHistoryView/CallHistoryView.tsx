@@ -3,19 +3,24 @@ import { CallItem } from './CallItem';
 import { request } from '../../../helpers/api/RequestHelper';
 import { getUrl } from '../../../helpers/UrlHelper';
 import { ApplicationContext } from '../../../context/ApplicationContext';
+import { LoadIndicator } from '../ConfigurationView/LoadIndicator';
 
 export const CallHistoryView = () => {
-  const { user } = useContext(ApplicationContext);
+  // TODO, add hook useFetchCallHistory(start, limit) => isFetching, calls
 
+  const { user } = useContext(ApplicationContext);
   const [calls, setCalls] = useState([]);
+  const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchCalls = async () => {
       try {
-        const response = await request(getUrl(`/users/${user.id}/calls`))
-          .withAuthentication(user)
-          .fetch();
+        setIsFetching(true);
+
+        const response = await request(getUrl(`/calls`)).withAuthentication(user).fetch();
+
+        setIsFetching(false);
 
         setCalls(response.body);
       } catch (error) {
@@ -30,7 +35,9 @@ export const CallHistoryView = () => {
     <div className="history">
       {error}
 
-      {calls.length === 0 && <div style={{ padding: '10px' }}>No calls recorded</div>}
+      {isFetching && <LoadIndicator />}
+
+      {!isFetching && calls.length === 0 && <div style={{ padding: '10px' }}>No calls recorded</div>}
 
       {calls.map((call: any) => {
         return (

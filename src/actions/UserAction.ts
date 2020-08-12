@@ -34,7 +34,7 @@ const toPlainObject = (user: User) => {
     tags: Array.from(user.tags),
     activity: user.activity,
     role: user.role,
-    connectionState: user.connection.state,
+    sockets: user.sockets,
   };
 };
 

@@ -1,11 +1,14 @@
 import React from 'react';
-import { useAudioDevices } from '../../../hooks/useAudioDevices';
 import { Alert } from '@material-ui/lab';
 import { Card, CardContent } from '@material-ui/core';
 import { AudioDeviceForm } from './AudioDeviceForm';
+import { useSelector } from 'react-redux';
+import { selectAudioInputDevices, selectAudioOutputDevices, selectDeviceException } from '../../../store/Store';
 
 export const AudioDeviceView = () => {
-  const { audioInputDevices, audioOutputDevices, audioDeviceException } = useAudioDevices();
+  const audioInputDevices = useSelector(selectAudioInputDevices);
+  const audioOutputDevices = useSelector(selectAudioOutputDevices);
+  const audioDeviceException = useSelector(selectDeviceException);
 
   const getView = () => {
     if (audioDeviceException) {

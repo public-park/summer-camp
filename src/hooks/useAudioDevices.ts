@@ -1,16 +1,32 @@
 import { useState, useEffect } from 'react';
 import { requestUserMedia } from '../helpers/UserMediaHelper';
 import { MediaDeviceException } from '../exceptions/MediaDeviceException';
-import { useSelector } from 'react-redux';
-import { selectConnectionState } from '../store/Store';
-import { UserConnectionState } from '../models/enums/UserConnectionState';
+
+interface AudioDevices {
+  input: MediaDeviceInfo[];
+  output: MediaDeviceInfo[];
+}
 
 export const useAudioDevices = () => {
-  const connectionState = useSelector(selectConnectionState);
+  const [devices, setDevices] = useState<AudioDevices | undefined>();
+  const [exception, setException] = useState<MediaDeviceException | undefined>();
 
-  const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
-  const [audioOutputDevices, setAudioOutputDevices] = useState<MediaDeviceInfo[]>([]);
-  const [audioDeviceException, setAudioDeviceException] = useState<MediaDeviceException | undefined>();
+  const addAudioDevicesListener = (f: () => void) => {
+    console.debug(`${useAudioDevices.name} add audio device listener PPPPPPPP`);
+    console.log(f.name);
+
+    if (navigator.mediaDevices) {
+      navigator.mediaDevices.addEventListener('devicechange', f);
+    }
+  };
+
+  const removeAudioDevicesListener = (f: () => void) => {
+    console.debug(`${useAudioDevices.name} remove audio device listener`);
+    console.log(f.name);
+    if (navigator.mediaDevices) {
+      navigator.mediaDevices.removeEventListener('devicechange', f);
+    }
+  };
 
   const getAllAudioDevices = async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
@@ -32,26 +48,21 @@ export const useAudioDevices = () => {
     };
   };
 
+  const getAudioDevices = async () => {
+    try {
+      setDevices(await getAllAudioDevices());
+    } catch (exception) {
+      setException(exception);
+    }
+  };
+
   useEffect(() => {
-    async function getAudioDevices() {
-      try {
-        const devices = await getAllAudioDevices();
+    getAudioDevices();
+    addAudioDevicesListener(getAudioDevices);
 
-        setAudioInputDevices(devices.input);
-        setAudioOutputDevices(devices.output);
-      } catch (exception) {
-        setAudioDeviceException(exception);
-      }
-    }
-
-    navigator.mediaDevices.addEventListener('devicechange', () => {
-      getAudioDevices();
-    });
-
-    if (connectionState === UserConnectionState.Open) {
-      getAudioDevices();
-    }
-  }, [connectionState]);
-
-  return { audioInputDevices, audioOutputDevices, audioDeviceException };
+    return () => {
+      removeAudioDevicesListener(getAudioDevices);
+    };
+  }, []);
+  return { devices, exception };
 };

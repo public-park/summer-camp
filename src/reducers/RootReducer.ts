@@ -2,7 +2,6 @@ import { Store } from '../store/Store';
 import produce from 'immer';
 import { Action } from '../actions/ActionType';
 import { DefaultStore } from '../store/DefaultStore';
-import { UserConnectionState } from '../models/enums/UserConnectionState';
 
 const reducer = (state: Store = DefaultStore, action: Action): Store => {
   const isPhoneNumberExpression = /^\+\d+$/g;
@@ -68,6 +67,10 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
         draft.call = action.payload.call;
         break;
 
+      case 'PHONE_CALL_UPDATE':
+        draft.call = action.payload.call;
+        break;
+
       case 'PHONE_TOKEN_UPDATED':
         draft.phone.token = action.payload;
 
@@ -90,6 +93,15 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
 
       case 'PHONE_OUTPUT_DEVICE_UPDATED':
         draft.phone.devices.output = action.payload;
+        break;
+
+      case 'AUDIO_DEVICES_EXCEPTION':
+        draft.devices.exception = action.payload;
+        break;
+
+      case 'AUDIO_DEVICES_CHANGE':
+        draft.devices.audio.input = action.payload.input;
+        draft.devices.audio.output = action.payload.output;
         break;
 
       case 'PHONE_INPUT_DEVICE_LOST':

@@ -7,7 +7,7 @@ import { validateConfiguration } from './services/validateConfiguration';
 import { ConfigurationContext } from './ConfigurationContext';
 import { DefaultConfiguration } from './DefaultConfiguration';
 
-export const AccountSetupForm = (props: any) => {
+export const AccountSetupForm = () => {
   const { user } = useContext(ApplicationContext);
 
   const { configuration, setView, saveBasic, isSaving, setBaseConfiguration } = useContext(ConfigurationContext);
@@ -34,10 +34,16 @@ export const AccountSetupForm = (props: any) => {
       accountSid: accountSid,
     };
 
-    if (await validateConfiguration(user, configuration)) {
-      setIsValidatedByServer(true);
+    try {
+      const validationResult = await validateConfiguration(user, configuration);
 
-      setBaseConfiguration(key as string, secret as string, accountSid as string);
+      if (validationResult.isValid) {
+        setIsValidatedByServer(true);
+
+        setBaseConfiguration(key as string, secret as string, accountSid as string);
+      }
+    } catch (error) {
+      console.error(error);
     }
 
     setIsLoading(false);

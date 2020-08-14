@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { selectCall } from '../../../../store/Store';
+import React, { useState, useContext } from 'react';
+import { ApplicationContext } from '../../../../context/ApplicationContext';
 
 export const HoldButton = () => {
-  const [isOnHold, setIsOnHold] = useState(false);
+  const { call } = useContext(ApplicationContext);
 
-  const call = useSelector(selectCall);
+  const [isOnHold, setIsOnHold] = useState(false);
 
   const toggleHold = () => {
     const state: boolean = !isOnHold;

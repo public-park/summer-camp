@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { selectCall } from '../../../../store/Store';
+import React, { useState, useContext } from 'react';
+import { ApplicationContext } from '../../../../context/ApplicationContext';
 
 export const MuteButton = () => {
-  const [isMuted, setIsMuted] = useState(false);
+  const { call } = useContext(ApplicationContext);
 
-  const call = useSelector(selectCall);
+  const [isMuted, setIsMuted] = useState(false);
 
   const toggleMute = () => {
     const state: boolean = !isMuted;

@@ -3,7 +3,7 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import { IconButton, Avatar } from '@material-ui/core';
 import { SetupButton } from './Navigation/SetupButton';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectProfileImageUrl, selectName, selectConnectionState } from '../../../store/Store';
+import { selectProfileImageUrl, selectName, selectConnectionState, selectRole } from '../../../store/Store';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { UserConnectionState } from '../../../models/enums/UserConnectionState';
 import { setWorkspaceView } from '../../../actions/WorkspaceViewAction';
@@ -18,13 +18,14 @@ export const Header = () => {
   const dispatch = useDispatch();
 
   const name = useSelector(selectName);
+  const role = useSelector(selectRole);
   const profileImageUrl = useSelector(selectProfileImageUrl);
   const connectionState = useSelector(selectConnectionState);
 
   return (
     <div className="header">
       <div>
-        <Avatar src={profileImageUrl} alt={user.name?.toString()}>
+        <Avatar src={profileImageUrl} alt={name}>
           {name?.toUpperCase().substr(0, 1)}
         </Avatar>
         <div className="name">{name}</div>
@@ -39,7 +40,7 @@ export const Header = () => {
         <div>
           <AudioDeviceButton onClick={() => dispatch(setWorkspaceView('AUDIO_DEVICE_VIEW'))} color="secondary" />
         </div>
-        {user.role === 'owner' && (
+        {role === 'owner' && (
           <div>
             <SetupButton onClick={() => dispatch(setWorkspaceView('SETUP_VIEW'))} color="secondary" />
           </div>

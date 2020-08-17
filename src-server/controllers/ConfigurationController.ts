@@ -31,7 +31,6 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
       account.configuration.applicationSid = applicationSid;
     }
-
     await accountRepository.update(account);
 
     res.status(200).end();
@@ -97,13 +96,7 @@ const validate = async (req: RequestWithUser, res: Response, next: Function) => 
 
 const fetch = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
-    const configuration = req.user.account.configuration;
-
-    if (configuration) {
-      delete configuration.secret;
-    }
-
-    res.json(configuration);
+    res.json(req.user.account.getConfigurationWithoutSecret());
   } catch (error) {
     return next(error);
   }

@@ -6,7 +6,7 @@ import { Profile, VerifiedCallback } from 'passport-saml';
 import { RequestWithAccount } from '../requests/RequestWithAccount';
 
 export interface RequestWithProfile extends RequestWithAccount {
-  profile: any;
+  profile: Profile;
 }
 
 const verifyProfile = (req: RequestWithProfile, profile: Profile, done: VerifiedCallback) => {

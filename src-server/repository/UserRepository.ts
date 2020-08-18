@@ -1,18 +1,24 @@
-import { BaseRepository } from './BaseRepository';
-import { User, UserAuthentication } from '../models/User';
+import { User } from '../models/User';
 import { UserRole } from '../models/UserRole';
 import { UserActivity } from '../models/UserActivity';
+import { Account } from '../models/Account';
+import { UserAuthentication } from '../models/UserAuthenticationProvider';
 
-export interface UserRepository extends BaseRepository<User> {
+export interface UserRepository {
   create: (
     name: string,
     profileImageUrl: string | undefined,
     tags: Set<string>,
-    accountId: string,
+    account: Account,
     authentication: UserAuthentication,
     role: UserRole,
     activity: UserActivity
   ) => Promise<User>;
-  getByName: (name: string) => Promise<User | undefined>;
-  getOneByAccountId: (id: string) => Promise<User | undefined>;
+  getById: (account: Account, id: string) => Promise<User | undefined>;
+  getByName: (name: string, account?: Account) => Promise<User | undefined>;
+  getByNameId: (account: Account, nameId: string) => Promise<User | undefined>;
+  getOneByAccount: (account: Account) => Promise<User | undefined>;
+  getAll: (account: Account, skip: number, limit: number) => Promise<Array<User>>;
+  update: (account: Account, user: User) => Promise<User>;
+  delete: (account: Account, user: User) => Promise<void>;
 }

@@ -9,7 +9,7 @@ export interface CallData {
   callSid: string | undefined;
   from: string;
   to: string;
-  status: CallStatus | undefined;
+  status: CallStatus;
   direction: CallDirection;
   duration?: number | undefined;
 }
@@ -17,6 +17,6 @@ export interface CallData {
 export interface CallRepository extends BaseRepository<Call> {
   create: (data: CallData, account: Account, user?: User) => Promise<Call>;
   getByCallSid: (callSid: string) => Promise<Call | undefined>;
-  getCallsByUser: (user: User) => Promise<Array<Call>>;
-  getCallsByAccount: (account: Account) => Promise<Array<Call>>;
+  getByUser: (user: User, skip: number, limit: number) => Promise<Array<Call>>;
+  getByAccount: (account: Account, skip: number, limit: number) => Promise<Array<Call>>;
 }

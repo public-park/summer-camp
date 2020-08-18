@@ -3,7 +3,7 @@ import { useCallDurationFormat } from '../PhoneView/hooks/useCallDurationFormat'
 import Moment from 'react-moment';
 import { updatePhoneDisplayWithFocus } from '../../../actions/PhoneAction';
 import { useDispatch } from 'react-redux';
-import { CallDirection } from '../../../phone/Call';
+import { CallDirection, CallStatus } from '../../../phone/Call';
 
 interface CallItemProps {
   to: string;
@@ -11,7 +11,7 @@ interface CallItemProps {
   direction: CallDirection;
   duration: number;
   createdAt: Date;
-  status: string; // TODO, use enum types
+  status: CallStatus;
 }
 
 export const CallItem = (props: CallItemProps) => {

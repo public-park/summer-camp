@@ -1,13 +1,16 @@
 import { BaseRepository } from '../BaseRepository';
 import AccountModel from './AccountSchema';
-import { AccountNotFoundError } from '../AccountNotFoundError';
 import { Account } from '../../models/Account';
 import { AccountRepository } from '../AccountRepository';
-import { AccountNameError } from '../AccountNameError';
+import UserModel from './UserSchema';
+import { AccountNotFoundException } from '../../exceptions/AccountNotFoundException';
+import { InvalidAccountNameException } from '../../exceptions/InvalidAccountNameException';
 
 export class MongoAccountRepository implements AccountRepository, BaseRepository<Account> {
   async create(name: string) {
-    if (name === '') throw new AccountNameError();
+    if (!name) {
+      throw new InvalidAccountNameException();
+    }
 
     const model = new AccountModel({
       name: name,
@@ -26,6 +29,16 @@ export class MongoAccountRepository implements AccountRepository, BaseRepository
     }
   }
 
+  async getByUserName(name: string) {
+    const document = await UserModel.findOne({ name: name });
+
+    if (!document) {
+      throw new AccountNotFoundException();
+    }
+
+    return this.getById(document.accountId);
+  }
+
   async getById(id: string) {
     const document = await AccountModel.findById(id);
 
@@ -34,17 +47,11 @@ export class MongoAccountRepository implements AccountRepository, BaseRepository
     }
   }
 
-  async getAll() {
-    const documents = await AccountModel.find({});
-
-    return documents.map((document) => document.toAccount());
-  }
-
-  async update(entity: Account) {
+  async update(account: Account) {
     const document = await AccountModel.findOneAndUpdate(
-      { _id: entity.id },
+      { _id: account.id },
       {
-        ...entity,
+        ...account,
       },
       {
         new: true,
@@ -54,17 +61,17 @@ export class MongoAccountRepository implements AccountRepository, BaseRepository
     if (document) {
       return document.toAccount();
     } else {
-      throw new AccountNotFoundError();
+      throw new AccountNotFoundException();
     }
   }
 
-  async delete(entity: Account) {
-    const document = await AccountModel.deleteOne({ _id: entity.id });
+  async delete(account: Account) {
+    const document = await AccountModel.deleteOne({ _id: account.id });
 
     if (document) {
       return;
     } else {
-      throw new AccountNotFoundError();
+      throw new AccountNotFoundException();
     }
   }
 }

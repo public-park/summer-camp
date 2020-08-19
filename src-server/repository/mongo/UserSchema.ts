@@ -1,10 +1,12 @@
 import * as mongoose from 'mongoose';
 
 import { Document, Schema } from 'mongoose';
-import { User, UserAuthentication } from '../../models/User';
+import { User } from '../../models/User';
+import { Account } from '../../models/Account';
 import { v4 as uuidv4 } from 'uuid';
 import { UserActivity } from '../../models/UserActivity';
 import { UserRole } from '../../models/UserRole';
+import { UserAuthentication } from '../../models/UserAuthenticationProvider';
 
 export interface UserDocument extends Document {
   _id: string;
@@ -16,7 +18,7 @@ export interface UserDocument extends Document {
   authentication: UserAuthentication;
   role: UserRole;
   createdAt: Date;
-  toUser: () => User;
+  toUser: (account: Account) => User;
 }
 
 const UserSchema = new Schema(
@@ -34,14 +36,14 @@ const UserSchema = new Schema(
   { versionKey: false, collection: 'users' }
 );
 
-UserSchema.methods.toUser = function (): User {
+UserSchema.methods.toUser = function (account: Account): User {
   return new User(
     this._id,
     this.name,
     this.profileImageUrl,
     new Set(this.tags),
     this.activity,
-    this.accountId,
+    account,
     this.authentication,
     this.role,
     this.createdAt

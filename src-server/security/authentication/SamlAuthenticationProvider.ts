@@ -1,5 +1,5 @@
 import { AuthenticationProvider, AuthenticationProviderType } from './AuthenticationProvider';
-import { UserAuthentication } from '../../models/User';
+import { UserAuthentication } from '../../models/UserAuthenticationProvider';
 
 export interface SamlUserAuthentication extends UserAuthentication {
   nameId: string;

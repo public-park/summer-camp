@@ -5,5 +5,5 @@ export enum AuthenticationProviderType {
 
 export interface AuthenticationProvider {
   provider: AuthenticationProviderType;
-  create(...params: any): any;
+  create(...params: any): void;
 }

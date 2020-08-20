@@ -1,8 +1,9 @@
 import { AuthenticationProvider, AuthenticationProviderType } from './AuthenticationProvider';
 import { compare, hash } from 'bcrypt';
-import { User, UserAuthentication } from '../../models/User';
+import { User } from '../../models/User';
 import { InvalidAuthenticationRecordException } from './exceptions/InvalidAuthenticationRecordException';
 import { AuthenticationRecordNotFoundException } from './exceptions/AuthenticationRecordNotFoundException';
+import { UserAuthentication } from '../../models/UserAuthenticationProvider';
 
 export interface PasswordUserAuthentication extends UserAuthentication {
   secret: string;

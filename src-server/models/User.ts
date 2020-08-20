@@ -5,9 +5,32 @@ import { Role } from './roles/Role';
 import { UserRoleNotFoundException } from '../exceptions/UserRoleNotFoundException';
 import { UserRole } from './UserRole';
 import { AgentRole } from './roles/AgentRole';
+import { UserAuthentication } from './UserAuthenticationProvider';
+import { Account } from './Account';
 
-export interface UserAuthentication {
-  provider: string;
+export interface UserConfiguration {
+  inbound: {
+    isEnabled: boolean;
+    phoneNumber: string | undefined;
+  };
+  outbound: {
+    isEnabled: boolean;
+    mode: string | undefined;
+    phoneNumber: string | undefined;
+  };
+}
+
+export interface UserResponse {
+  id: string;
+  name: string;
+  profileImageUrl: string | undefined;
+  tags: Array<string>;
+  activity: UserActivity;
+  accountId: string;
+  authentication: {
+    provider: string;
+  };
+  role: UserRole;
 }
 
 export class User {
@@ -16,7 +39,7 @@ export class User {
   profileImageUrl: string | undefined;
   tags: Set<string>;
   activity: UserActivity;
-  accountId: string;
+  account: Account;
   authentication: UserAuthentication;
   createdAt: Date;
   role: UserRole;
@@ -27,7 +50,7 @@ export class User {
     profileImageUrl: string | undefined,
     tags: Set<string>,
     activity: UserActivity,
-    accountId: string,
+    account: Account,
     authentication: UserAuthentication,
     role: UserRole,
     createdAt: Date = new Date()
@@ -37,7 +60,7 @@ export class User {
     this.profileImageUrl = profileImageUrl;
     this.tags = tags;
     this.activity = activity;
-    this.accountId = accountId;
+    this.account = account;
     this.authentication = authentication;
     this.role = role;
     this.createdAt = createdAt;
@@ -59,13 +82,29 @@ export class User {
     return role.hasPermission(name);
   }
 
-  toApiResponse(): any {
+  toResponse(): UserResponse {
     return {
-      ...this,
+      id: this.id,
+      name: this.name,
+      profileImageUrl: this.profileImageUrl,
       tags: Array.from(this.tags),
+      activity: this.activity,
+      accountId: this.account.id,
       authentication: {
         provider: this.authentication.provider,
       },
+      role: this.role,
     };
+  }
+
+  getConfiguration(): UserConfiguration | null {
+    if (this.account.configuration) {
+      return {
+        inbound: this.account.configuration.inbound,
+        outbound: this.account.configuration.outbound,
+      };
+    } else {
+      return null;
+    }
   }
 }

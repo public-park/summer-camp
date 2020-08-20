@@ -6,40 +6,76 @@ import { UserNotFoundException } from '../../exceptions/UserNotFoundException';
 import { CallDirection } from '../../models/CallDirection';
 import { RequestWithAccount } from '../../requests/RequestWithAccount';
 import { CallStatus } from '../../models/CallStatus';
-import { parseRequest } from './StatusEventHelper';
-import { User } from '../../models/User';
-import { getStatusEventUrl } from './PhoneHelper';
-import { getIdentity } from '../../helpers/twilio/TwilioHelper';
-import { Call } from '../../models/Call';
+import { getStatus, getDuration, getFinalInboundCallState } from './CallStatusEventHelper';
+import { getConferenceStatusEventUrl } from './PhoneHelper';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { UserWithOnlineState } from '../../pool/UserWithOnlineState';
 
-const generateEnqueueTwiml = (req: RequestWithAccount, call: Call) => {
+const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithOnlineState) => {
+  const event = {
+    callSid: req.body.CallSid,
+    from: req.body.From,
+    to: req.body.To,
+    status: getStatus(req),
+    direction: CallDirection.Inbound,
+  };
+
+  const call = await calls.create(event, req.account, user);
+
+  user.updateCall(call);
+
   let twiml = new VoiceResponse();
 
-  twiml.dial().conference(call.id);
+  const dial = twiml.dial({ callerId: call.from });
+
+  const options: any = {
+    endConferenceOnExit: true,
+    statusCallbackEvent: ['join'],
+    statusCallback: getConferenceStatusEventUrl(req, call),
+    participantLabel: 'customer',
+  };
+
+  dial.conference(options, call.id);
 
   return twiml.toString();
 };
 
-const generateConnectTwiml = (statusEventUrl: string, user: User) => {
+const generateEnqueueTwiml = async (req: RequestWithAccount) => {
+  const event = {
+    callSid: req.body.CallSid,
+    from: req.body.From,
+    to: req.body.To,
+    status: CallStatus.Queued,
+    direction: CallDirection.Inbound,
+  };
+
+  const call = await calls.create(event, req.account);
+
   let twiml = new VoiceResponse();
 
   const dial = twiml.dial();
+  // VoiceResponse.ConferenceAttributes
+  const options: any = {
+    endConferenceOnExit: true,
+    participantLabel: 'customer',
+  };
 
-  dial.client(
-    {
-      statusCallbackEvent: ['ringing', 'answered', 'completed'],
-      statusCallbackMethod: 'POST',
-      statusCallback: statusEventUrl,
-    },
-    getIdentity(user)
-  );
+  dial.conference(options, call.id);
 
   return twiml.toString();
 };
 
-export const generateRejectTwiml = () => {
+export const generateRejectTwiml = async (req: RequestWithAccount, user?: UserWithOnlineState) => {
+  const event = {
+    callSid: req.body.CallSid,
+    from: req.body.From,
+    to: req.body.To,
+    status: CallStatus.NoAnswer,
+    direction: CallDirection.Inbound,
+  };
+
+  await calls.create(event, req.account, user);
+
   let twiml = new VoiceResponse();
 
   twiml.say(
@@ -57,7 +93,7 @@ const handleConnectWithFilter = async (req: RequestWithAccount, res: Response, n
   try {
     log.info(`${req.body.To} called`);
 
-    let users: Array<UserWithOnlineState> = pool.getOnlineByAccount(req.account);
+    let users: Array<UserWithOnlineState> = pool.getAll(req.account);
     const tag = req.query.tag?.toString();
 
     if (tag) {
@@ -69,27 +105,9 @@ const handleConnectWithFilter = async (req: RequestWithAccount, res: Response, n
     if (users.length !== 0) {
       const user = users[(Math.random() * users.length) | 0];
 
-      user.isOnACall = true;
-
-      const payload = {
-        ...parseRequest(req),
-        direction: CallDirection.Inbound,
-      };
-
-      const call = await calls.create(payload, req.account, user);
-
-      const statusEventUrl = getStatusEventUrl(req, req.account, call, CallDirection.Inbound);
-
-      res.status(200).send(generateConnectTwiml(statusEventUrl, user));
+      res.status(200).send(await generateConnectTwiml(req, user));
     } else {
-      const payload = {
-        ...parseRequest(req),
-        userId: undefined,
-        accountId: req.account.id,
-        direction: CallDirection.Inbound,
-      };
-
-      res.status(200).send(generateRejectTwiml());
+      res.status(200).send(await generateRejectTwiml(req));
     }
   } catch (error) {
     return next(error);
@@ -100,27 +118,16 @@ const handleConnectToUser = async (req: RequestWithAccount, res: Response, next:
   try {
     log.info(`${req.body.To} called`);
 
-    const user = await pool.getFirstByAccount(req.account);
+    const user = await pool.getOneByAccountWithFallback(req.account);
 
     if (!user) {
       throw new UserNotFoundException();
     }
 
-    const payload = {
-      ...parseRequest(req, user),
-      direction: CallDirection.Inbound,
-    };
-
-    const call = await calls.create(payload, req.account, user);
-
-    if (user.isOnline && user.isAvailable) {
-      user.isOnACall = true;
-
-      const statusEventUrl = getStatusEventUrl(req, req.account, call, CallDirection.Inbound);
-
-      res.status(200).send(generateConnectTwiml(statusEventUrl, user));
+    if (user.sockets.length() > 0 && user.isAvailable) {
+      res.status(200).send(await generateConnectTwiml(req, user));
     } else {
-      res.status(200).send(generateRejectTwiml());
+      res.status(200).send(await generateRejectTwiml(req, user));
     }
   } catch (error) {
     return next(error);
@@ -129,20 +136,30 @@ const handleConnectToUser = async (req: RequestWithAccount, res: Response, next:
 
 const handleCompleted = async (req: RequestWithAccount, res: Response, next: NextFunction) => {
   try {
-    const event = parseRequest(req);
-
-    const call = await calls.getByCallSid(req.body.CallSid);
+    let call = await calls.getByCallSid(req.body.CallSid);
 
     if (!call) {
       throw new CallNotFoundException();
     }
 
-    // manually override the status if the call was not accepted
-    if (call.status && [CallStatus.NoAnswer, CallStatus.Ringing, CallStatus.Queued].includes(call.status)) {
-      event.status = CallStatus.NoAnswer;
+    let status = getStatus(req);
+
+    /* override the status if the call was not accepted */
+    if (call.status) {
+      status = getFinalInboundCallState(call.status, status);
     }
 
-    await calls.updateStatus(call.id, event.callSid, event.status, event.duration);
+    /* set duration if the call was accepted */
+    let duration;
+
+    if (status !== CallStatus.NoAnswer) {
+      duration = getDuration(req);
+    }
+    call = await calls.updateStatus(call.id, status, req.body.CallSid, duration);
+
+    if (call.userId) {
+      pool.getById(call.userId)?.updateCallAndBroadcast(call);
+    }
 
     res.status(200).end();
   } catch (error) {
@@ -154,15 +171,7 @@ const handleEnqueue = async (req: RequestWithAccount, res: Response, next: NextF
   try {
     log.info(`${req.body.To} called`);
 
-    const payload = {
-      ...parseRequest(req),
-      direction: CallDirection.Inbound,
-      status: CallStatus.Queued,
-    };
-
-    const call = await calls.create(payload, req.account);
-
-    res.status(200).send(generateEnqueueTwiml(req, call));
+    res.status(200).send(generateEnqueueTwiml(req));
   } catch (error) {
     return next(error);
   }

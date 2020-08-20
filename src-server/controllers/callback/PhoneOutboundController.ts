@@ -1,24 +1,23 @@
 import { Response, NextFunction } from 'express';
 import VoiceResponse = require('twilio/lib/twiml/VoiceResponse');
-import { pool, callRepository, accountRepository } from '../../worker';
-import { UserNotFoundException } from '../../exceptions/UserNotFoundException';
-import { CallDirection } from '../../models/CallDirection';
+import { callRepository } from '../../worker';
 import { RequestWithAccount } from '../../requests/RequestWithAccount';
-import { getStatusEventUrl, getCallerId } from './PhoneHelper';
-import { AccountNotFoundError } from '../../repository/AccountNotFoundError';
+import { getConferenceStatusEventUrl } from './PhoneHelper';
+import { Call } from '../../models/Call';
+import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 
-const generateDialTwiml = (statusEventUrl: string, callerId: string, phoneNumber: string) => {
+const generateConnectTwiml = (req: RequestWithAccount, call: Call) => {
   let twiml = new VoiceResponse();
 
-  const dial = twiml.dial({ callerId: callerId });
+  const dial = twiml.dial({ callerId: call.from });
 
-  dial.number(
+  dial.conference(
     {
-      statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
-      statusCallbackMethod: 'POST',
-      statusCallback: statusEventUrl,
+      endConferenceOnExit: true,
+      statusCallbackEvent: ['join'],
+      statusCallback: getConferenceStatusEventUrl(req, call),
     },
-    phoneNumber
+    call.id
   );
 
   return twiml.toString();
@@ -26,35 +25,13 @@ const generateDialTwiml = (statusEventUrl: string, callerId: string, phoneNumber
 
 const handle = async (req: RequestWithAccount, res: Response, next: NextFunction) => {
   try {
-    const user = await pool.getUserById(req.body.userId);
+    const call = await callRepository.getById(req.body.callId);
 
-    if (!user) {
-      throw new UserNotFoundException();
+    if (!call) {
+      throw new CallNotFoundException();
     }
 
-    const account = await accountRepository.getById(user.accountId);
-
-    if (!account) {
-      throw new AccountNotFoundError();
-    }
-
-    const callerId = getCallerId(req.account);
-
-    const callData = {
-      direction: CallDirection.Outbound,
-      to: req.body.PhoneNumber,
-      from: callerId,
-      callSid: undefined,
-      status: undefined,
-    };
-
-    const call = await callRepository.create(callData, req.account, user);
-
-    const statusEventUrl = getStatusEventUrl(req, account, call, CallDirection.Outbound);
-
-    user.isOnACall = true;
-
-    res.status(200).send(generateDialTwiml(statusEventUrl, callerId, req.body.PhoneNumber));
+    res.status(200).send(generateConnectTwiml(req, call));
   } catch (error) {
     return next(error);
   }

@@ -9,6 +9,7 @@ export const DefaultStore: Store = {
     tags: [],
     activity: UserActivity.Unknown,
     role: undefined,
+    sockets: undefined,
   },
   connection: {
     state: undefined,
@@ -27,9 +28,16 @@ export const DefaultStore: Store = {
       output: undefined,
     },
   },
+  devices: {
+    audio: {
+      input: [],
+      output: [],
+    },
+    exception: undefined,
+  },
   call: undefined,
   workspace: {
-    view: 'FETCH_CONFIGURATION_VIEW',
+    view: 'CONNECT_VIEW',
     notification: undefined,
   },
   logout: {

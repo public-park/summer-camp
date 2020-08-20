@@ -1,13 +1,14 @@
-import { Call } from '../phone/Call';
 import { UserActivity } from '../models/enums/UserActivity';
 import { UserConnectionState } from '../models/enums/UserConnectionState';
 import { ApplicationPage } from '../actions/PageAction';
 import { WorkspaceView } from '../actions/WorkspaceViewAction';
 import { PhoneState } from '../phone/PhoneState';
 import { UserRole } from '../models/enums/UserRole';
+import { CallStatus } from '../phone/Call';
+import { MediaDeviceException } from '../exceptions/MediaDeviceException';
 
 export const selectUser = (store: Store) => store.user;
-export const selectUserRole = (store: Store) => store.user.role;
+export const selectRole = (store: Store) => store.user.role;
 export const selectPhone = (store: Store) => store.phone;
 export const selectConfiguration = (store: Store) => store.phone.configuration;
 export const selectActivity = (store: Store) => store.user.activity;
@@ -28,10 +29,12 @@ export const selectPhoneError = (store: Store) => store.phone.error;
 export const selectPhoneDisplay = (store: Store) => store.phone.display;
 export const selectPhoneDisplayIsValidPhoneNumber = (store: Store) => store.phone.display.isValidPhoneNumber;
 export const selectPhoneDisplayValue = (store: Store) => store.phone.display.value;
+export const selectAudioInputDevices = (store: Store) => store.devices.audio.input;
+export const selectAudioOutputDevices = (store: Store) => store.devices.audio.output;
+export const selectDeviceException = (store: Store) => store.devices.exception;
 
 export const selectStore = (store: Store) => store;
 
-// TODO, implement call object
 export interface Store {
   call: Call | undefined;
   user: {
@@ -41,6 +44,7 @@ export interface Store {
     tags: Array<string>;
     activity: UserActivity;
     role: UserRole | undefined;
+    sockets: number | undefined;
   };
   connection: {
     state: UserConnectionState | undefined;
@@ -59,6 +63,13 @@ export interface Store {
       output: string | undefined;
     };
   };
+  devices: {
+    audio: {
+      input: Array<MediaDeviceInfo>;
+      output: Array<MediaDeviceInfo>;
+    };
+    exception: MediaDeviceException | undefined;
+  };
   workspace: {
     view: WorkspaceView;
     notification: string | undefined;
@@ -68,6 +79,13 @@ export interface Store {
   };
   token: string | undefined;
   page: ApplicationPage | undefined;
+}
+
+interface Call {
+  id: string;
+  from: string;
+  to: string;
+  status: CallStatus;
 }
 
 interface Configuration {

@@ -22,9 +22,6 @@ const getPhoneView = (view: ConfiguratonViewState) => {
       return <AccountSetupForm />;
     case 'PHONE_SETUP':
       return <PhoneSetupForm />;
-    default:
-      // TODO implement
-      break;
   }
 };
 

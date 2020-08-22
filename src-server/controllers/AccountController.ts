@@ -11,7 +11,7 @@ const fetch = async (req: RequestWithUser, res: Response, next: NextFunction) =>
       throw new AccountNotFoundException();
     }
 
-    res.json(account.toApiResponse());
+    res.json(account.toResponse());
   } catch (error) {
     return next(error);
   }

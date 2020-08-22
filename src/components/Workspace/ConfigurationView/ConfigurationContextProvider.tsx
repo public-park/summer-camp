@@ -5,17 +5,13 @@ import { ConfiguratonViewState } from './ConfigurationViewState';
 import { useValidateLocalConfiguration } from './hooks/useValidateLocalConfiguration';
 import { updateConfiguration } from './services/updateConfiguration';
 import { validateConfiguration } from './services/validateConfiguration';
-import { ApplicationContext } from '../../../context/ApplicationContext';
-import { ActionType } from '../../../actions/ActionType';
-import { useDispatch } from 'react-redux';
 import { fetchAccountConfiguration } from './services/fetchAccountConfiguration';
 import { DefaultConfiguration } from './DefaultConfiguration';
 import { ConfigurationContext } from './ConfigurationContext';
+import { ApplicationContext } from '../../../context/ApplicationContext';
 
 export const ConfigurationContextProvider = (props: any) => {
   const { user } = useContext(ApplicationContext);
-
-  const dispatch = useDispatch();
 
   const [view, setView] = useState<ConfiguratonViewState>('FETCHING');
 
@@ -24,7 +20,7 @@ export const ConfigurationContextProvider = (props: any) => {
 
   const [configuration, setConfiguration] = useState(DefaultConfiguration);
 
-  // TODO, should return error object
+  // TODO, should return exception object
   const { isValid, error } = useValidateLocalConfiguration(configuration);
 
   const getView = (): ConfiguratonViewState => {
@@ -125,10 +121,7 @@ export const ConfigurationContextProvider = (props: any) => {
     try {
       await updateConfiguration(user, configuration);
 
-      dispatch({
-        type: ActionType.USER_CONFIGURATION_CHANGED,
-        payload: {},
-      });
+      user.send('configuration', null);
     } catch (error) {
       console.log(error);
 

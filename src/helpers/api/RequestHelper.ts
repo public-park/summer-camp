@@ -6,10 +6,12 @@ export class RequestFactory {
   parameters: {} | undefined;
   body: {} | undefined;
   headers: {};
+  deadline: number;
 
   constructor(url: string) {
     this.url = url;
     this.headers = {};
+    this.deadline = 5000;
   }
 
   withBody(body: {}) {
@@ -36,15 +38,19 @@ export class RequestFactory {
       .accept('application/json')
       .set(this.headers)
       .send(body)
-      .timeout({ deadline: 5000 });
+      .timeout({ deadline: this.deadline });
   }
 
   async fetch() {
-    return await superagent.get(this.url).set(this.headers).send(this.body).timeout({ deadline: 5000 });
+    return await superagent.get(this.url).set(this.headers).send(this.body).timeout({ deadline: this.deadline });
   }
 }
 
 export const request = (url: string): RequestFactory => {
+  return new RequestFactory(url);
+};
+
+export const create = (url: string): RequestFactory => {
   return new RequestFactory(url);
 };
 

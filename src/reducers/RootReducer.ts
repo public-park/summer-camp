@@ -84,6 +84,7 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
 
       case 'PHONE_CONFIGURATION_UPDATED':
         draft.phone.configuration = action.payload;
+        draft.phone.token = undefined;
         draft.workspace.view = 'PHONE_VIEW';
         break;
 
@@ -124,13 +125,6 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
 
       case 'WORKSPACE_NOTIFICATION_HIDE':
         draft.workspace.notification = undefined;
-        break;
-
-      case 'USER_CONFIGURATION_CHANGED':
-        draft.phone.token = undefined;
-        draft.phone.state = 'OFFLINE';
-        draft.phone.configuration = undefined;
-        draft.workspace.view = 'FETCH_CONFIGURATION_VIEW';
         break;
 
       case 'USER_LOGIN':

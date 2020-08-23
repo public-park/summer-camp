@@ -1,12 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import { BaseRepository } from '../BaseRepository';
 import { CallRepository, CallData } from '../CallRepository';
-import { CallNotFoundError } from '../CallNotFoundError';
 import { User } from '../../models/User';
 import { Account } from '../../models/Account';
 import { FileBaseRepository } from './FileBaseRepository';
 import { Call } from '../../models/Call';
 import { CallStatus } from '../../models/CallStatus';
+import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 
 export class FileCallRepository extends FileBaseRepository<Call> implements CallRepository, BaseRepository<Call> {
   calls: Map<string, Call>;
@@ -62,15 +62,23 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     );
   }
 
-  async updateStatus(callSid: string, status: CallStatus, duration?: number) {
-    const call = await this.getByCallSid(callSid);
+  async updateStatus(id: string, status: CallStatus, callSid?: string, duration?: number) {
+    const call = await this.getById(id);
 
     if (!call) {
-      throw new CallNotFoundError();
+      throw new CallNotFoundException();
     }
 
     call.status = status;
-    call.duration = duration;
+    call.updatedAt = new Date();
+
+    if (callSid) {
+      call.callSid = callSid;
+    }
+
+    if (duration) {
+      call.duration = duration;
+    }
 
     await this.update(call);
 
@@ -109,28 +117,18 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     }
   }
 
-  async getCallsByUser(user: User) {
-    const list: Call[] = [];
-
-    for (const call of this.calls.values()) {
-      if (call.userId === user.id) {
-        list.push(this.getCopy(call));
-      }
-    }
-
-    return Promise.resolve(list.reverse());
+  async getByUser(user: User, skip: number = 0, limit: number = 50) {
+    const list = Array.from(this.calls.values()).filter(
+      (call, index) => call.userId == user.id && index >= skip && index < limit
+    );
+    return Promise.resolve(list.map((call) => this.getCopy(call)).reverse());
   }
 
-  async getCallsByAccount(account: Account) {
-    const list: Call[] = [];
-
-    for (const call of this.calls.values()) {
-      if (call.accountId === account.id) {
-        list.push(this.getCopy(call));
-      }
-    }
-
-    return Promise.resolve(list.reverse());
+  async getByAccount(account: Account, skip: number = 0, limit: number = 50) {
+    const list = Array.from(this.calls.values()).filter(
+      (call, index) => call.accountId == account.id && index >= skip && index < limit
+    );
+    return Promise.resolve(list.map((call) => this.getCopy(call)).reverse());
   }
 
   async getAll() {
@@ -153,7 +151,7 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
 
   async delete(call: Call) {
     if (!(await this.getById(call.id))) {
-      throw new CallNotFoundError();
+      throw new CallNotFoundException();
     }
 
     this.calls.delete(call.id);

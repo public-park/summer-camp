@@ -3,9 +3,8 @@ import { Account } from '../../models/Account';
 import { AccountRepository } from '../AccountRepository';
 import { BaseRepository } from '../BaseRepository';
 import { FileBaseRepository } from './FileBaseRepository';
-import { AccountNameError } from '../AccountNameError';
-import { AccountNotFoundError } from '../AccountNotFoundError';
 import { AccountNotFoundException } from '../../exceptions/AccountNotFoundException';
+import { InvalidAccountNameException } from '../../exceptions/InvalidAccountNameException';
 
 export class FileAccountRepository extends FileBaseRepository<Account>
   implements AccountRepository, BaseRepository<Account> {
@@ -13,7 +12,7 @@ export class FileAccountRepository extends FileBaseRepository<Account>
 
   constructor(fileName: string) {
     super(fileName);
-    // TODO fixme, where to catch
+
     this.accounts = this.fromPlainObjects(this.load());
   }
 
@@ -21,28 +20,24 @@ export class FileAccountRepository extends FileBaseRepository<Account>
     const account = this.accounts.get(id);
 
     if (account) {
-      return Promise.resolve(this.getCopy(account));
+      return Promise.resolve(account);
     }
   };
 
   getAll = async () => {
-    const list: Account[] = [];
-
-    for (const user of this.accounts.values()) {
-      list.push(this.getCopy(user));
-    }
-
-    return Promise.resolve(list);
+    return Promise.resolve(this.accounts);
   };
 
   update = async (account: Account) => {
-    if (!(await this.getById(account.id))) throw new AccountNotFoundError();
+    if (!(await this.getById(account.id))) {
+      throw new AccountNotFoundException();
+    }
 
     const existingAccount = await this.getById(account.id);
 
     if (existingAccount && existingAccount.name !== account.name) {
       if (await this.getByName(account.name)) {
-        throw new Error(); // TODO add error code
+        throw new InvalidAccountNameException();
       }
     }
 
@@ -50,12 +45,12 @@ export class FileAccountRepository extends FileBaseRepository<Account>
 
     await this.persist(this.toPlainObjects());
 
-    return this.getCopy(account);
+    return account;
   };
 
   delete = async (account: Account) => {
     if (!(await this.getById(account.id))) {
-      throw new AccountNotFoundError();
+      throw new AccountNotFoundException();
     }
 
     this.accounts.delete(account.id);
@@ -64,8 +59,8 @@ export class FileAccountRepository extends FileBaseRepository<Account>
   };
 
   create = async (name: string) => {
-    if (name === '') {
-      throw new AccountNameError();
+    if (!name) {
+      throw new InvalidAccountNameException();
     }
 
     if (await this.getByName(name)) {
@@ -78,7 +73,7 @@ export class FileAccountRepository extends FileBaseRepository<Account>
 
     await this.persist(this.toPlainObjects());
 
-    return Promise.resolve(this.getCopy(account));
+    return Promise.resolve(account);
   };
 
   protected getCopy(account: Account) {
@@ -93,9 +88,6 @@ export class FileAccountRepository extends FileBaseRepository<Account>
     };
 
     if (account.configuration) {
-      item.configuration = {
-        ...account.configuration,
-      };
       item.configuration = {
         ...account.configuration,
         inbound: { ...account.configuration.inbound },
@@ -129,7 +121,7 @@ export class FileAccountRepository extends FileBaseRepository<Account>
   getByName = async (name: string) => {
     for (const account of this.accounts.values()) {
       if (account.name === name) {
-        return Promise.resolve(this.getCopy(account));
+        return Promise.resolve(account);
       }
     }
   };

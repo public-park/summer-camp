@@ -1,62 +1,78 @@
 import { v4 as uuidv4 } from 'uuid';
-import { BaseRepository } from '../BaseRepository';
-import { User, UserAuthentication } from '../../models/User';
+import { User } from '../../models/User';
+import { Account } from '../../models/Account';
 import { UserRepository } from '../UserRepository';
 import { FileBaseRepository } from './FileBaseRepository';
 import { UserActivity } from '../../models/UserActivity';
-import { UserNotFoundError } from '../UserNotFoundError';
-import { UserNameError } from '../UserNameError';
 import { AccountRepository } from '../AccountRepository';
-import { AccountNotFoundError } from '../AccountNotFoundError';
 import { UserRole } from '../../models/UserRole';
 import { UserAlreadyExistsException } from '../../exceptions/UserAlreadyExistsException';
+import { AccountNotFoundException } from '../../exceptions/AccountNotFoundException';
+import { UserAuthentication } from '../../models/UserAuthenticationProvider';
+import { log } from '../../logger';
+import { InvalidUserNameException } from '../../exceptions/InvalidUserNameException';
+import { InvalidAccountException } from '../../exceptions/InvalidAccountException';
+import { UserNotFoundException } from '../../exceptions/UserNotFoundException';
+import { SamlUserAuthentication } from '../../security/authentication/SamlAuthenticationProvider';
 
-export class FileUserRepository extends FileBaseRepository<User> implements UserRepository, BaseRepository<User> {
+export class FileUserRepository extends FileBaseRepository<User> implements UserRepository {
   users: Map<string, User>;
-  accountRepository: AccountRepository;
+  accounts: AccountRepository;
 
-  constructor(fileName: string, accountRepository: AccountRepository) {
+  constructor(accounts: AccountRepository, fileName: string) {
     super(fileName);
 
-    this.accountRepository = accountRepository;
+    this.users = new Map();
+    this.accounts = accounts;
 
-    this.users = this.fromPlainObjects(this.load());
+    this.fromPlainObjects(this.load())
+      .then((users) => {
+        this.users = users;
+      })
+      .catch((error) => log.error(error));
   }
 
-  getById = async (id: string) => {
+  setAccountRepository(repository: AccountRepository) {
+    this.accounts = repository;
+  }
+
+  getById = async (account: Account, id: string) => {
     const user = this.users.get(id);
 
-    if (user) {
-      return Promise.resolve(this.getCopy(user));
+    if (user && user.account.id === account.id) {
+      return Promise.resolve(await this.getCopy(user));
     }
   };
 
-  getAll = async () => {
+  async getAll(account: Account, skip: number = 0, limit: number = 50) {
     const list: User[] = [];
 
     for (const user of this.users.values()) {
-      list.push(this.getCopy(user));
+      if (user.account.id === account.id) {
+        list.push(await this.getCopy(user));
+      }
     }
 
     return Promise.resolve(list);
-  };
+  }
 
-  update = async (user: User) => {
-    if (!(await this.getById(user.id))) {
-      throw new UserNotFoundError();
-    }
-    if (!(await this.accountRepository.getById(user.accountId))) {
-      throw new AccountNotFoundError();
+  update = async (account: Account, user: User) => {
+    if (!(await this.getById(account, user.id))) {
+      throw new UserNotFoundException();
     }
 
-    if (user.name === '') {
-      throw new UserNameError();
+    if (!user.name) {
+      throw new InvalidUserNameException();
     }
 
-    const existingUser = await this.getById(user.id);
+    if (user.account.id !== account.id) {
+      throw new InvalidAccountException();
+    }
 
-    if (existingUser && existingUser.name !== user.name) {
-      if (await this.getByName(user.name)) {
+    const existingUser = await this.getByName(user.name);
+
+    if (existingUser && existingUser.id !== user.id) {
+      if (await this.getByName(user.name, account)) {
         throw new UserAlreadyExistsException();
       }
     }
@@ -65,12 +81,12 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
 
     await this.persist(this.toPlainObjects());
 
-    return Promise.resolve(<User>this.getCopy(user));
+    return await this.getCopy(user);
   };
 
-  delete = async (user: User) => {
-    if (!(await this.getById(user.id))) {
-      throw new UserNotFoundError();
+  delete = async (account: Account, user: User) => {
+    if (!(await this.getById(account, user.id))) {
+      throw new UserNotFoundException();
     }
 
     this.users.delete(user.id);
@@ -78,7 +94,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     return this.persist(this.toPlainObjects());
   };
 
-  getByName = async (name: string) => {
+  getByName = async (name: string, account?: Account) => {
     for (const user of this.users.values()) {
       if (user.name === name) {
         return Promise.resolve(this.getCopy(user));
@@ -86,16 +102,38 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     }
   };
 
-  getOneByAccountId = async (id: string) => {
+  getAccountIdByName = async (name: string) => {
     for (const user of this.users.values()) {
-      if (user.accountId === id) {
+      if (user.name === name) {
+        return Promise.resolve(user.account.id);
+      }
+    }
+  };
+
+  getOneByAccount = async (account: Account) => {
+    for (const user of this.users.values()) {
+      if (user.account.id === account.id) {
         return Promise.resolve(this.getCopy(user));
       }
     }
   };
 
-  protected getCopy(user: User) {
-    return this.fromPlainObject(this.toPlainObject(user));
+  async getByNameId(account: Account, nameId: string) {
+    for (const user of this.users.values()) {
+      const authentication = user.authentication as SamlUserAuthentication;
+
+      if (user.account.id === account.id) {
+        return;
+      }
+
+      if (user.authentication && authentication.nameId === nameId) {
+        return Promise.resolve(this.getCopy(user));
+      }
+    }
+  }
+
+  protected async getCopy(user: User) {
+    return await this.fromPlainObject(await this.toPlainObject(user));
   }
 
   protected toPlainObjects(): Array<User> {
@@ -111,31 +149,39 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
       profileImageUrl: user.profileImageUrl,
       tags: Array.from(user.tags.values()),
       activity: user.activity,
-      accountId: user.accountId,
+      accountId: user.account.id,
       authentication: user.authentication,
       role: user.role,
       createdAt: user.createdAt,
     };
   }
 
-  protected fromPlainObjects(list: Array<any>): Map<string, User> {
+  protected async fromPlainObjects(list: Array<any>): Promise<Map<string, User>> {
     const users = new Map<string, User>();
 
-    list.map((item) => {
-      users.set(item.id, this.fromPlainObject(item));
-    });
+    await Promise.all(
+      list.map(async (item) => {
+        users.set(item.id, await this.fromPlainObject(item));
+      })
+    );
 
     return users;
   }
 
-  protected fromPlainObject(item: any): User {
+  protected async fromPlainObject(item: any): Promise<User> {
+    const account = await this.accounts.getById(item.accountId);
+
+    if (!account) {
+      throw new AccountNotFoundException();
+    }
+
     return new User(
       item.id,
       item.name,
       item.profileImageUrl,
       new Set(item.tags),
       item.activity,
-      item.accountId,
+      account,
       item.authentication,
       item.role,
       item.createdAt
@@ -146,28 +192,24 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     name: string,
     profileImageUrl: string | undefined,
     tags: Set<string>,
-    accountId: string,
+    account: Account,
     authentication: UserAuthentication,
     role: UserRole,
     activity: UserActivity = UserActivity.Unknown
   ) => {
-    if (name === '') {
-      throw new UserNameError();
+    if (!name) {
+      throw new InvalidUserNameException();
     }
 
-    if (!accountId) {
-      throw new Error();
+    if (!account) {
+      throw new AccountNotFoundException();
     }
 
-    if (await this.getByName(name)) {
-      throw new UserNotFoundError();
+    if (await this.getAccountIdByName(name)) {
+      throw new UserAlreadyExistsException();
     }
 
-    if (!(await this.accountRepository.getById(accountId))) {
-      throw new AccountNotFoundError();
-    }
-
-    const user = new User(uuidv4(), name, profileImageUrl, tags, activity, accountId, authentication, role);
+    const user = new User(uuidv4(), name, profileImageUrl, tags, activity, account, authentication, role);
 
     this.users.set(user.id, user);
 

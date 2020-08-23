@@ -1,6 +1,7 @@
 import { promises as fsWithPromise } from 'fs';
 import * as fs from 'fs';
 import * as path from 'path';
+import { log } from '../../logger';
 
 export abstract class FileBaseRepository<T> {
   file: string;
@@ -10,13 +11,19 @@ export abstract class FileBaseRepository<T> {
   }
 
   protected load(): Array<any> {
-    const data = JSON.parse(fs.readFileSync(this.file, 'utf8'));
+    try {
+      const data = JSON.parse(fs.readFileSync(this.file, 'utf8'));
 
-    if (!(data instanceof Array)) {
-      throw Error('loaded data is not an array');
+      if (!(data instanceof Array)) {
+        throw Error('loaded data is not an array');
+      }
+
+      return data;
+    } catch (error) {
+      log.error(error);
+
+      return [];
     }
-
-    return data;
   }
 
   protected async persist(entities: Array<any>): Promise<void> {

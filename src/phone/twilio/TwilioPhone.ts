@@ -38,6 +38,10 @@ export class TwilioPhone implements PhoneControl {
       return;
     }
 
+    if (state === 'ERROR') {
+      this.eventEmitter.emit('error', ...params);
+    }
+
     this.eventEmitter.emit('state_changed', this.state, ...params);
   }
 

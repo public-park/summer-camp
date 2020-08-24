@@ -1,35 +1,90 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import { ApplicationContext } from './context/ApplicationContext';
 import { useDispatch, useSelector } from 'react-redux';
-import { Action, ActionType } from './actions/ActionType';
 import { UserActivity } from './models/enums/UserActivity';
 import { UserConnectionState } from './models/enums/UserConnectionState';
-import { getWebSocketUrl } from './helpers/UrlHelper';
-import { usePersistentToken } from './hooks/usePersistentToken';
+import { getWebSocketUrl, getUrl } from './helpers/UrlHelper';
 import { User } from './models/User';
 import { TwilioPhone } from './phone/twilio/TwilioPhone';
 import { setActivity, setConnectionState, setLogout, setLogin } from './actions/UserAction';
 import { PhoneState } from './phone/PhoneState';
 import { usePageLifecycle } from './hooks/usePageLifecycle';
-import { selectToken, selectConnectionState, selectCall, selectPhoneState } from './store/Store';
+import {
+  selectToken,
+  selectConnectionState,
+  selectPhoneState,
+  selectPhoneInputDevice,
+  selectPhoneOutputDevice,
+  selectAudioInputDevices,
+  selectAudioOutputDevices,
+  selectPhoneToken,
+} from './store/Store';
+import {
+  setPhoneInputDevice,
+  setPhoneOutputDevice,
+  setPhoneCall,
+  setPhoneConfiguration,
+  setPhoneToken,
+  setPhoneException,
+  setPhoneState,
+  setOutgoingCall,
+  setIncomingCall,
+} from './actions/PhoneAction';
+
+import { useLocalStorageOnPageLoad } from './hooks/useLocalStorageOnPageLoad';
+import { useQueryStringToken } from './hooks/useQueryStringToken';
+/* Salesforce OpenCTI 
+import { useSalesforceOpenCti } from './hooks/useSalesforceOpenCti';
+*/
+import { request } from './helpers/api/RequestHelper';
+import { Call } from './phone/Call';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import { PhoneControl } from './phone/PhoneControl';
+import { useFetchPhoneToken } from './hooks/useFetchPhoneToken';
 
 export const ApplicationContextProvider = (props: any) => {
-  const call = useSelector(selectCall);
   const phoneState = useSelector(selectPhoneState);
+  const phoneToken = useSelector(selectPhoneToken);
 
-  const persistetToken = usePersistentToken();
+  const [persistetToken, setPersistetToken] = useLocalStorageOnPageLoad('token');
+  const [persistedAudioInputDeviceId, setPersistedAudioInputDeviceId] = useLocalStorage('audio-input-device-id');
+  const [persistedAudioOutputDeviceId, setPersistedAudioOutputDeviceId] = useLocalStorage('audio-output-device-id');
+
+  const queryStringToken = useQueryStringToken();
+
   const { isResume } = usePageLifecycle();
 
   const token = useSelector(selectToken);
   const connectionState = useSelector(selectConnectionState);
 
-  const [user] = useState(new User());
-  const [phone] = useState(new TwilioPhone(user));
+  const [user, setUser] = useState<User>(new User());
+  const [phone, setPhone] = useState<PhoneControl>(new TwilioPhone(user));
+  const [call, setCall] = useState<undefined | Call>();
+
+  const phoneInputDevice = useSelector(selectPhoneInputDevice);
+  const phoneOutputDevice = useSelector(selectPhoneOutputDevice);
+
+  const audioInputDevices = useSelector(selectAudioInputDevices);
+  const audioOutputDevices = useSelector(selectAudioOutputDevices);
+
+  const { token: phoneTokenFetched, exception: phoneTokenException } = useFetchPhoneToken(user);
+
+  /* Salesforce OpenCTI 
+   const doScreenPop = useSalesforceOpenCti(phone);  
+  */
 
   const dispatch = useDispatch();
 
   const login = (token: string) => {
+    const user = new User();
+    const phone = new TwilioPhone(user);
+
+    setUser(user);
+    setPhone(phone);
+
+    setPersistetToken(token);
+
     user.login(getWebSocketUrl(), token);
 
     dispatch(setLogin(token));
@@ -38,8 +93,13 @@ export const ApplicationContextProvider = (props: any) => {
   const logout = async (reason?: string) => {
     await user.logout();
 
+    phone.destroy();
+
+    setPersistetToken(undefined);
+
     dispatch(setLogout(reason));
 
+    /* manually reject incoming calls */
     if (phoneState === 'RINGING' && call) {
       call.reject();
     }
@@ -48,10 +108,19 @@ export const ApplicationContextProvider = (props: any) => {
   };
 
   useEffect(() => {
-    user.onConnectionStateChanged((state: UserConnectionState) => {
+    user.onConnectionStateChanged((state: UserConnectionState, code: number | undefined) => {
       console.log(`connection state changed to: ${state}`);
 
-      dispatch(setConnectionState(user));
+      if (state === UserConnectionState.Closed && code === 4001) {
+        logout('Your session ended, please login again');
+        return;
+      }
+
+      dispatch(setConnectionState(state, code));
+    });
+
+    user.onConnectionError((event: Event) => {
+      console.log(`connection error`, event);
     });
 
     user.onActivityChanged((activity: UserActivity) => {
@@ -60,55 +129,152 @@ export const ApplicationContextProvider = (props: any) => {
       dispatch(setActivity(user));
     });
 
-    phone.onIncomingCall((call) => {
-      const action: Action = {
-        type: ActionType.PHONE_INCOMING_CALL,
-        payload: { call: call },
-      };
+    user.onConfigurationChanged((configuration: any) => {
+      dispatch(setPhoneConfiguration(configuration));
+    });
 
-      dispatch(action);
+    user.onError((error: Error) => {
+      console.log('user error', error);
+    });
+
+    user.onCall((call: any) => {
+      dispatch(setPhoneCall(call));
+    });
+  }, [user]);
+
+  useEffect(() => {
+    phone.onIncomingCall((call) => {
+      setCall(call);
+
+      dispatch(setIncomingCall(call));
+
+      /* Salesforce OpenCTI 
+        doScreenPop(call.phoneNumber);
+      */
     });
 
     phone.onOutgoingCall((call) => {
-      const action: Action = {
-        type: ActionType.PHONE_OUTGOING_CALL,
-        payload: { call: call },
-      };
+      setCall(call);
 
-      dispatch(action);
+      dispatch(setOutgoingCall(call));
     });
 
     phone.onStateChanged((state: PhoneState, ...params: any) => {
-      const payload: any = { state: state };
-
-      if (state === 'ERROR') {
-        payload.error = params[0].message;
-      }
-
-      const action: Action = {
-        type: ActionType.PHONE_STATE_CHANGED,
-        payload: payload,
-      };
-
-      dispatch(action);
+      dispatch(setPhoneState(state));
     });
 
+    // TODO, add phone exception type
     phone.onError((error: Error) => {
       console.log(error);
+
+      dispatch(setPhoneException(error));
     });
-  }, []);
+  }, [phone]);
 
   useEffect(() => {
+    if (phoneToken && ['OFFLINE', 'EXPIRED'].includes(phoneState)) {
+      console.log(`device init with token: ${phoneToken?.substr(0, 10)} state was:  ${phoneState}`);
+      phone.init(phoneToken);
+    }
+  }, [phoneToken, phoneState, phone]);
+
+  useEffect(() => {
+    if (phoneTokenException) {
+      dispatch(setPhoneException(new Error('Could not fetch token, check your internet connection')));
+    }
+  }, [phoneTokenException]);
+
+  useEffect(() => {
+    if (phoneTokenFetched) {
+      dispatch(setPhoneToken(phoneTokenFetched));
+    }
+  }, [phoneTokenFetched]);
+
+  useEffect(() => {
+    const updateDevice = async (deviceId: string) => {
+      try {
+        phone.setInputDevice(deviceId);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    if (phoneInputDevice && phoneState === 'IDLE') {
+      updateDevice(phoneInputDevice);
+    }
+  }, [phoneInputDevice, phoneState]);
+
+  useEffect(() => {
+    const updateDevice = async (deviceId: string) => {
+      try {
+        phone.setOutputDevice(deviceId);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    if (phoneOutputDevice && phoneState === 'IDLE') {
+      updateDevice(phoneOutputDevice);
+    }
+  }, [phoneOutputDevice, phoneState]);
+
+  useEffect(() => {
+    if (phoneInputDevice) {
+      setPersistedAudioInputDeviceId(phoneInputDevice);
+    }
+  }, [phoneInputDevice]);
+
+  useEffect(() => {
+    if (phoneOutputDevice) {
+      setPersistedAudioOutputDeviceId(phoneOutputDevice);
+    }
+  }, [phoneOutputDevice]);
+
+  /* local storage listeners */
+  useEffect(() => {
+    const validateToken = async (token: string) => {
+      const response = await request(getUrl(`/validate-token`)).post({ token: token });
+
+      if (response.body.isValid) {
+        login(token);
+      } else {
+        console.log(`local token is not valid, deleting from local storage`);
+        setPersistetToken(undefined);
+      }
+    };
+
     if (persistetToken) {
-      login(persistetToken);
+      validateToken(persistetToken);
     }
   }, [persistetToken]);
+
+  useEffect(() => {
+    if (persistedAudioInputDeviceId && audioInputDevices.length > 0 && !phoneInputDevice) {
+      if (audioInputDevices.some((device) => device.deviceId === persistedAudioInputDeviceId)) {
+        dispatch(setPhoneInputDevice(persistedAudioInputDeviceId));
+      }
+    }
+  }, [persistedAudioInputDeviceId, phoneInputDevice, audioInputDevices]);
+
+  useEffect(() => {
+    if (persistedAudioOutputDeviceId && audioOutputDevices.length > 0 && !phoneOutputDevice) {
+      if (audioOutputDevices.some((device) => device.deviceId === persistedAudioOutputDeviceId)) {
+        dispatch(setPhoneOutputDevice(persistedAudioOutputDeviceId));
+      }
+    }
+  }, [persistedAudioOutputDeviceId, phoneOutputDevice, audioOutputDevices]);
 
   useEffect(() => {
     if (isResume && token && connectionState === UserConnectionState.Closed) {
       user.login(getWebSocketUrl(), token);
     }
   }, [isResume]);
+
+  useEffect(() => {
+    if (queryStringToken) {
+      login(queryStringToken);
+    }
+  }, [queryStringToken]);
 
   return (
     <ApplicationContext.Provider
@@ -117,6 +283,7 @@ export const ApplicationContextProvider = (props: any) => {
         logout,
         user,
         phone,
+        call,
       }}
     >
       {props.children}

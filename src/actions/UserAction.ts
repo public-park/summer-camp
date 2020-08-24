@@ -40,14 +40,14 @@ const toPlainObject = (user: User) => {
 
 export const setActivity = (user: User): UserAction => {
   return {
-    type: ActionType.USER_ACTIVITY_CHANGED,
+    type: ActionType.USER_ACTIVITY_CHANGE,
     payload: toPlainObject(user),
   };
 };
 
 export const setConnectionState = (state: UserConnectionState, code: number | undefined): UserConnectionStateAction => {
   return {
-    type: ActionType.USER_CONNECTION_STATE_CHANGED,
+    type: ActionType.USER_CONNECTION_STATE_CHANGE,
     payload: { state, code },
   };
 };

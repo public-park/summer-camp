@@ -15,11 +15,13 @@ export class User {
   private _isAvailable: boolean;
   private _activity: UserActivity;
   role: UserRole | undefined;
+
   connection: {
     socket: WebSocket | undefined;
     state: UserConnectionState;
     url: string | undefined;
   };
+  sockets: number | undefined;
   private eventEmitter: EventEmitter;
 
   constructor() {
@@ -50,6 +52,11 @@ export class User {
   }
 
   private _setConnectionState(state: UserConnectionState, ...args: any) {
+    if (this.connection.state === state) {
+      console.log(`ignore connection state ${state}`);
+      return;
+    }
+
     console.log(`set connection state to: ${state}`);
     this.connection.state = state;
 
@@ -89,13 +96,18 @@ export class User {
           this.accountId = payload.user.accountId;
           this._tags = new Set(payload.user.tags);
           this.role = payload.user.role;
+          this.sockets = payload.user.sockets;
 
           this._setActivity(payload.user.activity);
-          this._setConnectionState(UserConnectionState.Open); // TODO, introduce separate ready state
+          this._setConnectionState(UserConnectionState.Open);
+        }
+
+        if ('configuration' in payload) {
+          this.eventEmitter.emit('configuration', payload.configuration);
         }
 
         if ('call' in payload) {
-          this.eventEmitter.emit('call', payload);
+          this.eventEmitter.emit('call', payload.call);
         }
 
         if ('id' in payload) {
@@ -142,6 +154,7 @@ export class User {
     });
   }
 
+  // TODO remove any
   send(type: string, payload: any, callback?: (...args: any) => any) {
     if (!this.connection.socket || this.connection.socket.readyState !== WebSocket.OPEN) {
       throw new WebSocketNotInStateOpenException();
@@ -186,6 +199,10 @@ export class User {
 
   onConnectionStateChanged(listener: (state: UserConnectionState, code: number | undefined) => void) {
     this.eventEmitter.on('connection_state', listener);
+  }
+
+  onConfigurationChanged(listener: (configuration: any) => void) {
+    this.eventEmitter.on('configuration', listener);
   }
 
   onConnectionError(listener: (event: Event) => void) {

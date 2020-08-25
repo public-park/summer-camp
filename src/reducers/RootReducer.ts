@@ -9,12 +9,12 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
 
   return produce(state, (draft) => {
     switch (action.type) {
-      case 'USER_CONNECTION_STATE_CHANGED':
+      case 'USER_CONNECTION_STATE_CHANGE':
         draft.connection.state = action.payload.state;
 
         break;
 
-      case 'USER_ACTIVITY_CHANGED':
+      case 'USER_ACTIVITY_CHANGE':
         draft.user = action.payload;
         break;
 
@@ -42,21 +42,33 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
         draft.workspace.view = 'PHONE_VIEW';
         break;
 
-      case 'PHONE_STATE_CHANGED':
-        if (action.payload.state === 'EXPIRED') {
+      case 'PHONE_EXCEPTION':
+        if (state.workspace.view === 'CONNECT_VIEW' && ['ERROR', 'OFFLINE', 'CONNECTING'].includes(state.phone.state)) {
+          draft.workspace.view = 'PHONE_VIEW';
+        }
+
+        draft.phone.error = action.payload.message;
+        break;
+
+      case 'PHONE_STATE_CHANGE':
+        if (action.payload === 'EXPIRED') {
           draft.phone.token = undefined;
         }
-        if (action.payload.state === 'IDLE') {
+
+        if (action.payload === 'IDLE') {
           draft.call = undefined;
         }
 
-        if (action.payload.state === 'ERROR') {
-          draft.phone.error = action.payload.error;
-        } else {
+        /* switch to phone view upon first connect */
+        if (state.workspace.view === 'CONNECT_VIEW' && action.payload === 'IDLE') {
+          draft.workspace.view = 'PHONE_VIEW';
+        }
+
+        if (action.payload !== 'ERROR') {
           draft.phone.error = undefined;
         }
 
-        draft.phone.state = action.payload.state;
+        draft.phone.state = action.payload;
         break;
 
       case 'PHONE_INCOMING_CALL':
@@ -68,10 +80,10 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
         break;
 
       case 'PHONE_CALL_UPDATE':
-        draft.call = action.payload.call;
+        draft.call = action.payload;
         break;
 
-      case 'PHONE_TOKEN_UPDATED':
+      case 'PHONE_TOKEN_UPDATE':
         draft.phone.token = action.payload;
 
         if (action.payload.error) {
@@ -82,17 +94,17 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
 
         break;
 
-      case 'PHONE_CONFIGURATION_UPDATED':
+      case 'PHONE_CONFIGURATION_UPDATE':
         draft.phone.configuration = action.payload;
         draft.phone.token = undefined;
-        draft.workspace.view = 'PHONE_VIEW';
+        draft.workspace.view = 'CONNECT_VIEW';
         break;
 
-      case 'PHONE_INPUT_DEVICE_UPDATED':
+      case 'PHONE_INPUT_DEVICE_UPDATE':
         draft.phone.devices.input = action.payload;
         break;
 
-      case 'PHONE_OUTPUT_DEVICE_UPDATED':
+      case 'PHONE_OUTPUT_DEVICE_UPDATE':
         draft.phone.devices.output = action.payload;
         break;
 

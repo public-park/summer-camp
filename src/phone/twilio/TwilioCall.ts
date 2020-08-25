@@ -71,6 +71,8 @@ export class TwilioCall implements Call {
         { id: this.id, state: state },
 
         (payload: any) => {
+          this.isOnHold = state;
+
           resolve(payload.state);
         }
       );

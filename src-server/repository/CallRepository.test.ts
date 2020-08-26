@@ -38,7 +38,7 @@ describe('Call Repository create, update', () => {
       personas.alice,
       undefined,
       new Set(['es', 'jp']),
-      account.id,
+      account,
       authentication,
       UserRole.Owner
     );
@@ -172,13 +172,13 @@ describe('Call Repository create, update', () => {
       user
     );
 
-    let callB = await callRepository.updateStatus(call.id, callSid, CallStatus.InProgress);
+    let callB = await callRepository.updateStatus(call.id, CallStatus.InProgress, callSid);
 
     expect(callB).toBeInstanceOf(Call);
     expect(callB?.status).toBe(CallStatus.InProgress);
     expect(callB?.duration).toBeUndefined();
 
-    callB = await callRepository.updateStatus(call.id, callSid, CallStatus.Completed, 100);
+    callB = await callRepository.updateStatus(call.id, CallStatus.Completed, callSid, 100);
 
     expect(callB).toBeInstanceOf(Call);
     expect(callB?.status).toBe(CallStatus.Completed);
@@ -233,7 +233,7 @@ describe('Call Repository call list', () => {
       personas.joe,
       undefined,
       new Set(['es', 'jp']),
-      good.id,
+      good,
       authentication,
       UserRole.Owner
     );
@@ -242,7 +242,7 @@ describe('Call Repository call list', () => {
       personas.max,
       undefined,
       new Set(['es', 'jp']),
-      good.id,
+      good,
       authentication,
       UserRole.Owner
     );
@@ -261,7 +261,6 @@ describe('Call Repository call list', () => {
         callSid: callSidA,
         from: from,
         to: to,
-
         status: CallStatus.Ringing,
         direction: CallDirection.Inbound,
       },

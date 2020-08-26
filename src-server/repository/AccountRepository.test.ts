@@ -1,8 +1,8 @@
 require('dotenv').config();
 
 import { Account } from '../models/Account';
-import { AccountNameError } from './AccountNameError';
 import { init, corporations, accountRepository } from '../test/test-environment';
+import { InvalidAccountNameException } from '../exceptions/InvalidAccountNameException';
 
 init();
 
@@ -25,7 +25,7 @@ describe('Account Repository create', () => {
   });
 
   test('should fail to create an account with an empty name', async (done) => {
-    await expect(accountRepository.create('')).rejects.toThrow(AccountNameError);
+    await expect(accountRepository.create('')).rejects.toThrow(InvalidAccountNameException);
 
     done();
   });
@@ -108,19 +108,5 @@ describe('Account Repository read, update and delete an account', () => {
     await expect(accountRepository.getById(id)).resolves.toBeUndefined();
 
     done();
-  });
-
-  test('should read all previously created accounts from the repository', async () => {
-    await accountRepository.create(corporations.wonka);
-    await accountRepository.create(corporations.good);
-
-    expect(await accountRepository.getAll()).toHaveLength(3);
-  });
-
-  test('should delete two accounts and return the remaining list with one account', async () => {
-    await accountRepository.delete(<Account>await accountRepository.getByName(corporations.wonka));
-    await accountRepository.delete(<Account>await accountRepository.getByName(corporations.good));
-
-    expect(await accountRepository.getAll()).toHaveLength(1);
   });
 });

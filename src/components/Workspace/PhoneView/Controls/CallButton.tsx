@@ -11,7 +11,7 @@ export const CallButton = () => {
 
   const { phone } = useContext(ApplicationContext);
 
-  const startCall = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+  const initiate = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     setIsFetching(true);
 
     try {
@@ -23,7 +23,5 @@ export const CallButton = () => {
     }
   };
 
-  return (
-    <button onClick={(e) => startCall(e)} disabled={!isValid || isFetching} className="start-call-button"></button>
-  );
+  return <button onClick={(e) => initiate(e)} disabled={!isValid || isFetching} className="start-call-button"></button>;
 };

@@ -1,4 +1,4 @@
-import React, { MouseEvent, useState, useContext } from 'react';
+import React, { MouseEvent, useState, useContext, useEffect } from 'react';
 import {
   CardContent,
   Typography,
@@ -12,8 +12,12 @@ import {
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
 import { ApplicationContext } from '../../context/ApplicationContext';
-import { request } from '../../helpers/api/RequestHelper';
+import { create } from '../../helpers/api/RequestHelper';
 import { getUrl } from '../../helpers/UrlHelper';
+import { useRequest } from '../../hooks/useRequest';
+import { LoadIndicator } from '../Workspace/ConfigurationView/LoadIndicator';
+import { RequestTimeoutException } from '../../exceptions/RequestTimeoutException';
+import { RequestException } from '../../exceptions/RequestException';
 
 interface LoginFormProps {
   isVisible: boolean;
@@ -27,9 +31,7 @@ interface LoginFormValues {
 
 export const LoginForm = ({ isVisible }: LoginFormProps) => {
   const { login } = useContext(ApplicationContext);
-
-  const [hasError, setHasError] = useState(false);
-  const [, setIsFetching] = useState(false);
+  const { response, exception, state, setRequest } = useRequest();
 
   const [values, setValues] = useState<LoginFormValues>({
     name: '',
@@ -44,25 +46,22 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
   const handleSubmit = async (e: MouseEvent) => {
     e.preventDefault();
 
-    setIsFetching(true);
-    setHasError(false);
+    const url = getUrl('login');
+    const payload = {
+      name: values.name,
+      password: values.password,
+    };
 
-    console.log(`login:  ${values.name} via endpoint ${getUrl('login')}`);
+    console.log(`login: ${values.name} via endpoint ${url}`);
 
-    try {
-      const response = await request(getUrl('login')).post({
-        name: values.name,
-        password: values.password,
-      });
-
-      setIsFetching(true);
-
-      login(response.body.token);
-    } catch (error) {
-      setIsFetching(true);
-      setHasError(true);
-    }
+    setRequest(create(url).post(payload));
   };
+
+  useEffect(() => {
+    if (response) {
+      login(response.body.token);
+    }
+  }, [response]);
 
   const handleChange = (name: string) => (event: any) => {
     setValues({ ...values, [name]: event.target.value });
@@ -76,6 +75,7 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
             <FormControl fullWidth variant="outlined">
               <InputLabel htmlFor="outlined-adornment-password">Name</InputLabel>
               <OutlinedInput
+                disabled={state === 'InProgress'}
                 fullWidth
                 type="text"
                 style={{ marginBottom: '20px' }}
@@ -92,6 +92,7 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
             <FormControl fullWidth variant="outlined">
               <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
               <OutlinedInput
+                disabled={state === 'InProgress'}
                 style={{ marginBottom: '20px' }}
                 id="password-login-input"
                 type={values.showPassword ? 'text' : 'password'}
@@ -110,12 +111,22 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
             </FormControl>
           </div>
           <div>
-            <Button fullWidth onClick={handleSubmit} variant="contained" color="primary">
+            <Button
+              disabled={state === 'InProgress'}
+              fullWidth
+              onClick={handleSubmit}
+              variant="contained"
+              color="primary"
+            >
               GO
             </Button>
           </div>
         </form>
-        {hasError && <Typography>Login failed</Typography>}
+        {exception instanceof RequestException && <Typography style={{ marginTop: '5px' }}>Login failed</Typography>}
+        {exception instanceof RequestTimeoutException && (
+          <Typography style={{ marginTop: '5px' }}>Server did not respond, check your internet connection</Typography>
+        )}
+        {state === 'InProgress' && <LoadIndicator />}
       </CardContent>
     </div>
   );

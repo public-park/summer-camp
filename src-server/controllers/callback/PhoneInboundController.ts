@@ -10,17 +10,19 @@ import { getStatus, getDuration, getFinalInboundCallState } from './CallStatusEv
 import { getConferenceStatusEventUrl } from './PhoneHelper';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { UserWithOnlineState } from '../../pool/UserWithOnlineState';
+import { Call } from '../../models/Call';
+import { v4 as uuidv4 } from 'uuid';
+
+const createCallFromRequest = (req: RequestWithAccount, user: UserWithOnlineState | undefined, status: CallStatus) => {
+  const { CallSid, From, To } = req.body;
+
+  return new Call(uuidv4(), CallSid, From, To, req.account.id, user?.id, status, CallDirection.Inbound);
+};
 
 const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithOnlineState) => {
-  const event = {
-    callSid: req.body.CallSid,
-    from: req.body.From,
-    to: req.body.To,
-    status: getStatus(req),
-    direction: CallDirection.Inbound,
-  };
+  const call = createCallFromRequest(req, user, CallStatus.Initiated);
 
-  const call = await calls.create(event, req.account, user);
+  await calls.create(call);
 
   user.updateCall(call);
 
@@ -41,15 +43,9 @@ const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithOnlin
 };
 
 const generateEnqueueTwiml = async (req: RequestWithAccount) => {
-  const event = {
-    callSid: req.body.CallSid,
-    from: req.body.From,
-    to: req.body.To,
-    status: CallStatus.Queued,
-    direction: CallDirection.Inbound,
-  };
+  const call = createCallFromRequest(req, undefined, CallStatus.Queued);
 
-  const call = await calls.create(event, req.account);
+  await calls.create(call);
 
   let twiml = new VoiceResponse();
 
@@ -61,20 +57,14 @@ const generateEnqueueTwiml = async (req: RequestWithAccount) => {
   };
 
   dial.conference(options, call.id);
-
+  console.log(twiml.toString());
   return twiml.toString();
 };
 
 export const generateRejectTwiml = async (req: RequestWithAccount, user?: UserWithOnlineState) => {
-  const event = {
-    callSid: req.body.CallSid,
-    from: req.body.From,
-    to: req.body.To,
-    status: CallStatus.NoAnswer,
-    direction: CallDirection.Inbound,
-  };
+  const call = createCallFromRequest(req, user, CallStatus.NoAnswer);
 
-  await calls.create(event, req.account, user);
+  await calls.create(call);
 
   let twiml = new VoiceResponse();
 
@@ -94,6 +84,7 @@ const handleConnectWithFilter = async (req: RequestWithAccount, res: Response, n
     log.info(`${req.body.To} called`);
 
     let users: Array<UserWithOnlineState> = pool.getAll(req.account);
+
     const tag = req.query.tag?.toString();
 
     if (tag) {
@@ -145,21 +136,13 @@ const handleCompleted = async (req: RequestWithAccount, res: Response, next: Nex
     let status = getStatus(req);
 
     /* override the status if the call was not accepted */
-    if (call.status) {
-      status = getFinalInboundCallState(call.status, status);
-    }
-
-    /* set duration if the call was accepted */
-    let duration;
+    call.status = getFinalInboundCallState(call.status, status);
 
     if (status !== CallStatus.NoAnswer) {
-      duration = getDuration(req);
+      call.duration = getDuration(req);
     }
-    call = await calls.updateStatus(call.id, status, req.body.CallSid, duration);
 
-    if (call.userId) {
-      pool.getById(call.userId)?.updateCallAndBroadcast(call);
-    }
+    await calls.update(call);
 
     res.status(200).end();
   } catch (error) {

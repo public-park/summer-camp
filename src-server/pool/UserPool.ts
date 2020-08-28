@@ -52,6 +52,16 @@ export class UserPool {
     return this.users.get(id);
   }
 
+  getByIdOrFail(id: string) {
+    const user = this.getById(id);
+
+    if (!user) {
+      throw new UserNotFoundException();
+    }
+
+    return user;
+  }
+
   async getByIdWithFallback(account: Account, id: string): Promise<UserWithOnlineState | undefined> {
     let userWithOnlineState = this.getById(id);
 

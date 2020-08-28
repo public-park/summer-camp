@@ -1,50 +1,19 @@
 import { NextFunction, Response } from 'express';
-import { pool, callRepository as calls, callRepository } from '../../worker';
-import { UserNotFoundException } from '../../exceptions/UserNotFoundException';
+import { pool, callRepository as calls } from '../../worker';
 import { getStatus, getDuration } from './CallStatusEventHelper';
 import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
-import { CallStatus } from '../../models/CallStatus';
-import { InvalidCallStatusException } from '../../exceptions/InvalidCallStatusException';
 
 const handleInbound = async (request: StatusCallbackRequest, response: Response, next: NextFunction) => {
   try {
-    const user = await pool.getById(<string>request.call.userId);
+    const user = pool.getByIdOrFail(<string>request.call.userId);
 
-    if (!user) {
-      throw new UserNotFoundException();
-    }
+    request.call.status = getStatus(request);
 
-    const event = {
-      callSid: request.body.CallSid,
-      from: request.body.From,
-      to: request.body.To,
-      status: getStatus(request),
-      duration: getDuration(request),
-    };
+    await calls.update(request.call);
 
-    if ([CallStatus.Initiated, CallStatus.Completed].includes(event.status)) {
-      response.status(200).end();
-      return;
-    }
+    user.updateCallAndBroadcast(request.call);
 
-    if ([CallStatus.Ringing].includes(event.status)) {
-      /* broadcast child-leg to user */
-      user.updateCallAndBroadcast(request.call);
-
-      response.status(200).end();
-      return;
-    }
-
-    if ([CallStatus.InProgress].includes(event.status)) {
-      const call = await calls.updateStatus(request.call.id, event.status, undefined, event.duration);
-
-      user.updateCallAndBroadcast(call);
-
-      response.status(200).end();
-      return;
-    }
-
-    throw new InvalidCallStatusException();
+    response.status(200).end();
   } catch (error) {
     return next(error);
   }
@@ -52,29 +21,15 @@ const handleInbound = async (request: StatusCallbackRequest, response: Response,
 
 const handleOutbound = async (request: StatusCallbackRequest, response: Response, next: NextFunction) => {
   try {
-    const user = await pool.getById(<string>request.call.userId);
+    const user = pool.getByIdOrFail(<string>request.call.userId);
 
-    if (!user) {
-      throw new UserNotFoundException();
-    }
+    request.call.callSid = request.body.CallSid;
+    request.call.status = getStatus(request);
+    request.call.duration = getDuration(request);
 
-    const event = {
-      callSid: request.body.CallSid,
-      from: request.body.From,
-      to: request.body.To,
-      status: getStatus(request),
-      duration: getDuration(request),
-    };
+    request.call = await calls.update(request.call);
 
-    /* always override the callSid with the outobund leg */
-    const callSid = event.callSid;
-
-    const call = await calls.updateStatus(request.call.id, event.status, callSid, event.duration);
-
-    /* the initiated state was already published initially when the call was created by the user */
-    if (event.status !== CallStatus.Initiated) {
-      user.updateCallAndBroadcast(call);
-    }
+    user.updateCallAndBroadcast(request.call);
 
     response.status(200).end();
   } catch (error) {

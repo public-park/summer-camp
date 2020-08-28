@@ -17,18 +17,7 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     this.calls = this.fromPlainObjects(this.load());
   }
 
-  async create(data: CallData, account: Account, user?: User) {
-    const call = new Call(
-      uuidv4(),
-      data.callSid,
-      data.from,
-      data.to,
-      account.id,
-      user?.id,
-      data.status,
-      data.direction
-    );
-
+  async create(call: Call) {
     this.calls.set(call.id, call);
 
     await this.persist(this.toPlainObjects());
@@ -60,29 +49,6 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
       item.duration,
       item.updateAt
     );
-  }
-
-  async updateStatus(id: string, status: CallStatus, callSid?: string, duration?: number) {
-    const call = await this.getById(id);
-
-    if (!call) {
-      throw new CallNotFoundException();
-    }
-
-    call.status = status;
-    call.updatedAt = new Date();
-
-    if (callSid) {
-      call.callSid = callSid;
-    }
-
-    if (duration) {
-      call.duration = duration;
-    }
-
-    await this.update(call);
-
-    return Promise.resolve(<Call>this.getCopy(call));
   }
 
   async getById(id: string) {
@@ -131,17 +97,9 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     return Promise.resolve(list.map((call) => this.getCopy(call)).reverse());
   }
 
-  async getAll() {
-    const list: Call[] = [];
-
-    for (const call of this.calls.values()) {
-      list.push(this.getCopy(call));
-    }
-
-    return Promise.resolve(list.reverse());
-  }
-
   async update(call: Call) {
+    call.updatedAt = new Date();
+
     this.calls.set(call.id, call);
 
     await this.persist(this.toPlainObjects());

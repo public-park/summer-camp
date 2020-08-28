@@ -1,7 +1,6 @@
 import { BaseRepository } from '../BaseRepository';
 import { CallRepository, CallData } from '../CallRepository';
 import { Call } from '../../models/Call';
-import { CallStatus } from '../../models/CallStatus';
 import CallModel from './CallSchema';
 import { User } from '../../models/User';
 import { Account } from '../../models/Account';
@@ -16,34 +15,6 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
     });
 
     const document = await model.save();
-
-    return document.toCall();
-  }
-
-  async updateStatus(id: string, status: CallStatus, callSid?: string, duration?: number) {
-    const updatedAt = new Date();
-
-    const payload: any = { status, updatedAt };
-
-    if (callSid) {
-      payload.callSid = callSid;
-    }
-
-    if (duration) {
-      payload.duration = duration;
-    }
-
-    const document = await CallModel.findOneAndUpdate(
-      {
-        _id: id,
-      },
-      payload,
-      {
-        new: true,
-        upsert: true,
-        runValidators: true,
-      }
-    ).orFail();
 
     return document.toCall();
   }
@@ -87,9 +58,12 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
       { _id: entity.id },
       {
         ...entity,
+        updatedAt: new Date(),
       },
       {
         new: true,
+        upsert: true,
+        runValidators: true,
       }
     );
 

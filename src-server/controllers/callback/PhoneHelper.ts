@@ -1,5 +1,4 @@
 import { RequestWithAccount } from '../../requests/RequestWithAccount';
-import { CallDirection } from '../../models/CallDirection';
 import { ConfigurationNotFoundException } from '../../exceptions/ConfigurationNotFoundException';
 import { InvalidConfigurationException } from '../../exceptions/InvalidConfigurationException';
 import { Account } from '../../models/Account';

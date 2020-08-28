@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import VoiceResponse = require('twilio/lib/twiml/VoiceResponse');
-import { callRepository } from '../../worker';
+import { callRepository as calls } from '../../worker';
 import { RequestWithAccount } from '../../requests/RequestWithAccount';
 import { getConferenceStatusEventUrl } from './PhoneHelper';
 import { Call } from '../../models/Call';
@@ -11,21 +11,21 @@ const generateConnectTwiml = (req: RequestWithAccount, call: Call) => {
 
   const dial = twiml.dial({ callerId: call.from });
 
-  dial.conference(
-    {
-      endConferenceOnExit: true,
-      statusCallbackEvent: ['join'],
-      statusCallback: getConferenceStatusEventUrl(req, call),
-    },
-    call.id
-  );
+  const options: any = {
+    endConferenceOnExit: true,
+    statusCallbackEvent: ['join'],
+    statusCallback: getConferenceStatusEventUrl(req, call),
+    participantLabel: 'agent',
+  };
+
+  dial.conference(options, call.id);
 
   return twiml.toString();
 };
 
 const handle = async (req: RequestWithAccount, res: Response, next: NextFunction) => {
   try {
-    const call = await callRepository.getById(req.body.callId);
+    const call = await calls.getById(req.body.callId);
 
     if (!call) {
       throw new CallNotFoundException();

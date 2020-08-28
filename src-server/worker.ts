@@ -26,7 +26,7 @@ import { handleError } from './middlewares/handleError';
 import { setHeaders as setHeadersCallback } from './middlewares/callback/setHeaders';
 import { verifyJwtOnUpgrade } from './middlewares/verifyJwtOnUpgrade';
 import { verifyUserResourcePolicy } from './middlewares/verifyUserResourcePolicy';
-import { verifyAccountResourcePolicy } from './middlewares/verifyAccontResourcePolicy';
+import { verifyAccountResourcePolicy } from './middlewares/verifyAccountResourcePolicy';
 import { addAccountToRequest } from './middlewares/callback/addAccountToRequest';
 
 // middlewares - schema validation
@@ -59,7 +59,33 @@ import * as mongoose from 'mongoose';
 import { UserPool } from './pool/UserPool';
 import { PhoneOutboundController } from './controllers/callback/PhoneOutboundController';
 import { PhoneInboundController } from './controllers/callback/PhoneInboundController';
-import { StatusEventController } from './controllers/callback/StatusEventController';
+import { CallStatusEventController } from './controllers/callback/CallStatusEventController';
+import { SamlController } from './controllers/SamlController';
+import * as passport from 'passport';
+
+import { getStrategy } from './helpers/SamlPassportHelper';
+import { ConferenceStatusEventController } from './controllers/callback/ConferenceStatusEventController';
+import { verifyCallResourcePolicy } from './middlewares/verifyCallResourcePolicy';
+import { CallController } from './controllers/CallController';
+import { addCallToRequest } from './middlewares/callback/addCallToRequest';
+import { FileCallRepository } from './repository/file/FileCallRepository';
+import { UserPresenceController } from './controllers/UserPresenceController';
+
+/* SAML 2.0 Metadata */
+if (process.env.REACT_APP_AUTHENTICATION_MODE === 'saml') {
+  try {
+    if (!process.env.SAML_AUTHENTICATION_METADATA) {
+      throw `env parameter SAML_AUTHENTICATION_METADATA is missing`;
+    }
+
+    const file = path.join(process.cwd(), process.env.SAML_AUTHENTICATION_METADATA);
+
+    passport.use('saml', getStrategy(file));
+  } catch (error) {
+    log.error(error);
+    process.exit();
+  }
+}
 
 /* MongoDB Repository  */
 if (!process.env.MONGODB_URI) {
@@ -69,11 +95,10 @@ if (!process.env.MONGODB_URI) {
 
 const mongoOptions = {
   connectTimeoutMS: 5000,
-  autoReconnect: true,
+  useUnifiedTopology: true,
   useFindAndModify: false,
   useNewUrlParser: true,
   useCreateIndex: true,
-  useUnifiedTopology: true,
 };
 
 mongoose
@@ -81,15 +106,15 @@ mongoose
   .then(() => log.info(`connected to ${process.env.MONGODB_URI} ...`))
   .catch((error) => log.error(error));
 
-export const userRepository = new MongoUserRepository();
 export const accountRepository = new MongoAccountRepository();
+export const userRepository = new MongoUserRepository(accountRepository);
 export const callRepository = new MongoCallRepository();
 
-/* Local File Repository 
+/* Local File Repository
 export const accountRepository = new FileAccountRepository('./accounts.json');
-export const userRepository = new FileUserRepository('./users.json', accountRepository);
+export const userRepository = new FileUserRepository(accountRepository, './users.json');
 export const callRepository = new FileCallRepository('calls.json');
-*/
+ */
 
 export const authenticationProvider = new PasswordAuthenticationProvider();
 
@@ -121,9 +146,26 @@ callback.param('accountId', addAccountToRequest);
 callback.route('/accounts/:accountId/phone/inbound').post(PhoneInboundController.handleConnectToUser);
 callback.route('/accounts/:accountId/phone/inbound/completed').post(PhoneInboundController.handleCompleted);
 callback.route('/accounts/:accountId/phone/outbound').post(PhoneOutboundController.handle);
-callback.route('/accounts/:accountId/calls/:callId/status-event/:direction').post(StatusEventController.handle);
 
 app.use('/api/callback', callback);
+
+const statusCallback = express.Router();
+
+statusCallback.use(express.urlencoded({ extended: true }));
+statusCallback.use(setHeadersCallback);
+statusCallback.param('accountId', addAccountToRequest);
+statusCallback.param('callId', addCallToRequest);
+
+statusCallback.route('/accounts/:accountId/calls/:callId/inbound').post(CallStatusEventController.handleInbound);
+statusCallback.route('/accounts/:accountId/calls/:callId/outbound').post(CallStatusEventController.handleOutbound);
+statusCallback
+  .route('/accounts/:accountId/calls/:callId/conference/inbound')
+  .post(ConferenceStatusEventController.handleInbound);
+statusCallback
+  .route('/accounts/:accountId/calls/:callId/conference/outbound')
+  .post(ConferenceStatusEventController.handleOutbound);
+
+app.use('/api/status-callback', statusCallback);
 
 const user = express.Router();
 
@@ -155,9 +197,8 @@ user
 
 user.route('/:userId').delete(allowAccessWith('user.delete'), UserController.remove);
 user.route('/:userId/phone/token').post(allowAccessWith('user.phone.create'), PhoneController.createToken);
-user.route('/:userId/presence').get(allowAccessWith('user.read'), UserController.getPresence);
+user.route('/:userId/presence').get(allowAccessWith('user.read'), UserPresenceController.get);
 user.route('/:userId/configuration').get(allowAccessWith('user.read'), UserController.getConfiguration);
-user.route('/:userId/calls').get(allowAccessWith('user.calls.read'), UserController.getCalls);
 
 app.use('/api/users', user);
 
@@ -197,6 +238,20 @@ account.route('/:accountId').get(allowAccessWith('account.read'), AccountControl
 
 app.use('/api/accounts', account);
 
+const call = express.Router();
+
+call.use(express.json());
+call.use(verifyJwt);
+call.use(addUserToRequest);
+call.use(setHeaders);
+
+call.param('callId', verifyCallResourcePolicy);
+
+call.route('/').get(allowAccessWith('call.read'), CallController.getAll);
+call.route('/:callId').get(allowAccessWith('call.read'), CallController.fetch);
+
+app.use('/api/calls', call);
+
 const loginRouter = express.Router();
 
 loginRouter.use(express.json());
@@ -217,9 +272,24 @@ validateTokenRouter.route('/').post(validateAgainst(ValidateTokenRequestSchema),
 
 app.use('/api/validate-token', validateTokenRouter);
 
-if (process.env.REGISTRATION_ENABLED === 'true') {
-  const registerRouter = express.Router();
+/* SAML 2.0
+const samlRouter = express.Router();
 
+samlRouter.use(express.urlencoded({ extended: true }));
+samlRouter.param('accountId', addAccountToRequest);
+
+samlRouter.route('/:accountId/authenticate').all(
+  passport.authenticate('saml', {
+    session: false,
+  }),
+  SamlController.authenticate
+);
+
+app.use('/saml', samlRouter);
+ */
+
+if (process.env.REACT_APP_AUTHENTICATION_MODE === 'local-password-with-registration') {
+  const registerRouter = express.Router();
   registerRouter.use(express.json());
   registerRouter.use(setHeaders);
   registerRouter.use(rejectIfContentTypeIsNot('application/json'));
@@ -229,25 +299,46 @@ if (process.env.REGISTRATION_ENABLED === 'true') {
   app.use('/api/register', registerRouter);
 }
 
+/* return not found for all other /api routes */
+app.all('/api/*', function (req, res) {
+  res.status(404).end();
+});
+
 if (process.env.NODE_ENV === 'production') {
   log.info('running server in production mode');
 
-  app.use(express.static(path.join(__dirname, '../build')));
-  app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../build', 'index.html')));
-}
+  app.enable('trust proxy');
 
-app.get('*', function (req, res) {
-  res.redirect('/');
-});
+  /* redirect insecure requests
+  app.use((request: express.Request, response: express.Response, next: express.NextFunction) => {
+    if (request.secure) {
+      return next();
+    }
+    response.redirect('http://' + request.headers.host + request.url);
+  }); */
+
+  app.use(express.static(path.join(__dirname, '../build')));
+
+  app.get('/', (request: express.Request, response: express.Response) =>
+    response.sendFile(path.join(__dirname, '../build', 'index.html'))
+  );
+
+  app.get('*', function (req, res) {
+    res.redirect('/');
+  });
+}
 
 app.use(handleError);
 
 const server = http.createServer(app);
 
 const options = {
-  verifyClient: verifyJwtOnUpgrade,
-  clientTracking: true,
-  noServer: true,
+  keepAliveInSeconds: 30,
+  server: {
+    verifyClient: verifyJwtOnUpgrade,
+    clientTracking: true,
+    noServer: true,
+  },
 };
 
 export const socketWorker = new SocketWorker(options, pool);

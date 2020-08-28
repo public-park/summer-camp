@@ -1,17 +1,31 @@
 import { BaseRepository } from '../BaseRepository';
-import { CallRepository, CallData } from '../CallRepository';
+import { CallRepository } from '../CallRepository';
 import { Call } from '../../models/Call';
 import CallModel from './CallSchema';
 import { User } from '../../models/User';
 import { Account } from '../../models/Account';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
+import { CallStatus } from '../../models/CallStatus';
+import { CallDirection } from '../../models/CallDirection';
 
 export class MongoCallRepository implements CallRepository, BaseRepository<Call> {
-  async create(data: CallData, account: Account, user?: User) {
+  async create(
+    from: string,
+    to: string,
+    account: Account,
+    status: CallStatus,
+    direction: CallDirection,
+    user?: User,
+    callSid?: string
+  ) {
     const model = new CallModel({
-      ...data,
+      from: from,
+      to: to,
       accountId: account.id,
+      status: status,
+      direction: direction,
       userId: user?.id,
+      callSid: callSid,
     });
 
     const document = await model.save();

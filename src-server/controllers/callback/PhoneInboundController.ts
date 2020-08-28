@@ -10,19 +10,11 @@ import { getStatus, getDuration, getFinalInboundCallState } from './CallStatusEv
 import { getConferenceStatusEventUrl } from './PhoneHelper';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { UserWithOnlineState } from '../../pool/UserWithOnlineState';
-import { Call } from '../../models/Call';
-import { v4 as uuidv4 } from 'uuid';
-
-const createCallFromRequest = (req: RequestWithAccount, user: UserWithOnlineState | undefined, status: CallStatus) => {
-  const { CallSid, From, To } = req.body;
-
-  return new Call(uuidv4(), CallSid, From, To, req.account.id, user?.id, status, CallDirection.Inbound);
-};
 
 const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithOnlineState) => {
-  const call = createCallFromRequest(req, user, CallStatus.Initiated);
+  const { CallSid, From, To } = req.body;
 
-  await calls.create(call);
+  const call = await calls.create(From, To, req.account, CallStatus.Initiated, CallDirection.Inbound, user, CallSid);
 
   user.updateCall(call);
 
@@ -43,9 +35,9 @@ const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithOnlin
 };
 
 const generateEnqueueTwiml = async (req: RequestWithAccount) => {
-  const call = createCallFromRequest(req, undefined, CallStatus.Queued);
+  const { CallSid, From, To } = req.body;
 
-  await calls.create(call);
+  const call = await calls.create(From, To, req.account, CallStatus.Queued, CallDirection.Inbound, undefined, CallSid);
 
   let twiml = new VoiceResponse();
 
@@ -57,14 +49,14 @@ const generateEnqueueTwiml = async (req: RequestWithAccount) => {
   };
 
   dial.conference(options, call.id);
-  console.log(twiml.toString());
+
   return twiml.toString();
 };
 
 export const generateRejectTwiml = async (req: RequestWithAccount, user?: UserWithOnlineState) => {
-  const call = createCallFromRequest(req, user, CallStatus.NoAnswer);
+  const { CallSid, From, To } = req.body;
 
-  await calls.create(call);
+  await calls.create(From, To, req.account, CallStatus.NoAnswer, CallDirection.Inbound, user, CallSid);
 
   let twiml = new VoiceResponse();
 
@@ -138,7 +130,7 @@ const handleCompleted = async (req: RequestWithAccount, res: Response, next: Nex
     /* override the status if the call was not accepted */
     call.status = getFinalInboundCallState(call.status, status);
 
-    if (status !== CallStatus.NoAnswer) {
+    if (call.status !== CallStatus.NoAnswer) {
       call.duration = getDuration(req);
     }
 

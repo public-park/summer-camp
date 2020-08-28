@@ -1,21 +1,20 @@
 import { BaseRepository } from './BaseRepository';
 import { Call } from '../models/Call';
-import { CallStatus } from '../models/CallStatus';
-import { CallDirection } from '../models/CallDirection';
 import { User } from '../models/User';
 import { Account } from '../models/Account';
-
-export interface CallData {
-  callSid: string | undefined;
-  from: string;
-  to: string;
-  status: CallStatus;
-  direction: CallDirection;
-  duration?: number | undefined;
-}
+import { CallDirection } from '../models/CallDirection';
+import { CallStatus } from '../models/CallStatus';
 
 export interface CallRepository extends BaseRepository<Call> {
-  create: (data: CallData, account: Account, user?: User) => Promise<Call>;
+  create: (
+    from: string,
+    to: string,
+    account: Account,
+    status: CallStatus,
+    direction: CallDirection,
+    user?: User,
+    callSid?: string
+  ) => Promise<Call>;
   getByCallSid: (callSid: string) => Promise<Call | undefined>;
   getByUser: (user: User, skip: number, limit: number) => Promise<Array<Call>>;
   getByAccount: (account: Account, skip: number, limit: number) => Promise<Array<Call>>;

@@ -1,12 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import { BaseRepository } from '../BaseRepository';
-import { CallRepository, CallData } from '../CallRepository';
+import { CallRepository } from '../CallRepository';
 import { User } from '../../models/User';
 import { Account } from '../../models/Account';
 import { FileBaseRepository } from './FileBaseRepository';
 import { Call } from '../../models/Call';
-import { CallStatus } from '../../models/CallStatus';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
+import { CallStatus } from '../../models/CallStatus';
+import { CallDirection } from '../../models/CallDirection';
 
 export class FileCallRepository extends FileBaseRepository<Call> implements CallRepository, BaseRepository<Call> {
   calls: Map<string, Call>;
@@ -17,7 +18,19 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     this.calls = this.fromPlainObjects(this.load());
   }
 
-  async create(call: Call) {
+  async create(
+    from: string,
+    to: string,
+    account: Account,
+    status: CallStatus,
+    direction: CallDirection,
+    user?: User,
+    callSid?: string
+  ) {
+    const call = new Call(uuidv4(), callSid, from, to, account.id, user?.id, status, direction);
+
+    call.createdAt = new Date();
+
     this.calls.set(call.id, call);
 
     await this.persist(this.toPlainObjects());

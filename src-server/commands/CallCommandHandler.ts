@@ -10,18 +10,14 @@ import { v4 as uuidv4 } from 'uuid';
 const handle = async (user: UserWithOnlineState, phoneNumber: string) => {
   const callerId = getCallerId(user.account);
 
-  const call = new Call(
-    uuidv4(),
-    undefined,
+  const call = await calls.create(
     callerId,
     phoneNumber,
-    user.account.id,
-    user.id,
+    user.account,
     CallStatus.Initiated,
-    CallDirection.Outbound
+    CallDirection.Outbound,
+    user
   );
-
-  await calls.create(call);
 
   user.updateCall(call);
 

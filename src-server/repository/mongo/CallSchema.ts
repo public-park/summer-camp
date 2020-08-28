@@ -25,8 +25,8 @@ const CallSchema = new Schema(
   {
     _id: { type: String, default: uuidv4 },
     callSid: { type: String, index: true },
-    from: { type: String },
-    to: { type: String },
+    from: { type: String, required: true },
+    to: { type: String, required: true },
     accountId: { type: String, required: true, index: true },
     userId: { type: String, index: true },
     status: { type: String },

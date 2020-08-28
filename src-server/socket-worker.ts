@@ -4,23 +4,54 @@ import * as WebSocket from 'ws';
 import { WebSocketWithKeepAlive } from './WebSocketWithKeepAlive';
 import { log } from './logger';
 import { UserPool } from './pool/UserPool';
+import { ActivityCommandHandler } from './commands/ActivityCommandHandler';
+import { CallCommandHandler } from './commands/CallCommandHandler';
+import { HoldCommandHandler } from './commands/HoldCommandHandler';
+import { accountRepository } from './worker';
+import { AccountNotFoundException } from './exceptions/AccountNotFoundException';
+import { UserWithOnlineState } from './pool/UserWithOnlineState';
+import { InvalidHttpHeaderException } from './exceptions/InvalidHttpHeaderException';
+import { TagsCommandHandler } from './commands/TagsCommandHandler';
+import { PresenceCommandHandler } from './commands/PresenceCommandHandler';
+import { ConfigurationCommandHandler } from './commands/ConfigurationCommandHandler';
+
+interface SocketWorkerOptions {
+  server: WebSocket.ServerOptions;
+  keepAliveInSeconds: number;
+}
 
 export class SocketWorker {
-  options: any;
+  options: SocketWorkerOptions;
   pool: UserPool;
 
   server: WebSocket.Server | undefined;
   keepAliveInterval: NodeJS.Timeout | undefined;
 
-  constructor(options: WebSocket.ServerOptions, pool: UserPool) {
+  constructor(options: SocketWorkerOptions, pool: UserPool) {
     this.pool = pool;
     this.options = options;
     this.server = undefined;
     this.keepAliveInterval = undefined;
   }
 
+  async getUserFromHttpHeader(headers: http.IncomingHttpHeaders): Promise<UserWithOnlineState> {
+    if (!headers.userId || !headers.accountId || !headers.token) {
+      throw new InvalidHttpHeaderException();
+    }
+
+    const account = await accountRepository.getById(<string>headers.accountId);
+
+    if (!account) {
+      throw new AccountNotFoundException();
+    }
+
+    const user = await this.pool.add(account, <string>headers.userId);
+
+    return user;
+  }
+
   run() {
-    this.server = new WebSocket.Server(this.options, () => {
+    this.server = new WebSocket.Server(this.options.server, () => {
       // is not triggered in noServer mode
       log.info(`${this.constructor.name}: ready: ${Date.now()}`);
     });
@@ -31,25 +62,12 @@ export class SocketWorker {
     });
 
     this.server.on('connection', async (socket: WebSocketWithKeepAlive, req: http.IncomingMessage) => {
-      //const context = this.context;
-
-      if (!req.headers.id || !req.headers.token) {
-        throw new Error('invalid http header provided');
-      }
-
       try {
-        // TODO, if user is already connected, disconnect existing sockets with reason
-        const user = await this.pool.getUserById(<string>req.headers.id);
+        const user = await this.getUserFromHttpHeader(req.headers);
 
-        if (!user) {
-          throw Error('user is null');
-        }
+        user.sockets.add(socket);
 
-        user.isOnline = true;
-
-        this.pool.users.set(user.id, user);
-
-        log.info(`add user ${user.id} to pool, new size is ${this.pool.users.size}`);
+        log.info(`add user ${user.id}, (socket(s) ${user.sockets}) to pool, size is ${this.pool.users.size}`);
 
         socket.isAlive = true;
         socket.token = <string>req.headers.token;
@@ -65,27 +83,87 @@ export class SocketWorker {
           socket.isAlive = true;
         });
 
-        socket.on('message', (message: WebSocket.Data) => {
+        socket.on('message', async (message: WebSocket.Data) => {
           log.debug(`received message: ${message.toString()}`);
 
           const payload: any = JSON.parse(message.toString());
 
           if ('activity' in payload) {
-            socket.send(message.toString());
+            const response = await ActivityCommandHandler.handle(user, payload.activity);
 
-            user.activity = payload.activity;
+            socket.send(JSON.stringify(response));
+          }
 
-            this.pool.repository.update(user);
+          if ('tags' in payload) {
+            const response = await TagsCommandHandler.handle(user, payload.tags);
+
+            socket.send(JSON.stringify(response));
+          }
+
+          if ('call' in payload) {
+            const response = await CallCommandHandler.handle(user, payload.call.to);
+
+            const message = {
+              id: payload.id,
+              call: {
+                ...response,
+              },
+            };
+
+            socket.send(JSON.stringify(message));
+          }
+
+          if ('presence' in payload) {
+            const response = await PresenceCommandHandler.handle(user);
+
+            const message = {
+              id: payload.id,
+              call: {
+                ...response,
+              },
+            };
+
+            socket.send(JSON.stringify(message));
+          }
+
+          if ('configuration' in payload) {
+            const response = await ConfigurationCommandHandler.handle(user);
+
+            const message = {
+              id: payload.id,
+              configuration: {
+                ...response,
+              },
+            };
+
+            socket.send(JSON.stringify(message));
+          }
+
+          if ('hold' in payload) {
+            const response = await HoldCommandHandler.handle(user, payload.hold.id, payload.hold.state);
+
+            const message = {
+              id: payload.id,
+              state: response,
+            };
+
+            socket.send(JSON.stringify(message));
           }
         });
 
         socket.on('close', (code: number, reason: string) => {
-          this.pool.users.delete(user.id);
+          user.sockets.remove(socket);
 
-          log.debug(`${user.id} closed socket with code ${code}, message: ${reason}`);
+          if (user.sockets.length() === 0) {
+            this.pool.delete(user.id);
+          }
+
+          log.debug(`${user.id} closed socket with code ${code}, message: ${reason}, socket(s) ${user.sockets}`);
         });
 
-        socket.send(JSON.stringify({ user: user.toApiResponse() }));
+        // TODO, add code below to a handler
+        user.broadcast({ user: user.toResponse() });
+        user.broadcast({ configuration: user.getConfiguration() });
       } catch (error) {
         socket.terminate();
         log.debug(error);
@@ -103,7 +181,7 @@ export class SocketWorker {
     this.keepAliveInterval = setInterval(() => {
       if (!this.server) {
         clearInterval(<NodeJS.Timeout>this.keepAliveInterval);
-        throw new Error('server does not exist, stopped loop');
+        throw new Error('server does not exist, stop keep alive');
       }
 
       this.server.clients.forEach((socket: WebSocket) => {
@@ -111,13 +189,15 @@ export class SocketWorker {
       });
 
       log.info(`broadcast ping to ${this.server.clients.size} client(s)`);
-    }, 30 * 1000);
+    }, this.options.keepAliveInSeconds * 1000);
   };
 
   closeSocketByUserId(id: string) {
     if (!this.server) {
       return;
     }
+
+    this.pool.delete(id);
 
     this.server.clients.forEach((socket: WebSocketWithKeepAlive) => {
       if (socket.user.id === id) {
@@ -135,8 +215,8 @@ export class SocketWorker {
     try {
       TokenHelper.verifyJwt((socket as WebSocketWithKeepAlive).token);
     } catch (error) {
-      log.debug(`${socket.user.id} socket ${socket.remoteAddress} - ${error.name}`);
-      socket.close(); // TODO, add reason
+      log.debug(`${socket.user.id} remote ${socket.remoteAddress} - ${error.name}`);
+      socket.close(4001);
     }
 
     socket.isAlive = false;

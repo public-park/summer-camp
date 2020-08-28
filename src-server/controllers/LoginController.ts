@@ -21,7 +21,7 @@ const login = async (req: Request, res: Response, next: any) => {
       const payload = {
         token: TokenHelper.createJwt(user, 14400),
         userId: user.id,
-        accountId: user.accountId,
+        accountId: user.account.id,
       };
 
       res.json(payload);

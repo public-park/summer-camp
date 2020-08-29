@@ -40,7 +40,7 @@ const authenticate = async (req: RequestWithProfile, res: Response, next: NextFu
 
     log.info(`authenticated ${req.profile.nameID} name: ${req.profile.name} role: ${req.profile.role} token: ${token}`);
 
-    res.redirect(`${process.env.REACT_APP_SAML_PUBLIC_URL}?token=${token}`);
+    res.redirect(`${process.env.SAML_AUTHENTICATION_PUBLIC_URL}?token=${token}`);
   } catch (error) {
     return next(error);
   }

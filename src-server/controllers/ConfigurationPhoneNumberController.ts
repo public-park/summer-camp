@@ -2,8 +2,8 @@ import * as Twilio from 'twilio';
 
 import { Request, Response, NextFunction } from 'express';
 import { accountRepository } from '../worker';
-import { AccountNotFoundError } from '../repository/AccountNotFoundError';
 import { ConfigurationNotFoundException } from '../exceptions/ConfigurationNotFoundException';
+import { AccountNotFoundException } from '../exceptions/AccountNotFoundException';
 
 export const fetchAllIncomingPhoneNumbers = async (client: Twilio.Twilio) => {
   const phoneNumbers = (await client.incomingPhoneNumbers.list()).filter(
@@ -31,7 +31,7 @@ const fetch = async (req: Request, res: Response, next: NextFunction) => {
     const account = await accountRepository.getById(<string>req.params.accountId);
 
     if (!account) {
-      throw new AccountNotFoundError();
+      throw new AccountNotFoundException();
     }
 
     if (!account.configuration) {

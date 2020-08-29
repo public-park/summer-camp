@@ -1,14 +1,12 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
-import { selectCall } from '../../../store/Store';
+import React, { useContext } from 'react';
+import { ApplicationContext } from '../../../context/ApplicationContext';
 
 export const IncomingCall = () => {
-  const call = useSelector(selectCall);
+  const { call } = useContext(ApplicationContext);
 
-  const answerCall = () => {
-    if (call) {
-      call.answer();
-    }
+  const answer = () => {
+    // TODO handle frontend error
+    call?.answer();
   };
 
   return (
@@ -21,7 +19,7 @@ export const IncomingCall = () => {
 
       <div className="blank"></div>
 
-      <button className="accept-call-button" onClick={() => answerCall()}></button>
+      <button className="accept-call-button" onClick={() => answer()}></button>
     </div>
   );
 };

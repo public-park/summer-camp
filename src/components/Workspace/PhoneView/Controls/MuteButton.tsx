@@ -4,7 +4,7 @@ import { ApplicationContext } from '../../../../context/ApplicationContext';
 export const MuteButton = () => {
   const { call } = useContext(ApplicationContext);
 
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(call?.isMuted);
 
   const toggleMute = () => {
     const state: boolean = !isMuted;

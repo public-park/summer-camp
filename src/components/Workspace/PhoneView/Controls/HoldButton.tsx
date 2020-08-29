@@ -4,7 +4,7 @@ import { ApplicationContext } from '../../../../context/ApplicationContext';
 export const HoldButton = () => {
   const { call } = useContext(ApplicationContext);
 
-  const [isOnHold, setIsOnHold] = useState(false);
+  const [isOnHold, setIsOnHold] = useState(call?.isOnHold);
 
   const toggleHold = () => {
     const state: boolean = !isOnHold;

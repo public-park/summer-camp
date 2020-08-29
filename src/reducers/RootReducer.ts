@@ -97,7 +97,13 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
       case 'PHONE_CONFIGURATION_UPDATE':
         draft.phone.configuration = action.payload;
         draft.phone.token = undefined;
-        draft.workspace.view = 'CONNECT_VIEW';
+
+        if (action.payload) {
+          draft.workspace.view = 'CONNECT_VIEW';
+        } else {
+          draft.workspace.view = 'PHONE_VIEW';
+        }
+
         break;
 
       case 'PHONE_INPUT_DEVICE_UPDATE':

@@ -4,9 +4,15 @@ import { toPassportConfig, MetadataReader } from 'passport-saml-metadata';
 import * as PassportSaml from 'passport-saml';
 import { Profile, VerifiedCallback } from 'passport-saml';
 import { RequestWithAccount } from '../requests/RequestWithAccount';
+import { UserRole } from '../models/UserRole';
+
+export interface UserProfile extends Profile {
+  role?: UserRole;
+  name?: string;
+}
 
 export interface RequestWithProfile extends RequestWithAccount {
-  profile: Profile;
+  profile: UserProfile;
 }
 
 const verifyProfile = (req: RequestWithProfile, profile: Profile, done: VerifiedCallback) => {

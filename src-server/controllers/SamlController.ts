@@ -4,21 +4,21 @@ import { userRepository } from '../worker';
 import { SamlAuthenticationProvider } from '../security/authentication/SamlAuthenticationProvider';
 import { UserRole } from '../models/UserRole';
 import { TokenHelper } from '../helpers/TokenHelper';
-import { RequestWithProfile } from '../saml-config2';
 import { InvalidSamlAttributeException } from '../exceptions/InvalidSamlAttributeException';
+import { RequestWithProfile } from '../helpers/SamlPassportHelper';
 
 const authenticate = async (req: RequestWithProfile, res: Response, next: NextFunction) => {
   try {
     log.debug(req.profile);
 
-    let user = await userRepository.getByNameId(req.account, req.profile.nameID);
+    let user = await userRepository.getByNameId(req.account, <string>req.profile.nameID);
 
     if (!user) {
       const provider = new SamlAuthenticationProvider();
 
-      const authentication = await provider.create(req.profile.nameID);
+      const authentication = await provider.create(<string>req.profile.nameID);
 
-      if (!Object.values(UserRole).includes(req.profile.role)) {
+      if (!req.profile.role || !Object.values(UserRole).includes(req.profile.role)) {
         throw new InvalidSamlAttributeException(`role ${req.profile.role} is unknown`);
       }
 

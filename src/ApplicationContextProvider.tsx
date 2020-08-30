@@ -78,11 +78,8 @@ export const ApplicationContextProvider = (props: any) => {
 
   const login = (token: string) => {
     const user = new User();
-    const phone = new TwilioPhone(user);
 
     setUser(user);
-    setPhone(phone);
-
     setPersistetToken(token);
 
     user.login(getWebSocketUrl(), token);
@@ -92,8 +89,6 @@ export const ApplicationContextProvider = (props: any) => {
 
   const logout = async (reason?: string) => {
     await user.logout();
-
-    phone.destroy();
 
     setPersistetToken(undefined);
 
@@ -130,6 +125,10 @@ export const ApplicationContextProvider = (props: any) => {
     });
 
     user.onConfigurationChanged((configuration: any) => {
+      phone.destroy();
+
+      setPhone(new TwilioPhone(user));
+
       dispatch(setPhoneConfiguration(configuration));
     });
 
@@ -172,11 +171,11 @@ export const ApplicationContextProvider = (props: any) => {
   }, [phone]);
 
   useEffect(() => {
-    if (phoneToken && ['OFFLINE', 'EXPIRED'].includes(phoneState)) {
-      console.log(`device init with token: ${phoneToken?.substr(0, 10)} state was:  ${phoneState}`);
+    if (phoneToken) {
+      console.log(`Phone device init with token: ${phoneToken?.substr(0, 10)} state was:  ${phoneState}`);
       phone.init(phoneToken);
     }
-  }, [phoneToken, phoneState, phone]);
+  }, [phoneToken]);
 
   useEffect(() => {
     if (phoneTokenException) {

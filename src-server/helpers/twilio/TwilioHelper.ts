@@ -19,14 +19,14 @@ interface VoiceAccessToken extends AccessToken {
 }
 
 interface TwilioHelperOptions {
-  edge: string;
+  accountSid: string;
+  edge?: string;
 }
 
 export class TwilioHelper {
   client: Twilio;
 
-  // TODO add edge to configuration, env param TWILIO_API_EDGE=frankfurt
-  constructor(account: Account, options?: TwilioHelperOptions) {
+  constructor(account: Account) {
     if (!account.hasConfiguration()) {
       throw new ConfigurationNotFoundException();
     }
@@ -37,10 +37,18 @@ export class TwilioHelper {
       throw new InvalidConfigurationException();
     }
 
+    const options: TwilioHelperOptions = {
+      accountSid: accountSid,
+    };
+
+    if (process.env.TWILIO_API_EDGE) {
+      options.edge = process.env.TWILIO_API_EDGE;
+    }
+
+    log.debug(`creating Twilio server-side client with options: ${JSON.stringify(options)}`);
+
     this.client = new Twilio(key, secret, {
       ...options,
-      accountSid: accountSid,
-      edge: 'frankfurt',
     });
   }
 
@@ -166,7 +174,7 @@ export class TwilioHelper {
       endConferenceOnExit: true,
       label: label,
       timeout: 45,
-      statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
+      statusCallbackEvent: ['ringing', 'answered', 'completed'],
       statusCallbackMethod: 'POST',
       statusCallback: statusEventUrl,
     };

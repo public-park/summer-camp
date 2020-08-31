@@ -58,9 +58,9 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
       item.userId,
       item.status,
       item.direction,
-      item.createdAt,
+      new Date(item.createdAt),
       item.duration,
-      item.updateAt
+      item.updatedAt ? new Date(item.updatedAt) : item.updatedAt
     );
   }
 

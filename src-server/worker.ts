@@ -87,7 +87,7 @@ if (process.env.REACT_APP_AUTHENTICATION_MODE === 'saml') {
   }
 }
 
-/* MongoDB Repository  */
+/* MongoDB Repository */
 if (!process.env.MONGODB_URI) {
   log.error(`env variable MONGODB_URI is not set, exiting worker ...`);
   process.exit();
@@ -110,11 +110,11 @@ export const accountRepository = new MongoAccountRepository();
 export const userRepository = new MongoUserRepository(accountRepository);
 export const callRepository = new MongoCallRepository();
 
-/* Local File Repository
+/* Local File Repository 
 export const accountRepository = new FileAccountRepository('./accounts.json');
 export const userRepository = new FileUserRepository(accountRepository, './users.json');
 export const callRepository = new FileCallRepository('calls.json');
- */
+*/
 
 export const authenticationProvider = new PasswordAuthenticationProvider();
 
@@ -124,6 +124,10 @@ export const pool = new UserPool(userRepository);
 export const app = express();
 
 app.set('port', process.env.PORT || 5000);
+app.set('etag', false);
+
+app.enable('trust proxy');
+app.disable('x-powered-by');
 
 let corsOptions: cors.CorsOptions = {
   origin: '*',
@@ -307,8 +311,6 @@ app.all('/api/*', function (req, res) {
 if (process.env.NODE_ENV === 'production') {
   log.info('running server in production mode');
 
-  app.enable('trust proxy');
-
   /* redirect insecure requests
   app.use((request: express.Request, response: express.Response, next: express.NextFunction) => {
     if (request.secure) {
@@ -317,7 +319,12 @@ if (process.env.NODE_ENV === 'production') {
     response.redirect('http://' + request.headers.host + request.url);
   }); */
 
-  app.use(express.static(path.join(__dirname, '../build')));
+  app.use(
+    express.static(path.join(__dirname, '../build'), {
+      etag: false,
+      lastModified: false,
+    })
+  );
 
   app.get('/', (request: express.Request, response: express.Response) =>
     response.sendFile(path.join(__dirname, '../build', 'index.html'))

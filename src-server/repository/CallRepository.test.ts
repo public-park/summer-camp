@@ -52,15 +52,14 @@ describe('Call Repository create, update', () => {
     const from = generatePhoneNumber();
 
     const call = await callRepository.create(
-      {
-        callSid: callSid,
-        from: from,
-        to: to,
-        status: CallStatus.Ringing,
-        direction: CallDirection.Inbound,
-      },
+      from,
+      to,
       account,
-      user
+      CallStatus.Ringing,
+      CallDirection.Inbound,
+
+      user,
+      callSid
     );
 
     expect(call).toBeInstanceOf(Call);
@@ -82,17 +81,7 @@ describe('Call Repository create, update', () => {
     const to = generatePhoneNumber();
     const from = generatePhoneNumber();
 
-    let call = await callRepository.create(
-      {
-        callSid: callSid,
-        from: from,
-        to: to,
-        status: CallStatus.Ringing,
-        direction: CallDirection.Inbound,
-      },
-      account,
-      user
-    );
+    let call = await callRepository.create(from, to, account, CallStatus.Ringing, CallDirection.Inbound, user, callSid);
 
     const callSidUpdate = generateCallSid();
     const toUpdated = generatePhoneNumber();
@@ -117,7 +106,7 @@ describe('Call Repository create, update', () => {
     expect(call.status).toBe(CallStatus.Completed);
     expect(call.direction).toBe(CallDirection.Outbound);
     expect(call.createdAt).toBe(call.createdAt);
-    expect(call.updatedAt).toBeUndefined();
+    expect(call.updatedAt).toBeInstanceOf(Date);
 
     done();
   });
@@ -128,15 +117,14 @@ describe('Call Repository create, update', () => {
     const from = generatePhoneNumber();
 
     const callA = await callRepository.create(
-      {
-        callSid: callSid,
-        from: from,
-        to: to,
-        status: CallStatus.Ringing,
-        direction: CallDirection.Inbound,
-      },
+      from,
+      to,
       account,
-      user
+      CallStatus.Ringing,
+      CallDirection.Inbound,
+
+      user,
+      callSid
     );
 
     const callB = await callRepository.getById(callA.id);
@@ -161,28 +149,32 @@ describe('Call Repository create, update', () => {
     const from = generatePhoneNumber();
 
     const call = await callRepository.create(
-      {
-        callSid: callSid,
-        from: from,
-        to: to,
-        status: CallStatus.Ringing,
-        direction: CallDirection.Inbound,
-      },
+      from,
+      to,
       account,
-      user
+      CallStatus.Ringing,
+      CallDirection.Inbound,
+
+      user,
+      callSid
     );
 
-    let callB = await callRepository.updateStatus(call.id, CallStatus.InProgress, callSid);
+    call.status = CallStatus.InProgress;
+
+    const callB = await callRepository.update(call);
 
     expect(callB).toBeInstanceOf(Call);
     expect(callB?.status).toBe(CallStatus.InProgress);
     expect(callB?.duration).toBeUndefined();
 
-    callB = await callRepository.updateStatus(call.id, CallStatus.Completed, callSid, 100);
+    call.duration = 100;
+    call.status = CallStatus.Completed;
 
-    expect(callB).toBeInstanceOf(Call);
-    expect(callB?.status).toBe(CallStatus.Completed);
-    expect(callB?.duration).toBe(100);
+    const callC = await callRepository.update(call);
+
+    expect(callC).toBeInstanceOf(Call);
+    expect(callC?.status).toBe(CallStatus.Completed);
+    expect(callC?.duration).toBe(100);
 
     done();
   });
@@ -193,15 +185,13 @@ describe('Call Repository create, update', () => {
     const from = generatePhoneNumber();
 
     const call = await callRepository.create(
-      {
-        callSid: callSid,
-        from: from,
-        to: to,
-        status: CallStatus.Ringing,
-        direction: CallDirection.Inbound,
-      },
+      from,
+      to,
       account,
-      user
+      CallStatus.Ringing,
+      CallDirection.Inbound,
+      user,
+      callSid
     );
 
     expect(call).toBeInstanceOf(Call);
@@ -256,40 +246,19 @@ describe('Call Repository call list', () => {
     const to = generatePhoneNumber();
     const from = generatePhoneNumber();
 
-    await callRepository.create(
-      {
-        callSid: callSidA,
-        from: from,
-        to: to,
-        status: CallStatus.Ringing,
-        direction: CallDirection.Inbound,
-      },
-      good,
-      joe
-    );
+    await callRepository.create(from, to, good, CallStatus.Ringing, CallDirection.Inbound, joe, callSidA);
+    await callRepository.create(from, to, good, CallStatus.Ringing, CallDirection.Inbound, max, callSidB);
 
-    await callRepository.create(
-      {
-        callSid: callSidB,
-        from: from,
-        to: to,
-        status: CallStatus.Ringing,
-        direction: CallDirection.Inbound,
-      },
-      good,
-      max
-    );
-
-    const callsMadeByJoe = await callRepository.getCallsByUser(joe);
+    const callsMadeByJoe = await callRepository.getByUser(joe);
 
     expect(callsMadeByJoe).toHaveLength(1);
 
-    const callsMadeByMax = await callRepository.getCallsByUser(max);
+    const callsMadeByMax = await callRepository.getByUser(max);
 
     expect(callsMadeByMax).toHaveLength(1);
     expect(callsMadeByMax[0]).toBeInstanceOf(Call);
 
-    const callsMadeByAccount = await callRepository.getCallsByAccount(good);
+    const callsMadeByAccount = await callRepository.getByAccount(good);
 
     expect(callsMadeByAccount).toHaveLength(2);
     expect(callsMadeByAccount[0]).toBeInstanceOf(Call);
@@ -299,7 +268,7 @@ describe('Call Repository call list', () => {
   });
 
   test('should return an empty list for a user that has no calls', async (done) => {
-    const callsMadeByAccount = await callRepository.getCallsByAccount(wonka);
+    const callsMadeByAccount = await callRepository.getByUser(wonka);
 
     expect(callsMadeByAccount).toHaveLength(0);
 
@@ -311,19 +280,9 @@ describe('Call Repository call list', () => {
     const to = generatePhoneNumber();
     const from = generatePhoneNumber();
 
-    await callRepository.create(
-      {
-        callSid: callSid,
-        from: from,
-        to: to,
-        status: CallStatus.Ringing,
-        direction: CallDirection.Inbound,
-      },
-      wonka,
-      max
-    );
+    await callRepository.create(from, to, wonka, CallStatus.Ringing, CallDirection.Inbound, max, callSid);
 
-    const callsMadeByAccount = await callRepository.getCallsByAccount(wonka);
+    const callsMadeByAccount = await callRepository.getByAccount(wonka);
 
     expect(callsMadeByAccount).toHaveLength(1);
 

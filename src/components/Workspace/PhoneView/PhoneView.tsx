@@ -8,6 +8,7 @@ import { Idle } from './Idle/Idle';
 import { Offline } from './Offline';
 import { Expired } from './Expired';
 import { PhoneException } from './PhoneException';
+import { PhoneState } from '../../../phone/PhoneState';
 
 export const PhoneView = () => {
   const state = useSelector(selectPhoneState);
@@ -26,15 +27,15 @@ export const PhoneView = () => {
     }
 
     switch (state) {
-      case 'RINGING':
+      case PhoneState.Ringing:
         return <IncomingCall />;
-      case 'BUSY':
+      case PhoneState.Busy:
         return <Busy />;
-      case 'IDLE':
+      case PhoneState.Idle:
         return <Idle />;
-      case 'OFFLINE':
+      case PhoneState.Offline:
         return <Offline />;
-      case 'EXPIRED':
+      case PhoneState.Expired:
         return <Expired />;
     }
   };

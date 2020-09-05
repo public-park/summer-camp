@@ -7,9 +7,14 @@ import { useCallDuration } from './hooks/useCallDuration';
 import { useCallDurationFormat } from './hooks/useCallDurationFormat';
 import { HoldButton } from './Controls/HoldButton';
 import { ApplicationContext } from '../../../context/ApplicationContext';
+import { useSelector } from 'react-redux';
+import { selectCall, Call } from '../../../store/Store';
+import { CallDirection } from '../../../phone/Call';
 
 export const Busy = () => {
   const { call } = useContext(ApplicationContext);
+
+  const { from, to, direction } = useSelector(selectCall) as Call;
 
   const [showKeypad, setShowKeypad] = useState(false);
 
@@ -25,7 +30,9 @@ export const Busy = () => {
     <div className="call">
       <div className="display">
         <span className="duration">{durationFormatted}</span>
-        <span className="phone-number">{call?.phoneNumber}</span>
+
+        {direction === CallDirection.Inbound && <span className="phone-number">{from}</span>}
+        {direction === CallDirection.Outbound && <span className="phone-number">{to}</span>}
       </div>
 
       <div className="control">

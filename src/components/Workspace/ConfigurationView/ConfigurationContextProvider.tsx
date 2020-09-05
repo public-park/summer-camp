@@ -9,6 +9,7 @@ import { fetchAccountConfiguration } from './services/fetchAccountConfiguration'
 import { DefaultConfiguration } from './DefaultConfiguration';
 import { ConfigurationContext } from './ConfigurationContext';
 import { ApplicationContext } from '../../../context/ApplicationContext';
+import { UserEvent } from '../../../models/enums/UserEvent';
 
 export const ConfigurationContextProvider = (props: any) => {
   const { user } = useContext(ApplicationContext);
@@ -121,7 +122,7 @@ export const ConfigurationContextProvider = (props: any) => {
     try {
       await updateConfiguration(user, configuration);
 
-      user.send('configuration', null);
+      user.send(UserEvent.Configuration, null);
     } catch (error) {
       console.log(error);
 

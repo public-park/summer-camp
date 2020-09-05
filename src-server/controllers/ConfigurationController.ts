@@ -17,20 +17,13 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
     /* update phone number configuration on Twilio */
     if (account.configuration.inbound.isEnabled === true) {
-      const voiceUrl = `${req.protocol}://${req.hostname}/api/callback/accounts/${req.user.account.id}/phone/inbound`;
+      let voiceUrl = `${req.protocol}://${req.hostname}/api/callback/accounts/${req.user.account.id}/phone/inbound`;
 
-      const statusCallbackUrl = `${req.protocol}://${req.hostname}/api/callback/accounts/${req.user.account.id}/phone/inbound/completed`;
+      let statusCallbackUrl = `${req.protocol}://${req.hostname}/api/callback/accounts/${req.user.account.id}/phone/inbound/completed`;
 
       await helper.configureInbound(account.configuration.inbound.phoneNumber as string, voiceUrl, statusCallbackUrl);
     }
 
-    if (account.configuration.outbound.isEnabled === true) {
-      const url = `${req.protocol}://${req.hostname}/api/callback/accounts/${req.user.account.id}/phone/outbound`;
-
-      const applicationSid = await helper.configureOutbound(account.configuration.applicationSid, url);
-
-      account.configuration.applicationSid = applicationSid;
-    }
     await accountRepository.update(account);
 
     res.status(200).end();

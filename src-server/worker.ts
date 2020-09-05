@@ -115,10 +115,9 @@ export const accountRepository = new FileAccountRepository('./accounts.json');
 export const userRepository = new FileUserRepository(accountRepository, './users.json');
 export const callRepository = new FileCallRepository('calls.json');
 */
-
 export const authenticationProvider = new PasswordAuthenticationProvider();
 
-export const pool = new UserPool(userRepository);
+export const pool = new UserPool(userRepository, callRepository);
 
 /* spinning up express */
 export const app = express();
@@ -149,7 +148,7 @@ callback.param('accountId', addAccountToRequest);
 
 callback.route('/accounts/:accountId/phone/inbound').post(PhoneInboundController.handleConnectToUser);
 callback.route('/accounts/:accountId/phone/inbound/completed').post(PhoneInboundController.handleCompleted);
-callback.route('/accounts/:accountId/phone/outbound').post(PhoneOutboundController.handle);
+callback.route('/accounts/:accountId/phone/outbound/:callId').post(PhoneOutboundController.handle);
 
 app.use('/api/callback', callback);
 

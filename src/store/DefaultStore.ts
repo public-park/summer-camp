@@ -1,5 +1,6 @@
 import { Store } from './Store';
 import { UserActivity } from '../models/enums/UserActivity';
+import { PhoneState } from '../phone/PhoneState';
 
 export const DefaultStore: Store = {
   user: {
@@ -15,7 +16,7 @@ export const DefaultStore: Store = {
     state: undefined,
   },
   phone: {
-    state: 'OFFLINE',
+    state: PhoneState.Offline,
     token: undefined,
     configuration: undefined,
     error: undefined,

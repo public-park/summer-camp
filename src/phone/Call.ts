@@ -17,6 +17,8 @@ export interface Call {
   hold: (state: boolean) => Promise<void>;
   sendDigits: (digits: string) => void;
   onConnectionStateChange: (listener: (state: boolean) => void) => void;
+  onAnswer: (listener: () => void) => void;
+  registerConnection: (connection: any) => void;
 }
 
 export enum CallDirection {

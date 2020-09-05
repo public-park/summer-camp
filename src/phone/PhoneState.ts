@@ -1,1 +1,9 @@
-export type PhoneState = 'IDLE' | 'CONNECTING' | 'BUSY' | 'RINGING' | 'ERROR' | 'OFFLINE' | 'EXPIRED';
+export enum PhoneState {
+  'Idle' = 'idle',
+  'Connecting' = 'connecting',
+  'Busy' = 'busy',
+  'Ringing' = 'ringing',
+  'Offline' = 'offline',
+  'Expired' = 'expired',
+  'Error' = 'error',
+}

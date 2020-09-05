@@ -11,8 +11,9 @@ import { ParticipantListInstanceCreateOptions } from 'twilio/lib/rest/api/v2010/
 import { CallConnectionType } from '../../models/CallConnectionType';
 import { Call } from '../../models/Call';
 import { RequestWithAccount } from '../../requests/RequestWithAccount';
-import { getCallStatusEventUrl } from '../../controllers/callback/PhoneHelper';
+import { getCallStatusEventUrl, getCallerId, getOutboundUrl } from '../../controllers/callback/PhoneHelper';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
+import { CallListInstanceCreateOptions } from 'twilio/lib/rest/api/v2010/account/call';
 
 interface VoiceAccessToken extends AccessToken {
   identity: string;
@@ -52,45 +53,6 @@ export class TwilioHelper {
     });
   }
 
-  async getOrCreateTwimlApplication(applicationSid: string | undefined): Promise<string> {
-    if (!applicationSid) {
-      const application = await this.createTwimlApplication();
-
-      return application.sid;
-    }
-
-    try {
-      const application = await this.client.applications(applicationSid).fetch();
-
-      return application.sid;
-    } catch (error) {
-      if (error.status !== 404) {
-        throw error;
-      }
-
-      const application = await this.createTwimlApplication();
-
-      return application.sid;
-    }
-  }
-
-  async createTwimlApplication(): Promise<any> {
-    const application = await this.client.applications.create({
-      friendlyName: 'Summer Camp - Phone',
-    });
-
-    return application;
-  }
-
-  async updateTwimlApplication(applicationSid: string, url: string): Promise<string> {
-    const application = await this.client.applications(applicationSid).update({
-      voiceUrl: url,
-      voiceMethod: 'POST',
-    });
-
-    return application.sid;
-  }
-
   async configureInbound(phoneNumber: string, voiceUrl: string, statusCallbackUrl: string): Promise<undefined> {
     const phoneNumbers = await this.client.incomingPhoneNumbers.list({ phoneNumber: phoneNumber });
 
@@ -110,14 +72,6 @@ export class TwilioHelper {
         throw new ServerException('more than one phone number found');
       }
     }
-  }
-
-  async configureOutbound(applicationSid: string | undefined, url: string): Promise<string> {
-    const sid = await this.getOrCreateTwimlApplication(applicationSid);
-
-    await this.updateTwimlApplication(sid, url);
-
-    return sid;
   }
 
   getCallConnectionType = (endpoint: string): CallConnectionType => {
@@ -140,24 +94,25 @@ export class TwilioHelper {
     return await this.client.calls(callSid).fetch();
   }
 
-  async addUserToConference(request: RequestWithAccount, call: Call) {
+  async setRecording(request: RequestWithAccount, call: Call) {}
+
+  async addUserToConference(call: Call) {
     await this.addParticipantToConference(
       call.id,
       call.to,
       `client:${getIdentityByUserId(<string>call.userId)}`,
       'agent',
-      getCallStatusEventUrl(request, call)
+      getCallStatusEventUrl(call),
+      ['answered', 'completed']
     );
   }
 
   async addCustomerToConference(request: RequestWithAccount, call: Call) {
-    await this.addParticipantToConference(
-      call.id,
-      call.from,
-      call.to,
-      'customer',
-      getCallStatusEventUrl(request, call)
-    );
+    await this.addParticipantToConference(call.id, call.from, call.to, 'customer', getCallStatusEventUrl(call), [
+      'ringing',
+      'answered',
+      'completed',
+    ]);
   }
 
   async addParticipantToConference(
@@ -165,7 +120,8 @@ export class TwilioHelper {
     from: string,
     to: string,
     label: string,
-    statusEventUrl: string
+    statusEventUrl: string,
+    statusEvents: string[]
   ): Promise<string> {
     let options: ParticipantListInstanceCreateOptions = {
       to: to,
@@ -174,7 +130,7 @@ export class TwilioHelper {
       endConferenceOnExit: true,
       label: label,
       timeout: 45,
-      statusCallbackEvent: ['ringing', 'answered', 'completed'],
+      statusCallbackEvent: statusEvents,
       statusCallbackMethod: 'POST',
       statusCallback: statusEventUrl,
     };
@@ -182,6 +138,20 @@ export class TwilioHelper {
     const call = await this.client.conferences(conferenceName).participants.create(options);
 
     return call.callSid;
+  }
+
+  async callUser(call: Call, user: User): Promise<string> {
+    const options: CallListInstanceCreateOptions = {
+      url: getOutboundUrl(call, user),
+      to: `client:${getIdentityByUserId(<string>user.id)}`,
+      from: getCallerId(user.account),
+      recordingChannels: 'dual',
+      record: true,
+    };
+
+    const response = await this.client.calls.create(options);
+
+    return response.sid;
   }
 
   async holdParticipant(conferenceName: string, label: string, hold: boolean): Promise<void> {
@@ -220,10 +190,6 @@ export const createVoiceToken = (user: User, lifetime: number = 600): string => 
 
   if (user.account.configuration && user.account.configuration.inbound.isEnabled) {
     options.incomingAllow = true;
-  }
-
-  if (user.account.configuration && user.account.configuration.outbound.isEnabled) {
-    options.outgoingApplicationSid = user.account.configuration.applicationSid;
   }
 
   const grant = new AccessToken.VoiceGrant(options);

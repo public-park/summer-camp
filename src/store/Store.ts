@@ -4,7 +4,7 @@ import { ApplicationPage } from '../actions/PageAction';
 import { WorkspaceView } from '../actions/WorkspaceViewAction';
 import { PhoneState } from '../phone/PhoneState';
 import { UserRole } from '../models/enums/UserRole';
-import { CallStatus } from '../phone/Call';
+import { CallStatus, CallDirection } from '../phone/Call';
 import { MediaDeviceException } from '../exceptions/MediaDeviceException';
 
 export const selectUser = (store: Store) => store.user;
@@ -81,11 +81,13 @@ export interface Store {
   page: ApplicationPage | undefined;
 }
 
-interface Call {
+export interface Call {
   id: string;
   from: string;
   to: string;
   status: CallStatus;
+  direction: CallDirection;
+  answeredAt: Date | undefined;
 }
 
 interface Configuration {

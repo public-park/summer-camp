@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { ApplicationContext } from './context/ApplicationContext';
 import { useDispatch, useSelector } from 'react-redux';
@@ -23,13 +23,11 @@ import {
 import {
   setPhoneInputDevice,
   setPhoneOutputDevice,
-  setPhoneCall,
   setPhoneConfiguration,
   setPhoneToken,
   setPhoneException,
   setPhoneState,
-  setOutgoingCall,
-  setIncomingCall,
+  setPhoneCall,
 } from './actions/PhoneAction';
 
 import { useLocalStorageOnPageLoad } from './hooks/useLocalStorageOnPageLoad';
@@ -42,6 +40,7 @@ import { Call } from './phone/Call';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { PhoneControl } from './phone/PhoneControl';
 import { useFetchPhoneToken } from './hooks/useFetchPhoneToken';
+import { UserEvent } from './models/enums/UserEvent';
 
 export const ApplicationContextProvider = (props: any) => {
   const phoneState = useSelector(selectPhoneState);
@@ -59,7 +58,7 @@ export const ApplicationContextProvider = (props: any) => {
   const connectionState = useSelector(selectConnectionState);
 
   const [user, setUser] = useState<User>(new User());
-  const [phone, setPhone] = useState<PhoneControl>(new TwilioPhone(user));
+  const [phone, setPhone] = useState<PhoneControl>();
   const [call, setCall] = useState<undefined | Call>();
 
   const phoneInputDevice = useSelector(selectPhoneInputDevice);
@@ -95,12 +94,37 @@ export const ApplicationContextProvider = (props: any) => {
     dispatch(setLogout(reason));
 
     /* manually reject incoming calls */
-    if (phoneState === 'RINGING' && call) {
+    if (phoneState === PhoneState.Ringing && call) {
       call.reject();
     }
 
-    phone.destroy();
+    phone?.destroy();
   };
+
+  useEffect(() => {
+    const phone = new TwilioPhone();
+
+    setPhone(phone);
+
+    phone.onIncomingCall((call) => {
+      setCall(call);
+
+      /* Salesforce OpenCTI 
+        doScreenPop(call.phoneNumber);
+      */
+    });
+
+    phone.onStateChanged((state: PhoneState, ...params: any) => {
+      dispatch(setPhoneState(state));
+    });
+
+    // TODO, add phone exception type
+    phone.onError((error: Error) => {
+      console.log(error);
+
+      dispatch(setPhoneException(error));
+    });
+  }, []);
 
   useEffect(() => {
     user.onConnectionStateChanged((state: UserConnectionState, code: number | undefined) => {
@@ -125,9 +149,7 @@ export const ApplicationContextProvider = (props: any) => {
     });
 
     user.onConfigurationChanged((configuration: any) => {
-      phone.destroy();
-
-      setPhone(new TwilioPhone(user));
+      phone?.destroy();
 
       dispatch(setPhoneConfiguration(configuration));
     });
@@ -136,46 +158,23 @@ export const ApplicationContextProvider = (props: any) => {
       console.log('user error', error);
     });
 
-    user.onCall((call: any) => {
+    user.on(UserEvent.Call, (call: Call) => {
       dispatch(setPhoneCall(call));
+
+      setCall(phone?.call);
     });
-  }, [user]);
+
+    if (phone) {
+      phone.registerUser(user);
+    }
+  }, [user, phone]);
 
   useEffect(() => {
-    phone.onIncomingCall((call) => {
-      setCall(call);
-
-      dispatch(setIncomingCall(call));
-
-      /* Salesforce OpenCTI 
-        doScreenPop(call.phoneNumber);
-      */
-    });
-
-    phone.onOutgoingCall((call) => {
-      setCall(call);
-
-      dispatch(setOutgoingCall(call));
-    });
-
-    phone.onStateChanged((state: PhoneState, ...params: any) => {
-      dispatch(setPhoneState(state));
-    });
-
-    // TODO, add phone exception type
-    phone.onError((error: Error) => {
-      console.log(error);
-
-      dispatch(setPhoneException(error));
-    });
-  }, [phone]);
-
-  useEffect(() => {
-    if (phoneToken) {
+    if (phoneToken && phone) {
       console.log(`Phone device init with token: ${phoneToken?.substr(0, 10)} state was:  ${phoneState}`);
       phone.init(phoneToken);
     }
-  }, [phoneToken]);
+  }, [phoneToken, phone]);
 
   useEffect(() => {
     if (phoneTokenException) {
@@ -192,13 +191,13 @@ export const ApplicationContextProvider = (props: any) => {
   useEffect(() => {
     const updateDevice = async (deviceId: string) => {
       try {
-        phone.setInputDevice(deviceId);
+        phone && phone.setInputDevice(deviceId);
       } catch (error) {
         console.log(error);
       }
     };
 
-    if (phoneInputDevice && phoneState === 'IDLE') {
+    if (phoneInputDevice && phoneState === PhoneState.Idle) {
       updateDevice(phoneInputDevice);
     }
   }, [phoneInputDevice, phoneState]);
@@ -206,13 +205,13 @@ export const ApplicationContextProvider = (props: any) => {
   useEffect(() => {
     const updateDevice = async (deviceId: string) => {
       try {
-        phone.setOutputDevice(deviceId);
+        phone && phone.setOutputDevice(deviceId);
       } catch (error) {
         console.log(error);
       }
     };
 
-    if (phoneOutputDevice && phoneState === 'IDLE') {
+    if (phoneOutputDevice && phoneState === PhoneState.Idle) {
       updateDevice(phoneOutputDevice);
     }
   }, [phoneOutputDevice, phoneState]);

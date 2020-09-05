@@ -4,6 +4,7 @@ import { Call } from '../models/Call';
 import { UserRepository } from '../repository/UserRepository';
 import { WebSocketWithKeepAlive } from '../WebSocketWithKeepAlive';
 import { CallStatus } from '../models/CallStatus';
+import { CallDirection } from '../models/CallDirection';
 
 export class UserSockets {
   private sockets: Array<WebSocketWithKeepAlive>;
@@ -41,6 +42,7 @@ export interface UserWithOnlineStateResponse extends UserResponse {
     from: string;
     to: string;
     status: CallStatus | undefined;
+    direction: CallDirection;
   } | null;
   sockets: number;
 }
@@ -80,7 +82,13 @@ export class UserWithOnlineState extends User {
     const response = super.toResponse() as UserWithOnlineStateResponse;
 
     if (this.call) {
-      response.call = { id: this.call.id, from: this.call.from, to: this.call.to, status: this.call.status };
+      response.call = {
+        id: this.call.id,
+        from: this.call.from,
+        to: this.call.to,
+        status: this.call.status,
+        direction: this.call.direction,
+      };
     } else {
       response.call = null;
     }
@@ -88,24 +96,6 @@ export class UserWithOnlineState extends User {
     response.sockets = this.sockets.length();
 
     return response;
-  }
-
-  updateCallAndBroadcast(call: Call) {
-    this.call = call;
-
-    if (!call.isActive()) {
-      this.call = undefined;
-    }
-
-    this.broadcast({ call: this.toResponse().call });
-  }
-
-  updateCall(call: Call) {
-    this.call = call;
-
-    if (!call.isActive()) {
-      this.call = undefined;
-    }
   }
 
   broadcast(payload: object) {

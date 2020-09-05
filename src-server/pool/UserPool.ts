@@ -4,14 +4,37 @@ import { UserNotFoundException } from '../exceptions/UserNotFoundException';
 import { User } from '../models/User';
 import { Account } from '../models/Account';
 import { WebSocketWithKeepAlive } from '../WebSocketWithKeepAlive';
+import { CallRepository } from '../repository/CallRepository';
 
 export class UserPool {
-  users: Map<string, UserWithOnlineState>;
-  repository: UserRepository;
+  pool: Map<string, UserWithOnlineState>;
+  calls: CallRepository;
+  users: UserRepository;
 
-  constructor(repository: UserRepository) {
-    this.users = new Map();
-    this.repository = repository;
+  constructor(users: UserRepository, calls: CallRepository) {
+    this.pool = new Map();
+    this.users = users;
+    this.calls = calls;
+
+    this.calls.onUpdate((call) => {
+      if (!call.userId) {
+        return;
+      }
+
+      const user = this.getById(call.userId);
+
+      if (!user) {
+        return;
+      }
+
+      if (call.isActive()) {
+        user.call = call;
+
+        user.broadcast({ call: user.toResponse().call });
+      } else {
+        user.broadcast({ call: null });
+      }
+    });
   }
 
   async add(account: Account, id: string, socket?: WebSocketWithKeepAlive | undefined): Promise<UserWithOnlineState> {
@@ -25,7 +48,7 @@ export class UserPool {
       user.sockets.add(socket);
     }
 
-    this.users.set(user.id, user);
+    this.pool.set(user.id, user);
 
     return user;
   }
@@ -34,7 +57,7 @@ export class UserPool {
     let existing = this.getById(user.id);
 
     if (existing) {
-      this.users.set(user.id, this.getUserWithOnlineState(user, existing.sockets.get()));
+      this.pool.set(user.id, this.getUserWithOnlineState(user, existing.sockets.get()));
     }
   }
 
@@ -45,11 +68,11 @@ export class UserPool {
       throw new UserNotFoundException();
     }
 
-    this.users.delete(user.id);
+    this.pool.delete(user.id);
   }
 
   getById(id: string): UserWithOnlineState | undefined {
-    return this.users.get(id);
+    return this.pool.get(id);
   }
 
   getByIdOrFail(id: string) {
@@ -68,7 +91,7 @@ export class UserPool {
     if (userWithOnlineState) {
       return userWithOnlineState;
     } else {
-      const user = await this.repository.getById(account, id);
+      const user = await this.users.getById(account, id);
 
       if (user) {
         return this.getUserWithOnlineState(user);
@@ -90,7 +113,7 @@ export class UserPool {
     if (user) {
       return Promise.resolve(user);
     } else {
-      const user = await this.repository.getOneByAccount(account);
+      const user = await this.users.getOneByAccount(account);
 
       if (!user) {
         throw new UserNotFoundException();
@@ -101,10 +124,15 @@ export class UserPool {
   }
 
   getAll(account: Account): Array<UserWithOnlineState> {
-    return Array.from(this.users.values()).filter((user) => user.account.id === account.id);
+    console.log(this.pool);
+    return Array.from(this.pool.values()).filter((user) => user.account.id === account.id);
   }
 
   getUserWithOnlineState = (user: User, sockets: Array<WebSocketWithKeepAlive> = []): UserWithOnlineState => {
-    return new UserWithOnlineState(user, sockets, this.repository);
+    return new UserWithOnlineState(user, sockets, this.users);
+  };
+
+  getSize = () => {
+    return this.pool.size;
   };
 }

@@ -124,7 +124,6 @@ export class UserPool {
   }
 
   getAll(account: Account): Array<UserWithOnlineState> {
-    console.log(this.pool);
     return Array.from(this.pool.values()).filter((user) => user.account.id === account.id);
   }
 

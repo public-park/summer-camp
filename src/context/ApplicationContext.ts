@@ -6,7 +6,7 @@ import { Call } from '../phone/Call';
 
 export interface ApplicationContextType {
   user: User;
-  phone: PhoneControl;
+  phone: PhoneControl | undefined;
   call: Call | undefined;
   login: (token: string) => void;
   logout: (reason?: string) => void;
@@ -14,7 +14,7 @@ export interface ApplicationContextType {
 
 const DefaultApplicationContext: ApplicationContextType = {
   user: new User(),
-  phone: new TwilioPhone(new User()),
+  phone: undefined,
   call: undefined,
   login: () => {},
   logout: () => {},

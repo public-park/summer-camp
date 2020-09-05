@@ -113,12 +113,12 @@ export const lostPhoneOutputDevice = (notificaton: string): PhoneDeviceLostActio
 
 export interface PhoneCallAction {
   type: ActionType;
-  payload: string;
+  payload: Call | undefined;
 }
 
-export const setPhoneCall = (call: string): PhoneCallAction => {
+export const setPhoneCall = (call: Call | undefined): PhoneCallAction => {
   return {
-    type: ActionType.PHONE_CALL_UPDATE,
+    type: ActionType.CALL_STATE_CHANGE,
     payload: call,
   };
 };
@@ -128,33 +128,9 @@ export interface PhoneStateAction {
   payload: PhoneState;
 }
 
-export const setPhoneState = (state: PhoneState): PhoneCallAction => {
+export const setPhoneState = (state: PhoneState): PhoneStateAction => {
   return {
     type: ActionType.PHONE_STATE_CHANGE,
     payload: state,
-  };
-};
-
-export interface PhoneIncomingCallAction {
-  type: ActionType;
-  payload: Call;
-}
-
-export const setIncomingCall = (call: Call): PhoneIncomingCallAction => {
-  return {
-    type: ActionType.PHONE_INCOMING_CALL,
-    payload: call,
-  };
-};
-
-export interface PhoneOutgoingCallAction {
-  type: ActionType;
-  payload: Call;
-}
-
-export const setOutgoingCall = (call: Call): PhoneOutgoingCallAction => {
-  return {
-    type: ActionType.PHONE_OUTGOING_CALL,
-    payload: call,
   };
 };

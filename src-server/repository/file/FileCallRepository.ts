@@ -8,14 +8,18 @@ import { Call } from '../../models/Call';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { CallStatus } from '../../models/CallStatus';
 import { CallDirection } from '../../models/CallDirection';
+import { EventEmitter } from 'events';
 
 export class FileCallRepository extends FileBaseRepository<Call> implements CallRepository, BaseRepository<Call> {
   calls: Map<string, Call>;
+  private eventEmitter: EventEmitter;
 
   constructor(fileName: string) {
     super(fileName);
 
     this.calls = this.fromPlainObjects(this.load());
+
+    this.eventEmitter = new EventEmitter();
   }
 
   async create(
@@ -34,6 +38,8 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     this.calls.set(call.id, call);
 
     await this.persist(this.toPlainObjects());
+
+    this.eventEmitter.emit('call', call);
 
     return Promise.resolve(call);
   }
@@ -117,6 +123,8 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
 
     await this.persist(this.toPlainObjects());
 
+    this.eventEmitter.emit('call', call);
+
     return Promise.resolve(<Call>this.getCopy(call));
   }
 
@@ -128,5 +136,9 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     this.calls.delete(call.id);
 
     return this.persist(this.toPlainObjects());
+  }
+
+  onUpdate(listener: (call: Call) => void) {
+    this.eventEmitter.on('call', listener);
   }
 }

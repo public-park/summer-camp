@@ -18,4 +18,5 @@ export interface CallRepository extends BaseRepository<Call> {
   getByCallSid: (callSid: string) => Promise<Call | undefined>;
   getByUser: (user: User, skip: number, limit: number) => Promise<Array<Call>>;
   getByAccount: (account: Account, skip: number, limit: number) => Promise<Array<Call>>;
+  onUpdate: (listener: (call: Call) => void) => void;
 }

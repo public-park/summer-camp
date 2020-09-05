@@ -7,8 +7,15 @@ import { Account } from '../../models/Account';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { CallStatus } from '../../models/CallStatus';
 import { CallDirection } from '../../models/CallDirection';
+import { EventEmitter } from 'events';
 
 export class MongoCallRepository implements CallRepository, BaseRepository<Call> {
+  private eventEmitter: EventEmitter;
+
+  constructor() {
+    this.eventEmitter = new EventEmitter();
+  }
+
   async create(
     from: string,
     to: string,
@@ -30,7 +37,11 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
 
     const document = await model.save();
 
-    return document.toCall();
+    const call = document.toCall();
+
+    this.eventEmitter.emit('call', call);
+
+    return call;
   }
 
   async getById(id: string) {
@@ -82,7 +93,11 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
     );
 
     if (document) {
-      return document.toCall();
+      const call = document.toCall();
+
+      this.eventEmitter.emit('call', call);
+
+      return call;
     } else {
       throw new CallNotFoundException();
     }
@@ -96,5 +111,9 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
     } else {
       throw new CallNotFoundException();
     }
+  }
+
+  onUpdate(listener: (call: Call) => void) {
+    this.eventEmitter.on('call', listener);
   }
 }

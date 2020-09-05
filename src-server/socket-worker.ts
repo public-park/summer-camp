@@ -14,6 +14,9 @@ import { InvalidHttpHeaderException } from './exceptions/InvalidHttpHeaderExcept
 import { TagsCommandHandler } from './commands/TagsCommandHandler';
 import { PresenceCommandHandler } from './commands/PresenceCommandHandler';
 import { ConfigurationCommandHandler } from './commands/ConfigurationCommandHandler';
+import { AcceptCommandHandler } from './commands/AcceptCommandHandler';
+import { UserMessage } from './models/UserMessage';
+import { UserEvent } from './models/UserEvent';
 
 interface SocketWorkerOptions {
   server: WebSocket.ServerOptions;
@@ -67,7 +70,7 @@ export class SocketWorker {
 
         user.sockets.add(socket);
 
-        log.info(`add user ${user.id}, (socket(s) ${user.sockets}) to pool, size is ${this.pool.users.size}`);
+        log.info(`add user ${user.id}, (socket(s) ${user.sockets}) to pool, size is ${this.pool.getSize()}`);
 
         socket.isAlive = true;
         socket.token = <string>req.headers.token;
@@ -83,28 +86,28 @@ export class SocketWorker {
           socket.isAlive = true;
         });
 
-        socket.on('message', async (message: WebSocket.Data) => {
-          log.debug(`received message: ${message.toString()}`);
+        socket.on('message', async (data: WebSocket.Data) => {
+          log.debug(`received message: ${data.toString()}`);
 
-          const payload: any = JSON.parse(message.toString());
+          const { id, payload } = <UserMessage>JSON.parse(data.toString());
 
-          if ('activity' in payload) {
+          if (UserEvent.Activity in payload) {
             const response = await ActivityCommandHandler.handle(user, payload.activity);
 
             socket.send(JSON.stringify(response));
           }
 
-          if ('tags' in payload) {
+          if (UserEvent.Tags in payload) {
             const response = await TagsCommandHandler.handle(user, payload.tags);
 
             socket.send(JSON.stringify(response));
           }
 
-          if ('call' in payload) {
+          if (UserEvent.Call in payload) {
             const response = await CallCommandHandler.handle(user, payload.call.to);
 
             const message = {
-              id: payload.id,
+              id: id,
               call: {
                 ...response,
               },
@@ -113,11 +116,11 @@ export class SocketWorker {
             socket.send(JSON.stringify(message));
           }
 
-          if ('presence' in payload) {
+          if (UserEvent.Presence in payload) {
             const response = await PresenceCommandHandler.handle(user);
 
             const message = {
-              id: payload.id,
+              id: id,
               call: {
                 ...response,
               },
@@ -126,11 +129,12 @@ export class SocketWorker {
             socket.send(JSON.stringify(message));
           }
 
-          if ('configuration' in payload) {
+          if (UserEvent.Configuration in payload) {
             const response = await ConfigurationCommandHandler.handle(user);
 
+            // TODO, add message type
             const message = {
-              id: payload.id,
+              id: id,
               configuration: {
                 ...response,
               },
@@ -139,12 +143,30 @@ export class SocketWorker {
             socket.send(JSON.stringify(message));
           }
 
-          if ('hold' in payload) {
+          if (UserEvent.Hold in payload) {
             const response = await HoldCommandHandler.handle(user, payload.hold.id, payload.hold.state);
 
             const message = {
-              id: payload.id,
+              id: id,
               state: response,
+            };
+
+            socket.send(JSON.stringify(message));
+          }
+
+          if (UserEvent.Accept in payload) {
+            const response = await AcceptCommandHandler.handle(user, payload.accept.id);
+
+            const message = {
+              id: id,
+            };
+
+            socket.send(JSON.stringify(message));
+          }
+
+          if (UserEvent.Record in payload) {
+            const message = {
+              id: id,
             };
 
             socket.send(JSON.stringify(message));

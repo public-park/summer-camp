@@ -4,6 +4,8 @@ import { UserConnectionState } from './enums/UserConnectionState';
 import { WebSocketNotInStateOpenException } from '../exceptions/WebSocketNotInStateOpenException';
 import { UserRole } from './enums/UserRole';
 import { v4 as uuidv4 } from 'uuid';
+import { UserEvent } from './enums/UserEvent';
+import { UserMessage } from './UserMessage';
 
 export class User {
   id: string | undefined;
@@ -84,12 +86,13 @@ export class User {
 
       try {
         const payload = JSON.parse(message.data);
-
-        if ('activity' in payload) {
+        console.log(payload);
+        console.log(UserEvent.Call in payload);
+        if (UserEvent.Activity in payload) {
           this._setActivity(payload.activity);
         }
 
-        if ('user' in payload) {
+        if (UserEvent.User in payload) {
           this.id = payload.user.id;
           this.name = payload.user.name;
           this.profileImageUrl = payload.user.profileImageUrl;
@@ -102,17 +105,15 @@ export class User {
           this._setConnectionState(UserConnectionState.Open);
         }
 
-        if ('configuration' in payload) {
-          this.eventEmitter.emit('configuration', payload.configuration);
+        if (UserEvent.Configuration in payload) {
+          this.eventEmitter.emit(UserEvent.Configuration, payload.configuration);
         }
 
-        if ('call' in payload) {
-          this.eventEmitter.emit('call', payload.call);
+        if (UserEvent.Call in payload) {
+          this.eventEmitter.emit(UserEvent.Call, payload.call);
         }
 
-        if ('id' in payload) {
-          this.eventEmitter.emit(payload.id, payload);
-        }
+        this.eventEmitter.emit(payload.id, payload);
       } catch (error) {
         this.eventEmitter.emit('error', error);
       }
@@ -154,27 +155,29 @@ export class User {
     });
   }
 
-  // TODO remove any
-  send(type: string, payload: any, callback?: (...args: any) => any) {
-    if (!this.connection.socket || this.connection.socket.readyState !== WebSocket.OPEN) {
-      throw new WebSocketNotInStateOpenException();
-    }
+  send(type: UserEvent, payload: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (!this.connection.socket || this.connection.socket.readyState !== WebSocket.OPEN) {
+        throw new WebSocketNotInStateOpenException();
+      }
 
-    const message: any = {
-      id: uuidv4(),
-    };
+      const message: UserMessage = {
+        id: uuidv4(),
+        payload: {
+          [type]: payload,
+        },
+      };
 
-    message[type] = payload;
+      this.eventEmitter.once(message.id, (payload: any) => {
+        resolve(payload);
+      });
 
-    if (callback) {
-      this.eventEmitter.once(message.id, callback);
-    }
-
-    this.connection.socket.send(JSON.stringify(message));
+      this.connection.socket.send(JSON.stringify(message));
+    });
   }
 
   set activity(activity: UserActivity) {
-    this.send('activity', activity);
+    this.send(UserEvent.Activity, activity);
   }
 
   get activity(): UserActivity {
@@ -186,7 +189,7 @@ export class User {
   }
 
   set tags(tags: Set<string>) {
-    this.send('tags', tags.values());
+    this.send(UserEvent.Tags, tags.values());
   }
 
   get tags(): Set<string> {
@@ -213,7 +216,11 @@ export class User {
     this.eventEmitter.on('error', listener);
   }
 
-  onCall(listener: (call: any) => void) {
-    this.eventEmitter.on('call', listener);
+  on(event: UserEvent, listener: (payload: any) => void) {
+    this.eventEmitter.on(event, listener);
+  }
+
+  off(event: UserEvent, listener: (payload: any) => void) {
+    this.eventEmitter.off(event, listener);
   }
 }

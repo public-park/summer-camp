@@ -2,6 +2,8 @@ import { Store } from '../store/Store';
 import produce from 'immer';
 import { Action } from '../actions/ActionType';
 import { DefaultStore } from '../store/DefaultStore';
+import { PhoneState } from '../phone/PhoneState';
+import { CallStatus } from '../phone/Call';
 
 const reducer = (state: Store = DefaultStore, action: Action): Store => {
   const isPhoneNumberExpression = /^\+\d+$/g;
@@ -51,36 +53,44 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
         break;
 
       case 'PHONE_STATE_CHANGE':
-        if (action.payload === 'EXPIRED') {
+        if (action.payload === PhoneState.Expired) {
           draft.phone.token = undefined;
         }
 
-        if (action.payload === 'IDLE') {
-          draft.call = undefined;
-        }
-
-        /* switch to phone view upon first connect */
-        if (state.workspace.view === 'CONNECT_VIEW' && action.payload === 'IDLE') {
+        if (action.payload === PhoneState.Error) {
           draft.workspace.view = 'PHONE_VIEW';
         }
 
-        if (action.payload !== 'ERROR') {
+        /* switch to phone view upon first connect */
+        if (state.workspace.view === 'CONNECT_VIEW' && action.payload === PhoneState.Idle) {
+          draft.workspace.view = 'PHONE_VIEW';
+        }
+
+        if (action.payload !== PhoneState.Error) {
           draft.phone.error = undefined;
         }
 
         draft.phone.state = action.payload;
         break;
 
-      case 'PHONE_INCOMING_CALL':
-        draft.call = action.payload.call;
-        break;
+      case 'CALL_STATE_CHANGE':
+        if (!action.payload) {
+          draft.call = undefined;
+        } else {
+          draft.call = {
+            id: action.payload.id,
+            from: action.payload.from,
+            to: action.payload.to,
+            status: action.payload.status,
+            direction: action.payload.direction,
+            answeredAt: undefined,
+          };
+        }
 
-      case 'PHONE_OUTGOING_CALL':
-        draft.call = action.payload.call;
-        break;
+        if (draft.call && action.payload.status === CallStatus.Ringing) {
+          draft.call.answeredAt = new Date();
+        }
 
-      case 'PHONE_CALL_UPDATE':
-        draft.call = action.payload;
         break;
 
       case 'PHONE_TOKEN_UPDATE':

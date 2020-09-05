@@ -3,6 +3,8 @@ import { TwilioHelper } from '../../helpers/twilio/TwilioHelper';
 import { log } from '../../logger';
 import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
 import { InvalidRequestBodyException } from '../../exceptions/InvalidRequestBodyException';
+import { callRepository as calls, pool } from '../../worker';
+import { CallStatus } from '../../models/CallStatus';
 
 const rejectIfNotJoinEvent = (event: string) => {
   if (event !== 'participant-join') {
@@ -17,9 +19,9 @@ const handleInbound = async (request: StatusCallbackRequest, response: Response,
     if (request.body.ParticipantLabel === 'customer') {
       log.info(`${request.body.ConferenceSid}, number ${request.call.from} joined, adding user ${request.call.userId}`);
 
-      const helper = new TwilioHelper(request.account);
+      request.call.status = CallStatus.Ringing;
 
-      await helper.addUserToConference(request, request.call);
+      await calls.update(request.call);
     }
 
     response.status(200).end();

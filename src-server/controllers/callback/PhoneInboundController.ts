@@ -16,8 +16,6 @@ const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithOnlin
 
   const call = await calls.create(From, To, req.account, CallStatus.Initiated, CallDirection.Inbound, user, CallSid);
 
-  user.updateCall(call);
-
   let twiml = new VoiceResponse();
 
   const dial = twiml.dial({ callerId: call.from });
@@ -25,7 +23,7 @@ const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithOnlin
   const options: any = {
     endConferenceOnExit: true,
     statusCallbackEvent: ['join'],
-    statusCallback: getConferenceStatusEventUrl(req, call),
+    statusCallback: getConferenceStatusEventUrl(call),
     participantLabel: 'customer',
   };
 

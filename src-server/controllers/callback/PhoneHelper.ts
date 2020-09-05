@@ -1,19 +1,20 @@
-import { RequestWithAccount } from '../../requests/RequestWithAccount';
 import { ConfigurationNotFoundException } from '../../exceptions/ConfigurationNotFoundException';
 import { InvalidConfigurationException } from '../../exceptions/InvalidConfigurationException';
 import { Account } from '../../models/Account';
 import { Call } from '../../models/Call';
+import { User } from '../../models/User';
 
-export const getCallStatusEventUrl = (request: RequestWithAccount, call: Call) => {
-  const { protocol, hostname } = request;
-
-  return `${protocol}://${hostname}/api/status-callback/accounts/${call.accountId}/calls/${call.id}/${call.direction}`;
+export const getCallStatusEventUrl = (call: Call) => {
+  return `${process.env.PUBLIC_BASE_URL}/api/status-callback/accounts/${call.accountId}/calls/${call.id}/${call.direction}`;
 };
 
-export const getConferenceStatusEventUrl = (request: RequestWithAccount, call: Call) => {
-  const { protocol, hostname } = request;
+// TODO allow base url with /
+export const getConferenceStatusEventUrl = (call: Call) => {
+  return `${process.env.PUBLIC_BASE_URL}/api/status-callback/accounts/${call.accountId}/calls/${call.id}/conference/${call.direction}`;
+};
 
-  return `${protocol}://${hostname}/api/status-callback/accounts/${call.accountId}/calls/${call.id}/conference/${call.direction}`;
+export const getOutboundUrl = (call: Call, user: User) => {
+  return `${process.env.PUBLIC_BASE_URL}/api/callback/accounts/${user.account.id}/phone/outbound/${call.id}`;
 };
 
 export const getCallerId = (account: Account): string => {

@@ -11,8 +11,6 @@ const handleInbound = async (request: StatusCallbackRequest, response: Response,
 
     await calls.update(request.call);
 
-    user.updateCallAndBroadcast(request.call);
-
     response.status(200).end();
   } catch (error) {
     return next(error);
@@ -28,8 +26,6 @@ const handleOutbound = async (request: StatusCallbackRequest, response: Response
     request.call.duration = getDuration(request);
 
     request.call = await calls.update(request.call);
-
-    user.updateCallAndBroadcast(request.call);
 
     response.status(200).end();
   } catch (error) {

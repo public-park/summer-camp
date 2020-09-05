@@ -10,11 +10,11 @@ const generateConnectTwiml = (req: RequestWithAccount, call: Call) => {
   let twiml = new VoiceResponse();
 
   const dial = twiml.dial({ callerId: call.from });
-
+  // VoiceResponse.ConferenceAttributes
   const options: any = {
     endConferenceOnExit: true,
     statusCallbackEvent: ['join'],
-    statusCallback: getConferenceStatusEventUrl(req, call),
+    statusCallback: getConferenceStatusEventUrl(call),
     participantLabel: 'agent',
   };
 
@@ -25,7 +25,7 @@ const generateConnectTwiml = (req: RequestWithAccount, call: Call) => {
 
 const handle = async (req: RequestWithAccount, res: Response, next: NextFunction) => {
   try {
-    const call = await calls.getById(req.body.callId);
+    const call = await calls.getById(req.params.callId);
 
     if (!call) {
       throw new CallNotFoundException();

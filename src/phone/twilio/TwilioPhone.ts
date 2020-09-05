@@ -1,10 +1,13 @@
 import * as Client from 'twilio-client';
 import { PhoneControl } from '../PhoneControl';
-import { Call, CallDirection } from '../Call';
+import { Call, CallDirection, CallStatus } from '../Call';
 import { TwilioCall } from './TwilioCall';
 import { EventEmitter } from 'events';
 import { PhoneState } from '../PhoneState';
 import { User } from '../../models/User';
+import { UserEvent } from '../../models/enums/UserEvent';
+import { PhoneNotReadyException } from '../../exceptions/PhoneNotReadyException';
+import { InvalidPhoneStateException } from '../../exceptions/InvalidPhoneStateException';
 
 interface DelayedState {
   state: PhoneState;
@@ -12,33 +15,40 @@ interface DelayedState {
 }
 
 export class TwilioPhone implements PhoneControl {
-  private user: User;
+  user: User | undefined;
+  call: Call | undefined;
   private readonly device: any;
   private state: PhoneState;
   private delayedState: DelayedState | undefined;
   private isInitialized: boolean;
+
+  private inputDeviceId: string | undefined;
+
   private readonly eventEmitter: EventEmitter;
 
-  constructor(user: User) {
-    this.user = user;
+  constructor() {
+    this.user = undefined;
     this.device = new Client.Device();
-    this.state = 'OFFLINE';
+    this.state = PhoneState.Offline;
     this.delayedState = undefined;
+    this.inputDeviceId = undefined;
+    this.call = undefined;
 
     this.eventEmitter = new EventEmitter();
 
     this.isInitialized = false;
   }
+
   private setState(state: PhoneState, ...params: any) {
     this.state = state;
 
-    if (this.delayedState && state === 'IDLE') {
+    if (this.delayedState && state === PhoneState.Idle) {
       this.emitDelayedState();
 
       return;
     }
 
-    if (state === 'ERROR') {
+    if (state === PhoneState.Error) {
       this.eventEmitter.emit('error', ...params);
     }
 
@@ -46,7 +56,7 @@ export class TwilioPhone implements PhoneControl {
   }
 
   private setDelayedState(state: PhoneState, ...params: any) {
-    console.log('set delayed state to ' + state, ' params:', params);
+    console.log(`set delayed state to ${state}  params:${JSON.stringify(params)}`);
     this.delayedState = { state, params };
   }
 
@@ -59,26 +69,38 @@ export class TwilioPhone implements PhoneControl {
     }
   }
 
+  private async resetAll() {
+    await this.unregisterInputDeviceId();
+
+    this.setState(PhoneState.Idle);
+
+    this.call = undefined;
+  }
+
+  private async registerInputDeviceId() {
+    this.inputDeviceId && (await this.device.audio.setInputDevice(this.inputDeviceId));
+  }
+
+  private async unregisterInputDeviceId() {
+    this.inputDeviceId && (await this.device.audio.unsetInputDevice(this.inputDeviceId));
+  }
+
   private registerConnectionListener(connection: any) {
-    connection.on('reject', () => {
-      this.setState('IDLE');
+    connection.on('reject', async () => {
+      await this.resetAll();
     });
 
-    connection.on('disconnect', () => {
-      this.setState('IDLE');
+    connection.on('disconnect', async () => {
+      await this.resetAll();
     });
 
-    connection.on('cancel', () => {
-      this.setState('IDLE');
-    });
-
-    connection.on('accept', () => {
-      this.setState('BUSY');
+    connection.on('cancel', async () => {
+      await this.resetAll();
     });
   }
 
   init(token: string) {
-    this.setState('CONNECTING');
+    this.setState(PhoneState.Connecting);
 
     try {
       this.device.setup(token, {
@@ -93,22 +115,19 @@ export class TwilioPhone implements PhoneControl {
       this.isInitialized = true;
 
       this.device.on('incoming', async (connection: any) => {
-        this.user.send('presence', null, (payload: any) => {
-          this.registerConnectionListener(connection);
+        await this.registerInputDeviceId();
 
-          this.setState('RINGING', payload.call.from);
+        this.registerConnectionListener(connection);
 
-          this.eventEmitter.emit(
-            'incoming',
-            new TwilioCall(payload.call.id, this.user, payload.call.from, CallDirection.Inbound, connection)
-          );
-        });
+        this.call?.registerConnection(connection);
+
+        connection.accept();
       });
 
       this.device.on('ready', () => {
         console.log(`Twilio Device 'onReady' event`);
 
-        this.setState('IDLE');
+        this.setState(PhoneState.Idle);
       });
 
       this.device.on('error', (error: any) => {
@@ -116,48 +135,49 @@ export class TwilioPhone implements PhoneControl {
 
         switch (error.code) {
           case 31205:
-            state = 'EXPIRED';
+            state = PhoneState.Expired;
             break;
           default:
-            state = 'ERROR';
+            state = PhoneState.Error;
             break;
         }
 
         /* do not push this states while on the call */
-        if (this.getState() === 'BUSY' || this.getState() === 'RINGING') {
+        if (this.getState() === PhoneState.Busy || this.getState() === PhoneState.Ringing) {
           this.setDelayedState(state, error);
         } else {
           this.setState(state, error);
         }
       });
     } catch (error) {
-      this.setState('ERROR', error);
+      this.setState(PhoneState.Error, error);
     }
   }
 
-  async call(phoneNumber: string): Promise<Call> {
-    return new Promise((resolve, reject) => {
-      this.user.send(
-        'call',
-        { to: phoneNumber },
+  async connect(to: string): Promise<Call> {
+    if (!this.user) {
+      throw new PhoneNotReadyException();
+    }
 
-        (payload: any) => {
-          const connection = this.device.connect({ callId: payload.call.id });
+    if (this.state !== PhoneState.Idle) {
+      throw new InvalidPhoneStateException();
+    }
 
-          this.registerConnectionListener(connection);
+    const { call } = await this.user.send(UserEvent.Call, { to: to });
 
-          const call = new TwilioCall(payload.call.id, this.user, phoneNumber, CallDirection.Outbound, connection);
+    this.call = new TwilioCall(call.id, <User>this.user, call.to, call.direction);
 
-          this.eventEmitter.emit('outgoing', call);
+    this.setState(PhoneState.Busy);
 
-          resolve(call);
-        }
-      );
-    });
+    this.eventEmitter.emit('outgoing', this.call);
+
+    return this.call;
   }
 
   destroy() {
-    this.setState('OFFLINE');
+    this.setState(PhoneState.Offline);
+
+    //this.eventEmitter.removeAllListeners();
 
     this.device.destroy();
   }
@@ -174,6 +194,10 @@ export class TwilioPhone implements PhoneControl {
     this.eventEmitter.on('outgoing', listener);
   }
 
+  onCallComplete(listener: () => void) {
+    this.eventEmitter.on('complete', listener);
+  }
+
   onStateChanged(listener: (state: PhoneState) => void) {
     this.eventEmitter.on('state_changed', listener);
   }
@@ -185,12 +209,43 @@ export class TwilioPhone implements PhoneControl {
   setInputDevice(deviceId: string) {
     console.log(`set input device to: ${deviceId}`);
 
-    return this.device.audio.setInputDevice(deviceId);
+    this.inputDeviceId = deviceId;
   }
 
   setOutputDevice(deviceId: string) {
     console.log(`set output device to: ${deviceId}`);
 
     return this.device.audio.speakerDevices.set(deviceId);
+  }
+
+  registerUser(user: User) {
+    // TODO payload, CallResponse
+    user.on(UserEvent.Call, (call: any) => {
+      if (call === null) {
+        this.eventEmitter.emit('complete');
+
+        this.setState(PhoneState.Idle);
+
+        return;
+      }
+
+      if (call.status == CallStatus.Ringing && call.direction === CallDirection.Inbound) {
+        this.call = new TwilioCall(call.id, <User>this.user, call.from, call.direction);
+
+        this.call.onAnswer(() => {
+          this.setState(PhoneState.Busy);
+        });
+
+        this.eventEmitter.emit('incoming', this.call);
+
+        this.setState(PhoneState.Ringing, this.call.phoneNumber);
+      }
+
+      if (call.status == CallStatus.NoAnswer && call.direction === CallDirection.Inbound) {
+        this.setState(PhoneState.Idle);
+      }
+    });
+
+    this.user = user;
   }
 }

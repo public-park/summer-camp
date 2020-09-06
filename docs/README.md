@@ -7,3 +7,7 @@ Create and manage non-privileged users via API.
 Route incoming calls to a group or to a user.
 
 [How to Route Calls](docs/route-calls.md)
+
+Understand the call data stored by the phone backend.
+
+[How to Work with Call Record](docs/call-data-model.md)

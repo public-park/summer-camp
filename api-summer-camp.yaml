@@ -2,7 +2,7 @@
 openapi: 3.0.2
 info:
   title: Summer Camp
-  version: '0.7.0'
+  version: '0.9'
   license:
     name: GNU General Public License v3.0 or later
     url: https://github.com/public-park/summer-camp/LICENSE

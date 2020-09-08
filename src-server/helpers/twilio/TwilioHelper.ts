@@ -10,10 +10,11 @@ import { AccountConfiguration } from '../../models/AccountConfiguration';
 import { ParticipantListInstanceCreateOptions } from 'twilio/lib/rest/api/v2010/account/conference/participant';
 import { CallConnectionType } from '../../models/CallConnectionType';
 import { Call } from '../../models/Call';
-import { RequestWithAccount } from '../../requests/RequestWithAccount';
 import { getCallStatusEventUrl, getCallerId, getOutboundUrl } from '../../controllers/callback/PhoneHelper';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { CallListInstanceCreateOptions } from 'twilio/lib/rest/api/v2010/account/call';
+import { CallStatus } from '../../models/CallStatus';
+import { CallNotInProgressException } from '../../exceptions/CallNotInProgressException';
 
 interface VoiceAccessToken extends AccessToken {
   identity: string;
@@ -94,7 +95,49 @@ export class TwilioHelper {
     return await this.client.calls(callSid).fetch();
   }
 
-  async setRecording(request: RequestWithAccount, call: Call) {}
+  getActiveRecording = async (call: Call) => {
+    if (!call.callSid || call.status !== CallStatus.InProgress) {
+      throw new CallNotInProgressException();
+    }
+
+    const recordings = await this.client.calls(call.callSid).recordings.list();
+
+    if (recordings.length === 0) {
+      return undefined;
+    }
+
+    return recordings.filter((recording) => ['processing'].includes(recording.status))[0];
+  };
+
+  async setRecording(call: Call, record: boolean) {
+    log.info(`toggle recording on ${call.id} - callSid ${call.callSid} to ${record}`);
+
+    if (!call.callSid || call.status !== CallStatus.InProgress) {
+      throw new CallNotInProgressException();
+    }
+
+    const recording = await this.getActiveRecording(call);
+
+    /* create a new recording */
+    if (!recording) {
+      /* disable recording on a call without active recording ... */
+      if (!record) {
+        return;
+      }
+
+      log.info(`start recording on ${call.id} - callSid ${call.callSid}`);
+
+      return await this.client.calls(call.callSid).recordings.create({
+        recordingChannels: 'dual',
+      });
+    } else {
+      const status = record === false ? 'paused' : 'in-progress';
+
+      log.info(`update recording on ${call.id} - callSid ${call.callSid} to ${status}`);
+
+      return await this.client.calls(call.callSid).recordings(recording.sid).update({ status: status });
+    }
+  }
 
   async addUserToConference(call: Call) {
     await this.addParticipantToConference(
@@ -103,11 +146,11 @@ export class TwilioHelper {
       `client:${getIdentityByUserId(<string>call.userId)}`,
       'agent',
       getCallStatusEventUrl(call),
-      ['answered', 'completed']
+      ['answered']
     );
   }
 
-  async addCustomerToConference(request: RequestWithAccount, call: Call) {
+  async addCustomerToConference(call: Call) {
     await this.addParticipantToConference(call.id, call.from, call.to, 'customer', getCallStatusEventUrl(call), [
       'ringing',
       'answered',
@@ -140,13 +183,11 @@ export class TwilioHelper {
     return call.callSid;
   }
 
-  async callUser(call: Call, user: User): Promise<string> {
+  async connectUser(call: Call, user: User): Promise<string> {
     const options: CallListInstanceCreateOptions = {
       url: getOutboundUrl(call, user),
       to: `client:${getIdentityByUserId(<string>user.id)}`,
       from: getCallerId(user.account),
-      recordingChannels: 'dual',
-      record: true,
     };
 
     const response = await this.client.calls.create(options);
@@ -154,9 +195,11 @@ export class TwilioHelper {
     return response.sid;
   }
 
-  async holdParticipant(conferenceName: string, label: string, hold: boolean): Promise<void> {
+  async holdParticipant(call: Call, label: string, hold: boolean): Promise<void> {
+    log.info(`hold ${call.id} - callSid ${call.callSid} set label ${label} to ${hold}`);
+
     const conferences = await this.client.conferences.list({
-      friendlyName: conferenceName,
+      friendlyName: call.id,
       status: 'in-progress',
       limit: 1,
     });

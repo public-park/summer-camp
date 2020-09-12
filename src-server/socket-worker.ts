@@ -17,6 +17,7 @@ import { ConfigurationCommandHandler } from './commands/ConfigurationCommandHand
 import { AcceptCommandHandler } from './commands/AcceptCommandHandler';
 import { UserMessage } from './models/UserMessage';
 import { UserEvent } from './models/UserEvent';
+import { RecordCommandHandler } from './commands/RecordCommandHandler';
 
 interface SocketWorkerOptions {
   server: WebSocket.ServerOptions;
@@ -165,8 +166,11 @@ export class SocketWorker {
           }
 
           if (UserEvent.Record in payload) {
+            const response = await RecordCommandHandler.handle(user, payload.record.id, payload.record.state);
+
             const message = {
               id: id,
+              state: response,
             };
 
             socket.send(JSON.stringify(message));

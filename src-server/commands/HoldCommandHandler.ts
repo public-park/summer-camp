@@ -19,7 +19,7 @@ const handle = async (user: UserWithOnlineState, callId: string, state: boolean)
 
   const helper = new TwilioHelper(user.account);
 
-  await helper.holdParticipant(call.id, 'customer', state);
+  const hold = await helper.holdParticipant(call, 'customer', state);
 
   return state;
 };

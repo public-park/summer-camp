@@ -39,7 +39,7 @@ const handleOutbound = async (request: StatusCallbackRequest, response: Response
 
       const helper = new TwilioHelper(request.account);
 
-      await helper.addCustomerToConference(request, request.call);
+      await helper.addCustomerToConference(request.call);
     }
 
     response.status(200).end();

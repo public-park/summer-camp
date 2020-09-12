@@ -13,7 +13,7 @@ const handle = async (user: UserWithOnlineState, to: string) => {
 
   const helper = new TwilioHelper(user.account);
 
-  await helper.callUser(call, user);
+  await helper.connectUser(call, user);
 
   return call;
 };

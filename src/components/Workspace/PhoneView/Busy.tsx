@@ -10,6 +10,7 @@ import { ApplicationContext } from '../../../context/ApplicationContext';
 import { useSelector } from 'react-redux';
 import { selectCall, Call } from '../../../store/Store';
 import { CallDirection } from '../../../phone/Call';
+import { RecordButton } from './Controls/RecordButton';
 
 export const Busy = () => {
   const { call } = useContext(ApplicationContext);
@@ -41,6 +42,10 @@ export const Busy = () => {
         </div>
         <div>
           <HoldButton />
+        </div>
+
+        <div>
+          <RecordButton />
         </div>
         <div>
           <button onClick={() => setShowKeypad(!showKeypad)} className="keypad-button"></button>

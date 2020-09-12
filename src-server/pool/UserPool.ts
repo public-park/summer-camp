@@ -32,6 +32,7 @@ export class UserPool {
 
         user.broadcast({ call: user.toResponse().call });
       } else {
+        user.call = undefined;
         user.broadcast({ call: null });
       }
     });

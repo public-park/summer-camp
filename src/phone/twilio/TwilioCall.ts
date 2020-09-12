@@ -2,7 +2,7 @@ import { Call, CallDirection } from '../Call';
 import { EventEmitter } from 'events';
 import { User } from '../../models/User';
 import { UserEvent } from '../../models/enums/UserEvent';
-import { PhoneControl } from '../PhoneControl';
+import { UserHoldPayload, UserRecordPayload, UserAnswerPayload } from '../../models/UserMessage';
 
 export class TwilioCall implements Call {
   private connection: any;
@@ -70,17 +70,21 @@ export class TwilioCall implements Call {
   async hold(state: boolean): Promise<void> {
     console.log(`call ${this.id}, set hold to ${state}`);
 
-    const payload = await this.user.send(UserEvent.Hold, { id: this.id, state: state });
+    const request: UserHoldPayload = { id: this.id, state: state };
 
-    this.isOnHold = payload.state;
+    const response = await this.user.send(UserEvent.Hold, request);
+
+    this.isOnHold = response.state;
   }
 
   async record(state: boolean): Promise<void> {
     console.log(`call ${this.id}, set record to ${state}`);
 
-    const payload = await this.user.send(UserEvent.Hold, { id: this.id, state: state });
+    const request: UserRecordPayload = { id: this.id, state: state };
 
-    this.isRecording = payload.state;
+    const response = await this.user.send(UserEvent.Record, request);
+
+    this.isRecording = response.state;
   }
 
   sendDigits(digits: string) {
@@ -100,17 +104,15 @@ export class TwilioCall implements Call {
 
     this.answeredAt = new Date();
 
-    return this.user.send(UserEvent.Accept, { id: this.id });
+    const request: UserAnswerPayload = { id: this.id };
+
+    return this.user.send(UserEvent.Accept, request);
   }
 
   end() {
     this.connection.disconnect();
 
     return Promise.resolve();
-  }
-
-  onConnectionStateChange(listener: (state: boolean) => void) {
-    this.eventEmitter.on('connection_state', listener);
   }
 
   onAnswer(listener: () => void) {

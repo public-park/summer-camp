@@ -3,10 +3,11 @@ import { User } from '../models/User';
 export interface Call {
   id: string;
   user: User;
-  phoneNumber: string;
+  phoneNumber: string; // TODO rename to endpoint, can be from or to ...
   isConnected: boolean;
   isMuted: boolean;
   isOnHold: boolean;
+  isRecording: boolean;
   direction: CallDirection;
   createdAt: Date;
   answeredAt: Date | undefined;
@@ -15,8 +16,8 @@ export interface Call {
   reject: () => Promise<void>;
   mute: (state: boolean) => Promise<void>;
   hold: (state: boolean) => Promise<void>;
+  record: (state: boolean) => Promise<void>;
   sendDigits: (digits: string) => void;
-  onConnectionStateChange: (listener: (state: boolean) => void) => void;
   onAnswer: (listener: () => void) => void;
   registerConnection: (connection: any) => void;
 }

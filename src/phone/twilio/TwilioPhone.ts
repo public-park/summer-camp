@@ -8,6 +8,7 @@ import { User } from '../../models/User';
 import { UserEvent } from '../../models/enums/UserEvent';
 import { PhoneNotReadyException } from '../../exceptions/PhoneNotReadyException';
 import { InvalidPhoneStateException } from '../../exceptions/InvalidPhoneStateException';
+import { UserCallPayload } from '../../models/UserMessage';
 
 interface DelayedState {
   state: PhoneState;
@@ -21,6 +22,7 @@ export class TwilioPhone implements PhoneControl {
   private state: PhoneState;
   private delayedState: DelayedState | undefined;
   private isInitialized: boolean;
+  private ringtone: HTMLAudioElement;
 
   private inputDeviceId: string | undefined;
 
@@ -33,6 +35,7 @@ export class TwilioPhone implements PhoneControl {
     this.delayedState = undefined;
     this.inputDeviceId = undefined;
     this.call = undefined;
+    this.ringtone = new Audio('https://sdk.twilio.com/js/client/sounds/releases/1.0.0/incoming.mp3?cache=1.12.3');
 
     this.eventEmitter = new EventEmitter();
 
@@ -177,8 +180,6 @@ export class TwilioPhone implements PhoneControl {
   destroy() {
     this.setState(PhoneState.Offline);
 
-    //this.eventEmitter.removeAllListeners();
-
     this.device.destroy();
   }
 
@@ -219,20 +220,23 @@ export class TwilioPhone implements PhoneControl {
   }
 
   registerUser(user: User) {
-    // TODO payload, CallResponse
-    user.on(UserEvent.Call, (call: any) => {
-      if (call === null) {
-        this.eventEmitter.emit('complete');
-
+    user.on(UserEvent.Call, (payload: UserCallPayload) => {
+      if (this.hasEnded(payload.status)) {
         this.setState(PhoneState.Idle);
+
+        this.eventEmitter.emit('complete');
 
         return;
       }
 
-      if (call.status == CallStatus.Ringing && call.direction === CallDirection.Inbound) {
-        this.call = new TwilioCall(call.id, <User>this.user, call.from, call.direction);
+      if (this.isNewIncoming(payload.status, payload.direction)) {
+        this.call = new TwilioCall(payload.id, <User>this.user, payload.from, payload.direction);
+
+        this.playRingtone();
 
         this.call.onAnswer(() => {
+          this.pauseRingtone();
+
           this.setState(PhoneState.Busy);
         });
 
@@ -241,11 +245,36 @@ export class TwilioPhone implements PhoneControl {
         this.setState(PhoneState.Ringing, this.call.phoneNumber);
       }
 
-      if (call.status == CallStatus.NoAnswer && call.direction === CallDirection.Inbound) {
-        this.setState(PhoneState.Idle);
+      if (this.isAcceptedOrCanceled(payload.status, payload.direction)) {
+        this.pauseRingtone();
       }
     });
 
     this.user = user;
+  }
+
+  private hasEnded(status: CallStatus | undefined) {
+    if (!status) {
+      return true;
+    }
+
+    return [CallStatus.NoAnswer, CallStatus.Failed, CallStatus.Busy, CallStatus.Completed].includes(status);
+  }
+
+  private isNewIncoming(status: CallStatus, direction: CallDirection) {
+    return status == CallStatus.Ringing && direction === CallDirection.Inbound;
+  }
+
+  private isAcceptedOrCanceled(status: CallStatus, direction: CallDirection) {
+    return [CallStatus.InProgress, CallStatus.Canceled].includes(status) && direction === CallDirection.Inbound;
+  }
+
+  private playRingtone() {
+    this.ringtone.loop = true;
+    this.ringtone.play();
+  }
+
+  private pauseRingtone() {
+    this.ringtone.pause();
   }
 }

@@ -8,10 +8,13 @@ Summer Camp is a free WebRTC telephony application built in Typescript and React
 
 ## Features
 
-- Call a phone number
-- Receive phone calls
-- Mute/unmute yourself while on call
+- Outbound phone calls - call a phone number
+- Receive phone calls on a Twilio phone number
+- Mute or unmute the microphone
 - Send DTMF tones
+- Hold phone calls
+- Record phone calls in a dual-channel audio file
+- Start or pause recording while on a call
 - Set yourself **available** or **unavailable**. If the user is unavailable callers will hear a text-to-speech voice saying the caller is currently not online
 - Manage presence, if the user is not online the calls are rejected with a message to the caller
 
@@ -23,7 +26,7 @@ The project is split into two parts, the React UI source code in `/src` and the 
 
 The server authenticates users and keeps a WebSocket connection to the phone client, this allows the server to manage the user's presence on the browser and reject a call if the user is not online.
 
-The server has a RESTful API users can use with a valid JWT token issues by login route. You find the API descrption in OpenAPI 3 format in the project director [OpenAPI Summer Camp][api-summer-camp.yaml].
+The server has a RESTful API users can use with a valid JWT token issues by login route. You find the API descrption in OpenAPI 3 format in the project director [OpenAPI Summer Camp](api-summer-camp.yaml).
 
 ### React Frontend
 
@@ -32,6 +35,10 @@ The client side WebRTC phone application, written in [React](https://reactjs.org
 You find the server-side [TwiML](https://www.twilio.com/docs/voice/twiml) files to customise the message in `src-server/controllers/PhoneCallbackController.handleIncoming`.
 
 The frontend was created with [Create React App](https://github.com/facebook/create-react-app) without any custom setup except adding build scripts and NPM dependencies for the server part.
+
+## Try out the Phone
+
+You can try out this project on [Summer Camp WebRTC Phone](https://phone.summer-camp.dev). You use this hosted application at your sole risk, please use a separate Twilio test account.
 
 ## Let's get Started
 
@@ -131,10 +138,12 @@ In a next step the environment variables need to be set, the instructions in thi
 
 Open the newly installed application on Heroku, got to the **add-ons section** and install **MongoDB** as a database. Please note, installing the add-on will add the `MONGODB_URI` to your environment variables, if you point the project to a database you already own add the environment variable only.
 
-Open the application settings tab and add the following config vars.
+Open the application settings tab and add the following config variables.
 
 - `SESSION_SECRET`, the secret to encrypt the JWT session, it should be a large unguessable string
-- `REGISTRATION_ENABLED`, set this value to `true` first, this will allow you to register on the server as a new user. After you are registered, you can disable it again to prevent new users from signing up.
+- `REACT_APP_AUTHENTICATION_MODE`, set this value to `local-password-with-registration` first, this will allow you to register on the server as a new user. After you are registered, you can disable it again to prevent new users from signing up.
+
+- `PUBLIC_BASE_URL`, the public url, set this to protocol and domain you host this project.
 
 You are all set, open your app, you can now register your user and follow the in-app setup.
 
@@ -158,9 +167,11 @@ Running the command will start two Node processes with NPM [Concurrently](https:
 
 If you want to load environment variables from a file, install [dotenv](https://www.npmjs.com/package/dotenv) package to handle local environment variables. This project comes with a template for a `.env` file in the root directory.
 
-`REGISTRATION_ENABLED`, set to `true` or `false`
+`REACT_APP_AUTHENTICATION_MODE`, possible values are
 
-Controls wether the REST API endpoint is active.
+`saml`, enables [SSO with SAML 2.0](https://github.com/public-park/summer-camp/tree/master/docs/saml-user-authentication.md)
+`local-password`, authenticate users against the local database
+`local-password-with-registration`, local authentication and enable the registration endpoint on the REST API, this allows users to create new accounts
 
 `REACT_APP_SERVER_URL`
 
@@ -168,15 +179,22 @@ The API endpoint for the REST API and the WebSocket server. If this parameter is
 
 `SESSION_SECRET`, the secret to encrypt the JWT session, it should be a large unguessable string
 
+`PUBLIC_BASE_URL` the public url of the hosted application, for example **https://{your-domain-name-dot-com}**. This parameter is used by the server to determine the public address, for example to set webhooks on Twilio calls.
+
+`NODE_ENV` Specifies the environment in which an application is running, staging, production, testing, etc. In production mode the server is serving the static React phone UI from the build directory.
+
 ## Guides
 
+[Phone User Guide](docs/phone.md)
 [Manage Users](docs/manage-users.md)
+[Route Calls](docs/route-calls.md)
+[Call Data Model](docs/call-data-model.md)
 
 ## Testing
 
 `npm run test-server`
 
-Launches the Jest test runner, edit /`srv-server/test/test-environment.ts` to configure it for yor repository. For details see section **Choose a Storage**.
+Launches the Jest test runner, edit /`srv-server/test/test-environment.ts` to configure it for yor repository. For details see section ](##choose-a-storage)
 
 Right now this project has no automated tests for the React frontend, we will add them at a later stage.
 

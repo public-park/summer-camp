@@ -307,6 +307,25 @@ button {
   background-size: auto 32px;
 }
 
+.phone .call .control .record-button-disabled {
+  background-image: url(images/icon-record-off.svg);
+  background-position: center center;
+  background-size: auto 48px;
+  opacity: 0.2;
+}
+
+.phone .call .control .record-button {
+  background-image: url(images/icon-record-off.svg);
+  background-position: center center;
+  background-size: auto 48px;
+}
+
+.phone .call .control .record-pause-button {
+  background-image: url(images/icon-record-on.svg);
+  background-position: center center;
+  background-size: auto 48px;
+}
+
 .phone .call .control .hold-button-disabled {
   background-image: url(images/icon-hold-on.svg);
   background-position: center center;

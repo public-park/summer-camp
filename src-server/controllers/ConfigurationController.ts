@@ -6,6 +6,7 @@ import { accountRepository } from '../worker';
 import { AccountConfiguration } from '../models/AccountConfiguration';
 import { RequestWithUser } from '../requests/RequestWithUser';
 import { ConfigurationValidationFailedException } from '../exceptions/ConfigurationValidationFailedException';
+import { getCallbackUrl } from './callback/PhoneHelper';
 
 const update = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
@@ -17,9 +18,8 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
     /* update phone number configuration on Twilio */
     if (account.configuration.inbound.isEnabled === true) {
-      let voiceUrl = `${req.protocol}://${req.hostname}/api/callback/accounts/${req.user.account.id}/phone/inbound`;
-
-      let statusCallbackUrl = `${req.protocol}://${req.hostname}/api/callback/accounts/${req.user.account.id}/phone/inbound/completed`;
+      const voiceUrl = getCallbackUrl(`callback/accounts/${req.user.account.id}/phone/inbound`);
+      const statusCallbackUrl = getCallbackUrl(`/callback/accounts/${req.user.account.id}/phone/inbound/completed`);
 
       await helper.configureInbound(account.configuration.inbound.phoneNumber as string, voiceUrl, statusCallbackUrl);
     }

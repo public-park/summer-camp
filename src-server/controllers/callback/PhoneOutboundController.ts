@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import VoiceResponse = require('twilio/lib/twiml/VoiceResponse');
 import { callRepository as calls } from '../../worker';
 import { RequestWithAccount } from '../../requests/RequestWithAccount';
-import { getConferenceStatusEventUrl } from './PhoneHelper';
+import { getCallbackUrl } from './PhoneHelper';
 import { Call } from '../../models/Call';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 
@@ -14,7 +14,9 @@ const generateConnectTwiml = (req: RequestWithAccount, call: Call) => {
   const options: any = {
     endConferenceOnExit: true,
     statusCallbackEvent: ['join'],
-    statusCallback: getConferenceStatusEventUrl(call),
+    statusCallback: getCallbackUrl(
+      `status-callback/accounts/${call.accountId}/calls/${call.id}/conference/${call.direction}`
+    ),
     participantLabel: 'agent',
   };
 

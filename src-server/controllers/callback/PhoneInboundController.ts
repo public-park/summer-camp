@@ -7,9 +7,9 @@ import { CallDirection } from '../../models/CallDirection';
 import { RequestWithAccount } from '../../requests/RequestWithAccount';
 import { CallStatus } from '../../models/CallStatus';
 import { getStatus, getDuration, getFinalInboundCallState } from './CallStatusEventHelper';
-import { getConferenceStatusEventUrl } from './PhoneHelper';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { UserWithOnlineState } from '../../pool/UserWithOnlineState';
+import { getCallbackUrl } from './PhoneHelper';
 
 const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithOnlineState) => {
   const { CallSid, From, To } = req.body;
@@ -23,7 +23,9 @@ const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithOnlin
   const options: any = {
     endConferenceOnExit: true,
     statusCallbackEvent: ['join'],
-    statusCallback: getConferenceStatusEventUrl(call),
+    statusCallback: getCallbackUrl(
+      `status-callback/accounts/${call.accountId}/calls/${call.id}/conference/${call.direction}`
+    ),
     participantLabel: 'customer',
   };
 

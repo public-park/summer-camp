@@ -1,20 +1,24 @@
 import { ConfigurationNotFoundException } from '../../exceptions/ConfigurationNotFoundException';
 import { InvalidConfigurationException } from '../../exceptions/InvalidConfigurationException';
 import { Account } from '../../models/Account';
-import { Call } from '../../models/Call';
-import { User } from '../../models/User';
 
-export const getCallStatusEventUrl = (call: Call) => {
-  return `${process.env.PUBLIC_BASE_URL}/api/status-callback/accounts/${call.accountId}/calls/${call.id}/${call.direction}`;
+const stripLeadingSlash = (value: string): string => {
+  return value.startsWith('/') ? value.substr(1, value.length) : value;
 };
 
-// TODO allow base url with /
-export const getConferenceStatusEventUrl = (call: Call) => {
-  return `${process.env.PUBLIC_BASE_URL}/api/status-callback/accounts/${call.accountId}/calls/${call.id}/conference/${call.direction}`;
+const stripTrailingSlash = (value: string): string => {
+  return value.endsWith('/') ? value.substr(0, value.length - 1) : value;
 };
 
-export const getOutboundUrl = (call: Call, user: User) => {
-  return `${process.env.PUBLIC_BASE_URL}/api/callback/accounts/${user.account.id}/phone/outbound/${call.id}`;
+export const getCallbackUrl = (path: string) => {
+  if (!process.env.PUBLIC_BASE_URL) {
+    throw new InvalidConfigurationException();
+  }
+
+  const segment = stripLeadingSlash(path);
+  const base = stripTrailingSlash(process.env.PUBLIC_BASE_URL);
+
+  return [base, 'api', segment].join('/');
 };
 
 export const getCallerId = (account: Account): string => {

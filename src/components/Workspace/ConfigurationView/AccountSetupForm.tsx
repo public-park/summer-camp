@@ -10,7 +10,9 @@ import { DefaultConfiguration } from './DefaultConfiguration';
 export const AccountSetupForm = () => {
   const { user } = useContext(ApplicationContext);
 
-  const { configuration, setView, saveBasic, isSaving, setBaseConfiguration } = useContext(ConfigurationContext);
+  const { configuration, setView, saveBasic, isSaving, setBaseConfiguration, setException } = useContext(
+    ConfigurationContext
+  );
 
   const [key, setKey] = useState(configuration.key);
   const [secret, setSecret] = useState(configuration.secret);
@@ -56,6 +58,7 @@ export const AccountSetupForm = () => {
 
       setView('PHONE_SETUP');
     } catch (error) {
+      setException('server error please check logs');
       setView('FAILED');
     }
   };

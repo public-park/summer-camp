@@ -22,11 +22,11 @@ const DefaultConfigurationContext = {
     return 'FETCHING';
   },
   setView: (view: ConfiguratonViewState) => {},
-  isValid: false,
+  localValidation: { isValid: false, exception: '' },
   isSaving: false,
-  hasError: false,
   setIsSaving: (isSaving: boolean) => {},
-  error: '',
+  exception: '',
+  setException: (message: string) => {},
 };
 
 export const ConfigurationContext = createContext(DefaultConfigurationContext);

@@ -6,14 +6,20 @@ import { PhoneNumberConfigurationPanel } from './PhoneNumberConfigurationPanel';
 import { ConfigurationContext } from './ConfigurationContext';
 
 export const PhoneSetupForm = () => {
-  const { save, isSaving, isValid } = useContext(ConfigurationContext);
+  const { save, isSaving, localValidation } = useContext(ConfigurationContext);
 
   return (
     <div>
       <AccountResetForm />
       <PhoneNumberConfigurationPanel />
 
-      <Button fullWidth variant="contained" onClick={save} disabled={!isValid || isSaving} color="primary">
+      <Button
+        fullWidth
+        variant="contained"
+        onClick={save}
+        disabled={!localValidation.isValid || isSaving}
+        color="primary"
+      >
         SAVE SETUP
       </Button>
 

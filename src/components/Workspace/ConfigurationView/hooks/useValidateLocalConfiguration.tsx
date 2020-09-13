@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { AccountConfiguration } from '../../../../models/AccountConfiguration';
 
 export const useValidateLocalConfiguration = (configuration: AccountConfiguration) => {
-  const [error, setError] = useState('');
+  const [exception, setException] = useState('');
   const [isValid, setIsValid] = useState(false);
 
   useEffect(() => {
@@ -11,26 +11,26 @@ export const useValidateLocalConfiguration = (configuration: AccountConfiguratio
     }
 
     if (!configuration.outbound.isEnabled && !configuration.inbound.isEnabled) {
-      setError('Either outbound or inbound has to be active');
+      setException('Either outbound or inbound has to be active');
       setIsValid(false);
       return;
     }
 
     if (configuration.outbound.isEnabled) {
       if (!configuration.outbound.mode) {
-        setError('Please select mode via caller id or number');
+        setException('Please select mode via caller id or number');
         setIsValid(false);
         return;
       }
 
       if (configuration.outbound.mode === 'internal-caller-id' && !configuration.outbound.phoneNumber) {
-        setError('Please select a phoneNumber for outbound');
+        setException('Please select a phoneNumber for outbound');
         setIsValid(false);
         return;
       }
 
       if (configuration.outbound.mode === 'external-caller-id' && !configuration.outbound.phoneNumber) {
-        setError('Please select a callerId for outbound');
+        setException('Please select a callerId for outbound');
         setIsValid(false);
         return;
       }
@@ -38,15 +38,15 @@ export const useValidateLocalConfiguration = (configuration: AccountConfiguratio
 
     if (configuration.inbound.isEnabled) {
       if (!configuration.inbound.phoneNumber) {
-        setError('Please select a phoneNumber for inbound');
+        setException('Please select a phoneNumber for inbound');
         setIsValid(false);
         return;
       }
     }
 
     setIsValid(true);
-    setError('');
+    setException('');
   }, [configuration]);
 
-  return { isValid, error };
+  return { isValid, exception };
 };

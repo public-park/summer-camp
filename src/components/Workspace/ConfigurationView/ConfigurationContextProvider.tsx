@@ -15,14 +15,13 @@ export const ConfigurationContextProvider = (props: any) => {
   const { user } = useContext(ApplicationContext);
 
   const [view, setView] = useState<ConfiguratonViewState>('FETCHING');
+  const [exception, setException] = useState('');
 
   const [isSaving, setIsSaving] = useState(false);
-  const [hasError] = useState(false);
 
   const [configuration, setConfiguration] = useState(DefaultConfiguration);
 
-  // TODO, should return exception object
-  const { isValid, error } = useValidateLocalConfiguration(configuration);
+  const localValidation = useValidateLocalConfiguration(configuration);
 
   const getView = (): ConfiguratonViewState => {
     return view;
@@ -108,8 +107,8 @@ export const ConfigurationContextProvider = (props: any) => {
     try {
       await updateConfiguration(user, configuration);
     } catch (error) {
-      console.log(error);
-
+      console.error(error);
+      setException('server error please check logs');
       setView('FAILED');
     } finally {
       setIsSaving(false);
@@ -124,8 +123,8 @@ export const ConfigurationContextProvider = (props: any) => {
 
       user.send(UserEvent.Configuration, null);
     } catch (error) {
-      console.log(error);
-
+      console.error(error);
+      setException('server error please check logs');
       setView('FAILED');
     } finally {
       setIsSaving(false);
@@ -190,8 +189,8 @@ export const ConfigurationContextProvider = (props: any) => {
   return (
     <ConfigurationContext.Provider
       value={{
-        error,
-        hasError,
+        exception,
+        setException,
         configuration,
         setMode,
         setBaseConfiguration,
@@ -205,7 +204,7 @@ export const ConfigurationContextProvider = (props: any) => {
         saveBasic,
         getView,
         setView,
-        isValid,
+        localValidation,
         isSaving,
         setIsSaving,
       }}

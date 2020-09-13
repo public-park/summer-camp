@@ -6,12 +6,12 @@ import { PhoneSetupForm } from './PhoneSetupForm';
 import { ConfiguratonViewState } from './ConfigurationViewState';
 import { ConfigurationContext } from './ConfigurationContext';
 
-const getPhoneView = (view: ConfiguratonViewState) => {
+const getPhoneView = (view: ConfiguratonViewState, exception: string | undefined) => {
   switch (view) {
     case 'FAILED':
       return (
         <Alert style={{ marginTop: '15px' }} variant="filled" severity="error">
-          Could not fetch configuration
+          {exception}
         </Alert>
       );
     case 'FETCHING':
@@ -26,15 +26,15 @@ const getPhoneView = (view: ConfiguratonViewState) => {
 };
 
 export const ConfigurationView = () => {
-  const { getView, error } = useContext(ConfigurationContext);
+  const { getView, exception, localValidation } = useContext(ConfigurationContext);
 
   return (
     <div className="configuration">
-      {getPhoneView(getView())}
+      {getPhoneView(getView(), exception)}
 
-      {getView() === 'PHONE_SETUP' && error ? (
+      {getView() === 'PHONE_SETUP' && !localValidation.isValid ? (
         <Alert style={{ marginTop: '15px' }} variant="filled" severity="error">
-          {error}
+          {localValidation.exception}
         </Alert>
       ) : (
         ''

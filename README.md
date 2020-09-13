@@ -185,10 +185,11 @@ The API endpoint for the REST API and the WebSocket server. If this parameter is
 
 ## Guides
 
-[Phone User Guide](docs/phone.md)
-[Manage Users](docs/manage-users.md)
-[Route Calls](docs/route-calls.md)
-[Call Data Model](docs/call-data-model.md)
+[Phone User Guide](docs/phone.md)\
+[Manage Users](docs/manage-users.md)\
+[Route Calls](docs/route-calls.md)\
+[Call Data Model](docs/call-data-model.md)\
+[Authenticate Users with SSO (SAML 2.0)](docs/saml-user-authentication.md)
 
 ## Testing
 

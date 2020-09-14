@@ -10,7 +10,7 @@ import { AccountConfiguration } from '../../models/AccountConfiguration';
 import { ParticipantListInstanceCreateOptions } from 'twilio/lib/rest/api/v2010/account/conference/participant';
 import { CallConnectionType } from '../../models/CallConnectionType';
 import { Call } from '../../models/Call';
-import { getCallStatusEventUrl, getCallerId, getOutboundUrl } from '../../controllers/callback/PhoneHelper';
+import { getCallerId, getCallbackUrl } from '../../controllers/callback/PhoneHelper';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { CallListInstanceCreateOptions } from 'twilio/lib/rest/api/v2010/account/call';
 import { CallStatus } from '../../models/CallStatus';
@@ -116,10 +116,10 @@ export class TwilioHelper {
       throw new CallNotInProgressException();
     }
 
-    const recording = await this.getActiveRecording(call);
+    const activeRecording = await this.getActiveRecording(call);
 
     /* create a new recording */
-    if (!recording) {
+    if (!activeRecording) {
       /* disable recording on a call without active recording ... */
       if (!record) {
         return;
@@ -135,7 +135,7 @@ export class TwilioHelper {
 
       log.info(`update recording on ${call.id} - callSid ${call.callSid} to ${status}`);
 
-      return await this.client.calls(call.callSid).recordings(recording.sid).update({ status: status });
+      return await this.client.calls(call.callSid).recordings(activeRecording.sid).update({ status: status });
     }
   }
 
@@ -145,17 +145,20 @@ export class TwilioHelper {
       call.to,
       `client:${getIdentityByUserId(<string>call.userId)}`,
       'agent',
-      getCallStatusEventUrl(call),
+      getCallbackUrl(`status-callback/accounts/${call.accountId}/calls/${call.id}/${call.direction}`),
       ['answered']
     );
   }
 
   async addCustomerToConference(call: Call) {
-    await this.addParticipantToConference(call.id, call.from, call.to, 'customer', getCallStatusEventUrl(call), [
-      'ringing',
-      'answered',
-      'completed',
-    ]);
+    await this.addParticipantToConference(
+      call.id,
+      call.from,
+      call.to,
+      'customer',
+      getCallbackUrl(`status-callback/accounts/${call.accountId}/calls/${call.id}/${call.direction}`),
+      ['ringing', 'answered', 'completed']
+    );
   }
 
   async addParticipantToConference(
@@ -185,7 +188,7 @@ export class TwilioHelper {
 
   async connectUser(call: Call, user: User): Promise<string> {
     const options: CallListInstanceCreateOptions = {
-      url: getOutboundUrl(call, user),
+      url: getCallbackUrl(`callback/accounts/${user.account.id}/phone/outbound/${call.id}`),
       to: `client:${getIdentityByUserId(<string>user.id)}`,
       from: getCallerId(user.account),
     };

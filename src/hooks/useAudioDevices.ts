@@ -12,8 +12,7 @@ export const useAudioDevices = () => {
   const [exception, setException] = useState<MediaDeviceException | undefined>();
 
   const addAudioDevicesListener = (f: () => void) => {
-    console.debug(`${useAudioDevices.name} add audio device listener PPPPPPPP`);
-    console.log(f.name);
+    console.debug(`${useAudioDevices.name} add audio device listener`);
 
     if (navigator.mediaDevices) {
       navigator.mediaDevices.addEventListener('devicechange', f);
@@ -22,7 +21,6 @@ export const useAudioDevices = () => {
 
   const removeAudioDevicesListener = (f: () => void) => {
     console.debug(`${useAudioDevices.name} remove audio device listener`);
-    console.log(f.name);
     if (navigator.mediaDevices) {
       navigator.mediaDevices.removeEventListener('devicechange', f);
     }

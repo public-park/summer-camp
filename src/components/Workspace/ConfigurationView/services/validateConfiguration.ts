@@ -17,12 +17,9 @@ export const validateConfiguration = async (
       .withAuthentication(user)
       .post(configuration);
 
-    console.log(response.body);
     return { isValid: true };
   } catch (error) {
     // TODO check timeout
-    console.log(error.response.body);
-
     return { isValid: false, code: error.response.body.description };
   }
 };

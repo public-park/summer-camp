@@ -1,66 +1,45 @@
 import React, { useState, useContext, useEffect } from 'react';
 
-import { Typography, CardContent, Card, TextField, FormControl, Button } from '@material-ui/core';
+import { Typography, CardContent, Card, FormControl, Button } from '@material-ui/core';
 import { LoadIndicator } from './LoadIndicator';
-import { ApplicationContext } from '../../../context/ApplicationContext';
-import { validateConfiguration } from './services/validateConfiguration';
 import { ConfigurationContext } from './ConfigurationContext';
-import { DefaultConfiguration } from './DefaultConfiguration';
+import { AccountSetupFormInput } from './AccountSetupFormInput';
+import {
+  IS_TWILIO_ACCOUNT_SID_REGEXP,
+  IS_TWILIO_API_KEY_REGEXP,
+  IS_TWILIO_API_SECRET_REGEXP,
+} from '../../../Constants';
+import Alert from '@material-ui/lab/Alert';
 
 export const AccountSetupForm = () => {
-  const { user } = useContext(ApplicationContext);
+  const { configuration, saveBaseConfiguration, isSaving, isValidBaseConfiguration } = useContext(ConfigurationContext);
 
-  const { configuration, setView, saveBasic, isSaving, setBaseConfiguration, setException } = useContext(
-    ConfigurationContext
-  );
-
-  const [key, setKey] = useState(configuration.key);
-  const [secret, setSecret] = useState(configuration.secret);
-  const [accountSid, setAccountSid] = useState(configuration.accountSid);
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  const [isValidatedByServer, setIsValidatedByServer] = useState(false);
+  const [key, setKey] = useState(configuration.key || '');
+  const [secret, setSecret] = useState(configuration.secret || '');
+  const [accountSid, setAccountSid] = useState(configuration.accountSid || '');
+  const [isPristine, setIsPristine] = useState(true);
+  const [isValid, setIsValid] = useState(false);
 
   useEffect(() => {
-    setIsValidatedByServer(false);
+    if (
+      IS_TWILIO_API_KEY_REGEXP.test(key) &&
+      IS_TWILIO_API_SECRET_REGEXP.test(secret) &&
+      IS_TWILIO_ACCOUNT_SID_REGEXP.test(accountSid)
+    ) {
+      setIsValid(true);
+    } else {
+      setIsValid(false);
+    }
   }, [key, secret, accountSid]);
 
-  const validate = async () => {
-    setIsLoading(true);
+  const save = async () => {
+    await saveBaseConfiguration(key, secret, accountSid);
 
-    const configuration = {
-      ...DefaultConfiguration,
-      key: key,
-      secret: secret,
-      accountSid: accountSid,
-    };
-
-    try {
-      const validationResult = await validateConfiguration(user, configuration);
-
-      if (validationResult.isValid) {
-        setIsValidatedByServer(true);
-
-        setBaseConfiguration(key as string, secret as string, accountSid as string);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-
-    setIsLoading(false);
-    // TODO, error message missing
+    setIsPristine(true);
   };
 
-  const saveBasicSetup = async () => {
-    try {
-      await saveBasic();
-
-      setView('PHONE_SETUP');
-    } catch (error) {
-      setException('server error please check logs');
-      setView('FAILED');
-    }
+  const onFocus = () => {
+    setIsPristine(false);
   };
 
   return (
@@ -72,59 +51,45 @@ export const AccountSetupForm = () => {
 
         <form style={{ paddingTop: '10px' }} noValidate autoComplete="off">
           <FormControl fullWidth>
-            <TextField
-              style={{ marginBottom: '20px' }}
-              fullWidth
-              disabled={isLoading}
-              type="text"
-              autoComplete="off"
-              value={key ? key : ''}
-              onChange={(event) => setKey(event.target.value)}
+            <AccountSetupFormInput
               id="api_key"
               label="API Key"
+              type="text"
+              default={configuration.key || ''}
+              validator={IS_TWILIO_API_KEY_REGEXP}
+              onUpdate={setKey}
+              onFocus={onFocus}
             />
 
-            <TextField
-              style={{ marginBottom: '20px' }}
-              fullWidth
-              disabled={isLoading}
-              type="password"
-              autoComplete="off"
-              value={secret ? secret : ''}
-              onChange={(event) => setSecret(event.target.value)}
+            <AccountSetupFormInput
               id="api_secret"
               label="API Secret"
+              type="password"
+              default={configuration.secret || ''}
+              validator={IS_TWILIO_API_SECRET_REGEXP}
+              onUpdate={setSecret}
+              onFocus={onFocus}
             />
 
-            <TextField
-              style={{ marginBottom: '20px' }}
-              fullWidth
-              disabled={isLoading}
-              type="text"
-              autoComplete="off"
-              value={accountSid ? accountSid : ''}
-              onChange={(event) => setAccountSid(event.target.value)}
+            <AccountSetupFormInput
               id="account_sid"
               label="AccountSid"
+              type="text"
+              default={configuration.accountSid || ''}
+              validator={IS_TWILIO_ACCOUNT_SID_REGEXP}
+              onUpdate={setAccountSid}
+              onFocus={onFocus}
             />
           </FormControl>
-
-          {isValidatedByServer ? (
-            <Button
-              fullWidth
-              disabled={isLoading || isSaving}
-              onClick={saveBasicSetup}
-              variant="contained"
-              color="primary"
-            >
-              SAVE CONFIGURATION
-            </Button>
-          ) : (
-            <Button fullWidth disabled={isLoading || isSaving} onClick={validate} variant="contained" color="primary">
-              VALIDATE CONFIGURATION
-            </Button>
+          <Button fullWidth disabled={!isValid || isSaving} onClick={save} variant="contained" color="primary">
+            VALIDATE AND SAVE
+          </Button>
+          {isPristine && isValidBaseConfiguration === false && (
+            <Alert style={{ marginTop: '10px' }} variant="filled" severity="error">
+              Configuration could not be validated with Twilio, please check the provided configuration.
+            </Alert>
           )}
-          {(isLoading || isSaving) && <LoadIndicator />}
+          {isSaving && <LoadIndicator />}
         </form>
       </CardContent>
     </Card>

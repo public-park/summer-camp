@@ -20,25 +20,12 @@ export const ConfigurationContextProvider = (props: any) => {
   const [isSaving, setIsSaving] = useState(false);
 
   const [configuration, setConfiguration] = useState(DefaultConfiguration);
+  const [isValidBaseConfiguration, setIsValidBaseConfiguration] = useState<undefined | boolean>(undefined);
 
   const localValidation = useValidateLocalConfiguration(configuration);
 
   const getView = (): ConfiguratonViewState => {
     return view;
-  };
-
-  const setBaseConfiguration = (key: string, secret: string, accountSid: string) => {
-    const override = produce(configuration, (draft) => {
-      draft.key = key;
-      draft.secret = secret;
-      draft.accountSid = accountSid;
-    });
-
-    /* reset all */
-    disableOutbound();
-    disableInbound();
-
-    setConfiguration(override);
   };
 
   const enableOutbound = () => {
@@ -101,21 +88,40 @@ export const ConfigurationContextProvider = (props: any) => {
     setConfiguration(override);
   };
 
-  const saveBasic = async () => {
+  const saveBaseConfiguration = async (key: string, secret: string, accountSid: string) => {
     setIsSaving(true);
 
-    try {
-      await updateConfiguration(user, configuration);
-    } catch (error) {
-      console.error(error);
-      setException('server error please check logs');
-      setView('FAILED');
-    } finally {
+    const base = {
+      ...DefaultConfiguration,
+      key: key,
+      secret: secret,
+      accountSid: accountSid,
+    };
+
+    setConfiguration(base);
+
+    const result = await validateConfiguration(user, base);
+
+    if (result.isValid) {
+      try {
+        await updateConfiguration(user, base);
+
+        setConfiguration(base);
+
+        setView('PHONE_SETUP');
+      } catch (error) {
+        setException('server error please check logs');
+        setView('FAILED');
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      setIsValidBaseConfiguration(false);
       setIsSaving(false);
     }
   };
 
-  const save = async () => {
+  const saveAll = async () => {
     setIsSaving(true);
 
     try {
@@ -133,7 +139,6 @@ export const ConfigurationContextProvider = (props: any) => {
 
   useEffect(() => {
     async function validate() {
-      // TODO, handle exception
       const validationResult = await validateConfiguration(user, configuration);
 
       if (validationResult.isValid) {
@@ -178,7 +183,7 @@ export const ConfigurationContextProvider = (props: any) => {
           setView('VALIDATING');
         }
       } catch (error) {
-        console.log(error);
+        console.error(error);
         setView('FAILED');
       }
     }
@@ -192,21 +197,20 @@ export const ConfigurationContextProvider = (props: any) => {
         exception,
         setException,
         configuration,
+        isValidBaseConfiguration,
         setMode,
-        setBaseConfiguration,
         setInboundPhoneNumber,
         enableInbound,
         disableInbound,
         enableOutbound,
         disableOutbound,
         setOutboundPhoneNumber,
-        save,
-        saveBasic,
+        saveAll,
+        saveBaseConfiguration,
         getView,
         setView,
         localValidation,
         isSaving,
-        setIsSaving,
       }}
     >
       {props.children}

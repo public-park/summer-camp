@@ -19,7 +19,6 @@ export const validateConfiguration = async (
 
     return { isValid: true };
   } catch (error) {
-    // TODO check timeout
     return { isValid: false, code: error.response.body.description };
   }
 };

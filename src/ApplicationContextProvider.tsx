@@ -129,13 +129,14 @@ export const ApplicationContextProvider = (props: any) => {
 
     // TODO, add phone exception type
     phone.onError((error: Error) => {
-      console.error(error);
+      dispatch(setPhoneException(error));
 
-      if (view === 'CONNECT_VIEW' && ['ERROR', 'OFFLINE', 'CONNECTING'].includes(phoneState)) {
+      if (
+        view === 'CONNECT_VIEW' &&
+        [PhoneState.Error, PhoneState.Offline, PhoneState.Connecting].includes(phoneState)
+      ) {
         dispatch(setWorkspaceView('PHONE_VIEW'));
       }
-
-      dispatch(setPhoneException(error));
     });
   }, []);
 

@@ -1,7 +1,6 @@
 import { createContext } from 'react';
 import { User } from '../models/User';
 import { PhoneControl } from '../phone/PhoneControl';
-import { TwilioPhone } from '../phone/twilio/TwilioPhone';
 import { Call } from '../phone/Call';
 
 export interface ApplicationContextType {

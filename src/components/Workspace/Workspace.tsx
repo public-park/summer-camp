@@ -26,6 +26,7 @@ import { useReconnectWebSocket } from '../../hooks/useReconnectWebSocket';
 import { ConnectionLostWithReconnectAlert } from './NotificationLayer/ConnectionLostWithReconnectAlert';
 import { useAudioDevices } from '../../hooks/useAudioDevices';
 import { setAudioDevicesException, updateAudioDevices } from '../../actions/AudioDeviceAction';
+import { showNotification } from '../../actions/NotificationAction';
 
 const hasLostDevice = (deviceId: string | undefined, devices: MediaDeviceInfo[] | undefined) => {
   if (!deviceId || !devices) {
@@ -70,13 +71,15 @@ export const Workspace = () => {
 
   useEffect(() => {
     if (hasLostDevice(phoneInputDevice, audioInputDevices)) {
-      dispatch(lostPhoneInputDevice('Your active microphone device was removed.'));
+      dispatch(lostPhoneInputDevice());
+      dispatch(showNotification('Your active microphone device was removed.'));
     }
   }, [phoneInputDevice, audioInputDevices]);
 
   useEffect(() => {
     if (hasLostDevice(phoneOutputDevice, audioOutputDevices)) {
-      dispatch(lostPhoneOutputDevice('Your active speaker device was removed.'));
+      dispatch(lostPhoneOutputDevice());
+      dispatch(showNotification('Your active speaker device was removed.'));
     }
   }, [phoneOutputDevice, audioOutputDevices]);
 

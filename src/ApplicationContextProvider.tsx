@@ -19,6 +19,7 @@ import {
   selectAudioInputDevices,
   selectAudioOutputDevices,
   selectPhoneToken,
+  selectWorkspaceView,
 } from './store/Store';
 import {
   setPhoneInputDevice,
@@ -41,6 +42,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { PhoneControl } from './phone/PhoneControl';
 import { useFetchPhoneToken } from './hooks/useFetchPhoneToken';
 import { UserEvent } from './models/enums/UserEvent';
+import { setWorkspaceView } from './actions/WorkspaceViewAction';
 
 export const ApplicationContextProvider = (props: any) => {
   const phoneState = useSelector(selectPhoneState);
@@ -66,6 +68,8 @@ export const ApplicationContextProvider = (props: any) => {
 
   const audioInputDevices = useSelector(selectAudioInputDevices);
   const audioOutputDevices = useSelector(selectAudioOutputDevices);
+
+  const view = useSelector(selectWorkspaceView);
 
   const { token: phoneTokenFetched, exception: phoneTokenException } = useFetchPhoneToken(user);
 
@@ -116,11 +120,20 @@ export const ApplicationContextProvider = (props: any) => {
 
     phone.onStateChanged((state: PhoneState, ...params: any) => {
       dispatch(setPhoneState(state));
+
+      /* switch to phone view upon first connect */
+      if (view === 'CONNECT_VIEW' && state === PhoneState.Idle) {
+        dispatch(setWorkspaceView('PHONE_VIEW'));
+      }
     });
 
     // TODO, add phone exception type
     phone.onError((error: Error) => {
-      console.log(error);
+      console.error(error);
+
+      if (view === 'CONNECT_VIEW' && ['ERROR', 'OFFLINE', 'CONNECTING'].includes(phoneState)) {
+        dispatch(setWorkspaceView('PHONE_VIEW'));
+      }
 
       dispatch(setPhoneException(error));
     });
@@ -152,6 +165,12 @@ export const ApplicationContextProvider = (props: any) => {
       phone?.destroy();
 
       dispatch(setPhoneConfiguration(configuration));
+
+      if (configuration) {
+        dispatch([setWorkspaceView('CONNECT_VIEW')]);
+      } else {
+        dispatch(setWorkspaceView('PHONE_VIEW'));
+      }
     });
 
     user.onError((error: Error) => {

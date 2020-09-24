@@ -37,32 +37,11 @@ export const selectStore = (store: Store) => store;
 
 export interface Store {
   call: Call | undefined;
-  user: {
-    id: string;
-    name: string;
-    profileImageUrl: string | undefined;
-    tags: Array<string>;
-    activity: UserActivity;
-    role: UserRole | undefined;
-    sockets: number | undefined;
-  };
+  user: User;
   connection: {
     state: UserConnectionState | undefined;
   };
-  phone: {
-    state: PhoneState;
-    token: string | undefined;
-    configuration: Configuration | undefined;
-    error: string | undefined;
-    display: {
-      value: string;
-      isValidPhoneNumber: any;
-    };
-    devices: {
-      input: string | undefined;
-      output: string | undefined;
-    };
-  };
+  phone: Phone;
   devices: {
     audio: {
       input: Array<MediaDeviceInfo>;
@@ -81,6 +60,16 @@ export interface Store {
   page: ApplicationPage | undefined;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  profileImageUrl: string | undefined;
+  tags: Array<string>;
+  activity: UserActivity;
+  role: UserRole | undefined;
+  sockets: number | undefined;
+}
+
 export interface Call {
   id: string;
   from: string;
@@ -90,7 +79,22 @@ export interface Call {
   answeredAt: Date | undefined;
 }
 
-interface Configuration {
+export interface Phone {
+  state: PhoneState;
+  token: string | undefined;
+  configuration: PhoneConfiguration | undefined;
+  error: string | undefined;
+  display: {
+    value: string;
+    isValidPhoneNumber: any;
+  };
+  devices: {
+    input: string | undefined;
+    output: string | undefined;
+  };
+}
+
+export interface PhoneConfiguration {
   inbound: {
     isEnabled: boolean;
     phoneNumber: string | undefined;

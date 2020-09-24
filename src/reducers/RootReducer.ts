@@ -4,11 +4,9 @@ import { Action } from '../actions/ActionType';
 import { DefaultStore } from '../store/DefaultStore';
 import { PhoneState } from '../phone/PhoneState';
 import { CallStatus } from '../phone/Call';
+import { IS_PHONE_NUMBER_REGEXP, IS_NUMBER_REGEXP } from '../Constants';
 
 const reducer = (state: Store = DefaultStore, action: Action): Store => {
-  const isPhoneNumberExpression = /^\+\d+$/g;
-  const isNumberExpression = /^\d+$/g;
-
   return produce(state, (draft) => {
     switch (action.type) {
       case 'USER_CONNECTION_STATE_CHANGE':
@@ -21,49 +19,23 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
         break;
 
       case 'PHONE_DISPLAY_UPDATE':
-        if (isNumberExpression.test(action.payload)) {
+        if (IS_NUMBER_REGEXP.test(action.payload)) {
           action.payload = `+${action.payload}`;
         }
 
         draft.phone.display = {
           value: action.payload,
-          isValidPhoneNumber: isPhoneNumberExpression.test(action.payload),
+          isValidPhoneNumber: IS_PHONE_NUMBER_REGEXP.test(action.payload),
         };
         break;
 
-      case 'PHONE_DISPLAY_UPDATE_WITH_FOCUS':
-        if (isNumberExpression.test(action.payload)) {
-          action.payload = `+${action.payload}`;
-        }
-
-        draft.phone.display = {
-          value: action.payload,
-          isValidPhoneNumber: isPhoneNumberExpression.test(action.payload),
-        };
-
-        draft.workspace.view = 'PHONE_VIEW';
-        break;
-
-      case 'PHONE_EXCEPTION':
-        if (state.workspace.view === 'CONNECT_VIEW' && ['ERROR', 'OFFLINE', 'CONNECTING'].includes(state.phone.state)) {
-          draft.workspace.view = 'PHONE_VIEW';
-        }
-
+      case 'PHONE_ERROR':
         draft.phone.error = action.payload.message;
         break;
 
       case 'PHONE_STATE_CHANGE':
         if (action.payload === PhoneState.Expired) {
           draft.phone.token = undefined;
-        }
-
-        if (action.payload === PhoneState.Error) {
-          draft.workspace.view = 'PHONE_VIEW';
-        }
-
-        /* switch to phone view upon first connect */
-        if (state.workspace.view === 'CONNECT_VIEW' && action.payload === PhoneState.Idle) {
-          draft.workspace.view = 'PHONE_VIEW';
         }
 
         if (action.payload !== PhoneState.Error) {
@@ -107,13 +79,6 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
       case 'PHONE_CONFIGURATION_UPDATE':
         draft.phone.configuration = action.payload;
         draft.phone.token = undefined;
-
-        if (action.payload) {
-          draft.workspace.view = 'CONNECT_VIEW';
-        } else {
-          draft.workspace.view = 'PHONE_VIEW';
-        }
-
         break;
 
       case 'PHONE_INPUT_DEVICE_UPDATE':
@@ -135,12 +100,10 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
 
       case 'PHONE_INPUT_DEVICE_LOST':
         draft.phone.devices.input = undefined;
-        draft.workspace.notification = action.payload;
         break;
 
       case 'PHONE_OUTPUT_DEVICE_LOST':
         draft.phone.devices.output = undefined;
-        draft.workspace.notification = action.payload;
         break;
 
       case 'WORKSPACE_VIEW':

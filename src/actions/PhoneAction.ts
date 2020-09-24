@@ -14,13 +14,6 @@ export const updatePhoneDisplay = (value: string): PhoneDisplayAction => {
   };
 };
 
-export const updatePhoneDisplayWithFocus = (value: string): PhoneDisplayAction => {
-  return {
-    type: ActionType.PHONE_DISPLAY_UPDATE_WITH_FOCUS,
-    payload: value,
-  };
-};
-
 export interface PhoneTokenAction {
   type: ActionType;
   payload: string;
@@ -40,7 +33,7 @@ export interface PhoneExceptionAction {
 
 export const setPhoneException = (error: Error): PhoneExceptionAction => {
   return {
-    type: ActionType.PHONE_EXCEPTION,
+    type: ActionType.PHONE_ERROR,
     payload: error,
   };
 };
@@ -94,20 +87,20 @@ export const setPhoneOutputDevice = (device: MediaDeviceInfo | string | undefine
 
 export interface PhoneDeviceLostAction {
   type: ActionType;
-  payload: string;
+  payload: undefined;
 }
 
-export const lostPhoneInputDevice = (notificaton: string): PhoneDeviceLostAction => {
+export const lostPhoneInputDevice = (): PhoneDeviceLostAction => {
   return {
     type: ActionType.PHONE_INPUT_DEVICE_LOST,
-    payload: notificaton,
+    payload: undefined,
   };
 };
 
-export const lostPhoneOutputDevice = (notificaton: string): PhoneDeviceLostAction => {
+export const lostPhoneOutputDevice = (): PhoneDeviceLostAction => {
   return {
     type: ActionType.PHONE_OUTPUT_DEVICE_LOST,
-    payload: notificaton,
+    payload: undefined,
   };
 };
 
@@ -134,3 +127,12 @@ export const setPhoneState = (state: PhoneState): PhoneStateAction => {
     payload: state,
   };
 };
+
+export type PhoneActionType =
+  | PhoneDisplayAction
+  | PhoneTokenAction
+  | PhoneExceptionAction
+  | PhoneConfigurationAction
+  | PhoneDeviceAction
+  | PhoneDeviceLostAction
+  | PhoneStateAction;

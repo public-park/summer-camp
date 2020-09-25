@@ -65,7 +65,6 @@ const validate = async (req: RequestWithUser, res: Response, next: Function) => 
     let incomingPhoneNumbers = await fetchAllIncomingPhoneNumbers(client);
     let outgoingCallerIds = await fetchAllOutgoingCallerIds(client);
 
-    // validate if callerIds and phone number are still on account
     if (
       req.body.inbound.isEnabled &&
       !incomingPhoneNumbers.some((item) => item.phoneNumber === req.body.inbound.phoneNumber)
@@ -83,7 +82,11 @@ const validate = async (req: RequestWithUser, res: Response, next: Function) => 
 
     res.status(200).end();
   } catch (error) {
-    next(error);
+    if (error instanceof ConfigurationValidationFailedException) {
+      next(error);
+    } else {
+      next(new ConfigurationValidationFailedException('INVALID_TWILIO_CREDENTIALS'));
+    }
   }
 };
 

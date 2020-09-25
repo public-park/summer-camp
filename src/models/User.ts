@@ -86,8 +86,7 @@ export class User {
 
       try {
         const payload = JSON.parse(message.data);
-        console.log(payload);
-        console.log(UserEvent.Call in payload);
+
         if (UserEvent.Activity in payload) {
           this._setActivity(payload.activity);
         }

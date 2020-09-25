@@ -1,12 +1,16 @@
 import React, { useContext } from 'react';
 import { ApplicationContext } from '../../../context/ApplicationContext';
+import { CallNotFoundException } from '../../../exceptions/CallNotFoundException';
 
 export const IncomingCall = () => {
   const { call } = useContext(ApplicationContext);
 
   const answer = () => {
-    // TODO handle frontend error
-    call?.answer();
+    if (!call) {
+      throw new CallNotFoundException();
+    }
+
+    call.answer();
   };
 
   return (

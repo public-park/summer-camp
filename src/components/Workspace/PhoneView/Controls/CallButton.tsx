@@ -1,8 +1,8 @@
-import React, { useContext, useState, useRef } from 'react';
+import React, { useContext, useRef } from 'react';
 import { ApplicationContext } from '../../../../context/ApplicationContext';
 import { useSelector } from 'react-redux';
 import { selectPhoneDisplayIsValidPhoneNumber, selectPhoneDisplayValue } from '../../../../store/Store';
-import { PhoneNotReadyException } from '../../../../exceptions/PhoneNotReadyException';
+import { PhoneNotFoundException } from '../../../../exceptions/PhoneNotFoundException';
 
 export const CallButton = () => {
   const isValid = useSelector(selectPhoneDisplayIsValidPhoneNumber);
@@ -19,7 +19,7 @@ export const CallButton = () => {
 
     try {
       if (!phone) {
-        throw new PhoneNotReadyException();
+        throw new PhoneNotFoundException();
       }
 
       await phone.connect(phoneNumber);

@@ -240,6 +240,10 @@ button {
   overflow: hidden;
 }
 
+.phone .call .end-call-button[disabled] {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
 .phone .call .end-call-button:before {
   content: '';
   position: absolute;
@@ -299,6 +303,13 @@ button {
   background-image: url(images/icon-microphone-on.svg);
   background-position: center center;
   background-size: auto 32px;
+}
+
+.phone .call .control .mute-button-disabled {
+  background-image: url(images/icon-microphone-on.svg);
+  background-position: center center;
+  background-size: auto 32px;
+  opacity: 0.2;
 }
 
 .phone .call .control .unmute-button {

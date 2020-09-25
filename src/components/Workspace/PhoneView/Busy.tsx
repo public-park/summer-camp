@@ -2,20 +2,22 @@ import React, { useState, useContext } from 'react';
 
 import { Keypad } from './Idle/Keypad';
 import { MuteButton } from './Controls/MuteButton';
-
 import { useCallDuration } from './hooks/useCallDuration';
 import { useCallDurationFormat } from './hooks/useCallDurationFormat';
 import { HoldButton } from './Controls/HoldButton';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { useSelector } from 'react-redux';
-import { selectCall, Call } from '../../../store/Store';
+import { selectCallFrom, selectCallTo, selectCallDirection } from '../../../store/Store';
 import { CallDirection } from '../../../phone/Call';
 import { RecordButton } from './Controls/RecordButton';
+import { CallNotFoundException } from '../../../exceptions/CallNotFoundException';
 
 export const Busy = () => {
   const { call } = useContext(ApplicationContext);
 
-  const { from, to, direction } = useSelector(selectCall) as Call;
+  const from = useSelector(selectCallFrom);
+  const to = useSelector(selectCallTo);
+  const direction = useSelector(selectCallDirection);
 
   const [showKeypad, setShowKeypad] = useState(false);
 
@@ -23,8 +25,11 @@ export const Busy = () => {
   const durationFormatted = useCallDurationFormat(duration);
 
   const end = () => {
-    // TODO throw error
-    call?.end();
+    if (!call) {
+      throw new CallNotFoundException();
+    }
+
+    call.end();
   };
 
   return (
@@ -54,7 +59,7 @@ export const Busy = () => {
 
       {showKeypad ? <Keypad /> : <div className="blank"></div>}
 
-      <button onClick={() => end()} className="end-call-button"></button>
+      <button onClick={() => end()} disabled={!call?.isConnected} className="end-call-button"></button>
     </div>
   );
 };

@@ -19,5 +19,17 @@ export const MuteButton = () => {
     call.mute(!isMuted);
   };
 
-  return <button onClick={() => toggleMute()} className={isMuted ? 'unmute-button' : 'mute-button'}></button>;
+  const getButtonState = (isConnected: boolean | undefined, isMuted: boolean | undefined) => {
+    if (!isConnected) {
+      return 'mute-button-disabled';
+    }
+
+    if (isMuted) {
+      return ' unmute-button';
+    } else {
+      return ' mute-button';
+    }
+  };
+
+  return <button onClick={() => toggleMute()} className={getButtonState(call?.isConnected, call?.isMuted)}></button>;
 };

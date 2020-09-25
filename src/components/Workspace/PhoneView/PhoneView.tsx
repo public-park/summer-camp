@@ -15,8 +15,6 @@ export const PhoneView = () => {
   const error = useSelector(selectPhoneError);
   const configuration = useSelector(selectConfiguration);
 
-  const [] = useState(false);
-
   const getPhoneView = (): JSX.Element | undefined => {
     if (!configuration) {
       return <PhoneException text="the phone is not configured yet, please go to setup" />;

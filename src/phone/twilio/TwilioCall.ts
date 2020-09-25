@@ -3,9 +3,19 @@ import { EventEmitter } from 'events';
 import { User } from '../../models/User';
 import { UserEvent } from '../../models/enums/UserEvent';
 import { UserHoldPayload, UserRecordPayload, UserAnswerPayload } from '../../models/UserMessage';
+import { CallNotConnectedException } from '../../exceptions/CallNotConnectedException';
+
+export interface TwilioConnection {
+  reject: () => void;
+  disconnect: () => void;
+  sendDigits: (digit: string) => void;
+  mute: (state: boolean) => void;
+  accept: () => void;
+  on: (event: string, listener: (name: string) => void) => void;
+}
 
 export class TwilioCall implements Call {
-  private connection: any;
+  private connection: TwilioConnection | undefined;
 
   readonly user: User;
   readonly id: string;
@@ -35,8 +45,7 @@ export class TwilioCall implements Call {
     this.eventEmitter = new EventEmitter();
   }
 
-  // TODO remove any
-  registerConnection(connection: any) {
+  registerConnection(connection: TwilioConnection) {
     connection.on('warning', (name: string) => {
       console.log(`warning: ${name}`);
     });
@@ -46,22 +55,17 @@ export class TwilioCall implements Call {
     });
 
     connection.on('accept', () => {
-      this.setConnectionState(true);
-    });
-
-    connection.on('disconnect', () => {
-      this.setConnectionState(false);
+      this.isConnected = true;
     });
 
     this.connection = connection;
   }
 
-  private setConnectionState(state: boolean) {
-    this.isConnected = state;
-    this.eventEmitter.emit('connection_state', state);
-  }
-
   reject() {
+    if (!this.connection) {
+      throw new CallNotConnectedException();
+    }
+
     this.connection.reject();
 
     return Promise.resolve();
@@ -88,10 +92,18 @@ export class TwilioCall implements Call {
   }
 
   sendDigits(digits: string) {
+    if (!this.connection) {
+      throw new CallNotConnectedException();
+    }
+
     this.connection.sendDigits(digits.toString());
   }
 
   mute(state: boolean) {
+    if (!this.connection) {
+      throw new CallNotConnectedException();
+    }
+
     this.isMuted = state;
 
     this.connection.mute(state);
@@ -110,6 +122,10 @@ export class TwilioCall implements Call {
   }
 
   end() {
+    if (!this.connection) {
+      throw new CallNotConnectedException();
+    }
+
     this.connection.disconnect();
 
     return Promise.resolve();

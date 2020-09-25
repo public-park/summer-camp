@@ -5,7 +5,6 @@ import { CallDirection } from '../models/CallDirection';
 import { CallStatus } from '../models/CallStatus';
 import { TwilioHelper } from '../helpers/twilio/TwilioHelper';
 
-// TODO add command request, response interface
 const handle = async (user: UserWithOnlineState, to: string) => {
   const callerId = getCallerId(user.account);
 

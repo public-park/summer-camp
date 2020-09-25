@@ -13,6 +13,7 @@ export interface PhoneControl {
   onIncomingCall: (listener: (call: Call) => void) => void;
   onCallComplete: (listener: () => void) => void;
   onOutgoingCall: (listener: (call: Call) => void) => void;
+  onConnectionEstablished: (listener: (call: Call) => void) => void;
   setInputDevice: (deviceId: string) => void;
   setOutputDevice: (deviceId: string) => Promise<void>;
   registerUser: (user: User) => void;

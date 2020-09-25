@@ -1,7 +1,7 @@
 import * as Client from 'twilio-client';
 import { PhoneControl } from '../PhoneControl';
 import { Call, CallDirection, CallStatus } from '../Call';
-import { TwilioCall } from './TwilioCall';
+import { TwilioCall, TwilioConnection } from './TwilioCall';
 import { EventEmitter } from 'events';
 import { PhoneState } from '../PhoneState';
 import { User } from '../../models/User';
@@ -9,6 +9,7 @@ import { UserEvent } from '../../models/enums/UserEvent';
 import { PhoneNotReadyException } from '../../exceptions/PhoneNotReadyException';
 import { InvalidPhoneStateException } from '../../exceptions/InvalidPhoneStateException';
 import { UserCallPayload } from '../../models/UserMessage';
+import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 
 interface DelayedState {
   state: PhoneState;
@@ -78,6 +79,8 @@ export class TwilioPhone implements PhoneControl {
     this.setState(PhoneState.Idle);
 
     this.call = undefined;
+
+    this.eventEmitter.emit('complete');
   }
 
   private async registerInputDeviceId() {
@@ -86,20 +89,6 @@ export class TwilioPhone implements PhoneControl {
 
   private async unregisterInputDeviceId() {
     this.inputDeviceId && (await this.device.audio.unsetInputDevice(this.inputDeviceId));
-  }
-
-  private registerConnectionListener(connection: any) {
-    connection.on('reject', async () => {
-      await this.resetAll();
-    });
-
-    connection.on('disconnect', async () => {
-      await this.resetAll();
-    });
-
-    connection.on('cancel', async () => {
-      await this.resetAll();
-    });
   }
 
   init(token: string) {
@@ -117,14 +106,18 @@ export class TwilioPhone implements PhoneControl {
 
       this.isInitialized = true;
 
-      this.device.on('incoming', async (connection: any) => {
+      this.device.on('incoming', async (connection: TwilioConnection) => {
+        if (!this.call) {
+          throw new CallNotFoundException();
+        }
+
         await this.registerInputDeviceId();
 
-        this.registerConnectionListener(connection);
-
-        this.call?.registerConnection(connection);
+        this.call.registerConnection(connection);
 
         connection.accept();
+
+        this.eventEmitter.emit('connection', this.call);
       });
 
       this.device.on('ready', () => {
@@ -195,6 +188,10 @@ export class TwilioPhone implements PhoneControl {
     this.eventEmitter.on('outgoing', listener);
   }
 
+  onConnectionEstablished(listener: (call: Call) => void) {
+    this.eventEmitter.on('connection', listener);
+  }
+
   onCallComplete(listener: () => void) {
     this.eventEmitter.on('complete', listener);
   }
@@ -220,11 +217,11 @@ export class TwilioPhone implements PhoneControl {
   }
 
   registerUser(user: User) {
-    user.on(UserEvent.Call, (payload: UserCallPayload) => {
-      if (this.hasEnded(payload.status)) {
-        this.setState(PhoneState.Idle);
+    user.on(UserEvent.Call, (payload: UserCallPayload | null) => {
+      if (!payload || this.hasEnded(payload.status)) {
+        this.pauseRingtone();
 
-        this.eventEmitter.emit('complete');
+        this.resetAll();
 
         return;
       }
@@ -245,7 +242,7 @@ export class TwilioPhone implements PhoneControl {
         this.setState(PhoneState.Ringing, this.call.phoneNumber);
       }
 
-      if (this.isAcceptedOrCanceled(payload.status, payload.direction)) {
+      if (this.isAccepted(payload.status, payload.direction)) {
         this.pauseRingtone();
       }
     });
@@ -253,11 +250,7 @@ export class TwilioPhone implements PhoneControl {
     this.user = user;
   }
 
-  private hasEnded(status: CallStatus | undefined) {
-    if (!status) {
-      return true;
-    }
-
+  private hasEnded(status: CallStatus) {
     return [CallStatus.NoAnswer, CallStatus.Failed, CallStatus.Busy, CallStatus.Completed].includes(status);
   }
 
@@ -265,8 +258,8 @@ export class TwilioPhone implements PhoneControl {
     return status == CallStatus.Ringing && direction === CallDirection.Inbound;
   }
 
-  private isAcceptedOrCanceled(status: CallStatus, direction: CallDirection) {
-    return [CallStatus.InProgress, CallStatus.Canceled].includes(status) && direction === CallDirection.Inbound;
+  private isAccepted(status: CallStatus, direction: CallDirection) {
+    return [CallStatus.InProgress].includes(status) && direction === CallDirection.Inbound;
   }
 
   private playRingtone() {

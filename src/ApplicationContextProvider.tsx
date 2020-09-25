@@ -118,6 +118,10 @@ export const ApplicationContextProvider = (props: any) => {
       */
     });
 
+    phone.onConnectionEstablished((call) => {
+      setCall(call);
+    });
+
     phone.onStateChanged((state: PhoneState, ...params: any) => {
       dispatch(setPhoneState(state));
 

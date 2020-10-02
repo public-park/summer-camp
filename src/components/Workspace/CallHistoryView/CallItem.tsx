@@ -1,6 +1,6 @@
 import React from 'react';
 import { useCallDurationFormat } from '../PhoneView/hooks/useCallDurationFormat';
-import Moment from 'react-moment';
+import { DateTime } from 'luxon';
 import { updatePhoneDisplay } from '../../../actions/PhoneAction';
 import { useDispatch } from 'react-redux';
 import { CallDirection, CallStatus } from '../../../phone/Call';
@@ -11,13 +11,14 @@ interface CallItemProps {
   from: string;
   direction: CallDirection;
   duration: number;
-  createdAt: Date;
+  createdAt: string;
   status: CallStatus;
 }
 
 export const CallItem = (props: CallItemProps) => {
-  const { from, to, duration, direction, status, createdAt } = props;
+  const { from, to, duration, direction, status } = props;
 
+  const createdAt = DateTime.fromISO(props.createdAt);
   const durationToMinutes = useCallDurationFormat(duration);
 
   const dispatch = useDispatch();
@@ -50,7 +51,7 @@ export const CallItem = (props: CallItemProps) => {
           </h3>
 
           <h4 className="duration">
-            <Moment fromNow>{createdAt}</Moment> {status === 'completed' && `, ${durationToMinutes} minutes`}
+            {createdAt.toRelative()} {status === 'completed' && `, ${durationToMinutes} minutes`}
           </h4>
         </div>
       </div>

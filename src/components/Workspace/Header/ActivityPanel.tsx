@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { selectActivity } from '../../../store/Store';
-import { UserActivity } from '../../../models/enums/UserActivity';
+import { UserActivity } from '../../../models/UserActivity';
 import { FormControlLabel, withStyles } from '@material-ui/core';
 import React, { useContext } from 'react';
 import { ApplicationContext } from '../../../context/ApplicationContext';

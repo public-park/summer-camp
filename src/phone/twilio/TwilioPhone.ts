@@ -5,7 +5,7 @@ import { TwilioCall, TwilioConnection } from './TwilioCall';
 import { EventEmitter } from 'events';
 import { PhoneState } from '../PhoneState';
 import { User } from '../../models/User';
-import { UserEvent } from '../../models/enums/UserEvent';
+import { UserEvent } from '../../models/UserEvent';
 import { PhoneNotReadyException } from '../../exceptions/PhoneNotReadyException';
 import { InvalidPhoneStateException } from '../../exceptions/InvalidPhoneStateException';
 import { UserCallPayload } from '../../models/UserMessage';

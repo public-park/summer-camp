@@ -12,7 +12,7 @@ import {
   selectAudioOutputDevices,
 } from '../../store/Store';
 import { PhoneView } from './PhoneView/PhoneView';
-import { UserConnectionState } from '../../models/enums/UserConnectionState';
+import { UserConnectionState } from '../../models/UserConnectionState';
 import { HeaderThemeProvider } from './Header/HeaderThemeProvider';
 import { WorkspaceView } from '../../actions/WorkspaceViewAction';
 import { ConnectView } from './ConnectView/ConnectView';

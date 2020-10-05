@@ -1,7 +1,7 @@
 import { Call, CallDirection } from '../Call';
 import { EventEmitter } from 'events';
 import { User } from '../../models/User';
-import { UserEvent } from '../../models/enums/UserEvent';
+import { UserEvent } from '../../models/UserEvent';
 import { UserHoldPayload, UserRecordPayload, UserAnswerPayload } from '../../models/UserMessage';
 import { CallNotConnectedException } from '../../exceptions/CallNotConnectedException';
 

@@ -1,5 +1,5 @@
 import { Store } from './Store';
-import { UserActivity } from '../models/enums/UserActivity';
+import { UserActivity } from '../models/UserActivity';
 import { PhoneState } from '../phone/PhoneState';
 
 export const DefaultStore: Store = {

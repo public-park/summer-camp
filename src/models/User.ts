@@ -1,10 +1,10 @@
 import { EventEmitter } from 'events';
-import { UserActivity } from './enums/UserActivity';
-import { UserConnectionState } from './enums/UserConnectionState';
+import { UserActivity } from './UserActivity';
+import { UserConnectionState } from './UserConnectionState';
 import { WebSocketNotInStateOpenException } from '../exceptions/WebSocketNotInStateOpenException';
-import { UserRole } from './enums/UserRole';
+import { UserRole } from './UserRole';
 import { v4 as uuidv4 } from 'uuid';
-import { UserEvent } from './enums/UserEvent';
+import { UserEvent } from './UserEvent';
 import { UserMessage } from './UserMessage';
 
 export class User {

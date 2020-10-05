@@ -5,7 +5,7 @@ import { SetupButton } from './Navigation/SetupButton';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectProfileImageUrl, selectName, selectConnectionState, selectRole } from '../../../store/Store';
 import { ApplicationContext } from '../../../context/ApplicationContext';
-import { UserConnectionState } from '../../../models/enums/UserConnectionState';
+import { UserConnectionState } from '../../../models/UserConnectionState';
 import { setWorkspaceView } from '../../../actions/WorkspaceViewAction';
 import { ActivityPanel } from './ActivityPanel';
 import { HistoryButton } from './Navigation/HistoryButton';

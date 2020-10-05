@@ -1,8 +1,8 @@
 import { ActionType } from './ActionType';
 import { User } from '../models/User';
-import { UserActivity } from '../models/enums/UserActivity';
-import { UserConnectionState } from '../models/enums/UserConnectionState';
-import { UserRole } from '../models/enums/UserRole';
+import { UserActivity } from '../models/UserActivity';
+import { UserConnectionState } from '../models/UserConnectionState';
+import { UserRole } from '../models/UserRole';
 
 export interface UserAction {
   type: ActionType;

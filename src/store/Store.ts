@@ -1,9 +1,9 @@
-import { UserActivity } from '../models/enums/UserActivity';
-import { UserConnectionState } from '../models/enums/UserConnectionState';
+import { UserActivity } from '../models/UserActivity';
+import { UserConnectionState } from '../models/UserConnectionState';
 import { ApplicationPage } from '../actions/PageAction';
 import { WorkspaceView } from '../actions/WorkspaceViewAction';
 import { PhoneState } from '../phone/PhoneState';
-import { UserRole } from '../models/enums/UserRole';
+import { UserRole } from '../models/UserRole';
 import { CallStatus, CallDirection } from '../phone/Call';
 import { MediaDeviceException } from '../exceptions/MediaDeviceException';
 

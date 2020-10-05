@@ -9,7 +9,7 @@ import { fetchAccountConfiguration } from './services/fetchAccountConfiguration'
 import { DefaultConfiguration } from './DefaultConfiguration';
 import { ConfigurationContext } from './ConfigurationContext';
 import { ApplicationContext } from '../../../context/ApplicationContext';
-import { UserEvent } from '../../../models/enums/UserEvent';
+import { UserEvent } from '../../../models/UserEvent';
 
 export const ConfigurationContextProvider = (props: any) => {
   const { user } = useContext(ApplicationContext);

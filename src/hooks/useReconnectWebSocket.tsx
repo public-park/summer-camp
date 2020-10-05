@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from 'react';
 import { useSelector } from 'react-redux';
-import { UserConnectionState } from '../models/enums/UserConnectionState';
+import { UserConnectionState } from '../models/UserConnectionState';
 import { selectConnectionState, selectToken } from '../store/Store';
 import { ApplicationContext } from '../context/ApplicationContext';
 

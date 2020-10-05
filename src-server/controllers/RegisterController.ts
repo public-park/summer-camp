@@ -29,7 +29,7 @@ const register = async (req: Request, res: Response, next: any) => {
     );
 
     const payload = {
-      token: TokenHelper.createJwt(user, 180),
+      token: TokenHelper.createJwt(user, 14400),
       user: {
         id: user.id,
         name: user.name,

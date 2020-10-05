@@ -114,9 +114,9 @@ export const callRepository = new MongoCallRepository();
 export const accountRepository = new FileAccountRepository('./accounts.json');
 export const userRepository = new FileUserRepository(accountRepository, './users.json');
 export const callRepository = new FileCallRepository('calls.json');
+*/
 
 export const authenticationProvider = new PasswordAuthenticationProvider();
-*/
 
 export const pool = new UserPool(userRepository, callRepository);
 

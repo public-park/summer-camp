@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 
 import { ApplicationContext } from './context/ApplicationContext';
 import { useDispatch, useSelector } from 'react-redux';
-import { UserActivity } from './models/enums/UserActivity';
-import { UserConnectionState } from './models/enums/UserConnectionState';
+import { UserActivity } from './models/UserActivity';
+import { UserConnectionState } from './models/UserConnectionState';
 import { getWebSocketUrl, getUrl } from './helpers/UrlHelper';
 import { User } from './models/User';
 import { TwilioPhone } from './phone/twilio/TwilioPhone';
@@ -41,8 +41,9 @@ import { Call } from './phone/Call';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { PhoneControl } from './phone/PhoneControl';
 import { useFetchPhoneToken } from './hooks/useFetchPhoneToken';
-import { UserEvent } from './models/enums/UserEvent';
+import { UserEvent } from './models/UserEvent';
 import { setWorkspaceView } from './actions/WorkspaceViewAction';
+import { CloseCode } from './models/socket/CloseCode';
 
 export const ApplicationContextProvider = (props: any) => {
   const phoneState = useSelector(selectPhoneState);
@@ -148,8 +149,13 @@ export const ApplicationContextProvider = (props: any) => {
     user.onConnectionStateChanged((state: UserConnectionState, code: number | undefined) => {
       console.log(`connection state changed to: ${state}`);
 
-      if (state === UserConnectionState.Closed && code === 4001) {
+      if (state === UserConnectionState.Closed && code === CloseCode.TokenExpired) {
         logout('Your session ended, please login again');
+        return;
+      }
+      // TODO change text
+      if (state === UserConnectionState.Closed && code === CloseCode.ConcurrentSession) {
+        logout('Your session ended, this user logged in from another device');
         return;
       }
 
@@ -172,7 +178,7 @@ export const ApplicationContextProvider = (props: any) => {
       dispatch(setPhoneConfiguration(configuration));
 
       if (configuration) {
-        dispatch([setWorkspaceView('CONNECT_VIEW')]);
+        dispatch(setWorkspaceView('CONNECT_VIEW'));
       } else {
         dispatch(setWorkspaceView('PHONE_VIEW'));
       }

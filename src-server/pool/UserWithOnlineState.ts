@@ -27,6 +27,14 @@ export class UserSockets {
     });
   }
 
+  close(code: number) {
+    this.sockets.forEach((sockets) => {
+      sockets.close(code);
+    });
+
+    this.sockets = [];
+  }
+
   get() {
     return this.sockets;
   }

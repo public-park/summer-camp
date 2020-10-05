@@ -18,6 +18,7 @@ import { AcceptCommandHandler } from './commands/AcceptCommandHandler';
 import { UserMessage } from './models/UserMessage';
 import { UserEvent } from './models/UserEvent';
 import { RecordCommandHandler } from './commands/RecordCommandHandler';
+import { CloseCode } from './models/socket/CloseCode';
 
 interface SocketWorkerOptions {
   server: WebSocket.ServerOptions;
@@ -68,8 +69,6 @@ export class SocketWorker {
     this.server.on('connection', async (socket: WebSocketWithKeepAlive, req: http.IncomingMessage) => {
       try {
         const user = await this.getUserFromHttpHeader(req.headers);
-
-        user.sockets.add(socket);
 
         log.info(`add user ${user.id}, (socket(s) ${user.sockets}) to pool, size is ${this.pool.getSize()}`);
 
@@ -187,6 +186,11 @@ export class SocketWorker {
           log.debug(`${user.id} closed socket with code ${code}, message: ${reason}, socket(s) ${user.sockets}`);
         });
 
+        /* close existing sockets */
+        user.sockets.close(CloseCode.ConcurrentSession);
+
+        user.sockets.add(socket);
+
         // TODO, add code below to a handler
         user.broadcast({ user: user.toResponse() });
         user.broadcast({ configuration: user.getConfiguration() });
@@ -242,7 +246,7 @@ export class SocketWorker {
       TokenHelper.verifyJwt((socket as WebSocketWithKeepAlive).token);
     } catch (error) {
       log.debug(`${socket.user.id} remote ${socket.remoteAddress} - ${error.name}`);
-      socket.close(4001);
+      socket.close(CloseCode.TokenExpired);
     }
 
     socket.isAlive = false;

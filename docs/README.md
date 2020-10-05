@@ -19,7 +19,3 @@ Understand the call data stored by the phone backend.
 Salesforce integration, supporting click-to-call and screen-pop
 
 [Enable click-to-call with Salesforce](docs/salesforce.md)
-
-Configure single sign-on user authentication with SAML 2.0.
-
-[How to Setup SSO](docs/saml-user-authentication.md)

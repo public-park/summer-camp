@@ -114,8 +114,9 @@ export const callRepository = new MongoCallRepository();
 export const accountRepository = new FileAccountRepository('./accounts.json');
 export const userRepository = new FileUserRepository(accountRepository, './users.json');
 export const callRepository = new FileCallRepository('calls.json');
-*/
+
 export const authenticationProvider = new PasswordAuthenticationProvider();
+*/
 
 export const pool = new UserPool(userRepository, callRepository);
 
@@ -161,6 +162,7 @@ statusCallback.param('callId', addCallToRequest);
 
 statusCallback.route('/accounts/:accountId/calls/:callId/inbound').post(CallStatusEventController.handleInbound);
 statusCallback.route('/accounts/:accountId/calls/:callId/outbound').post(CallStatusEventController.handleOutbound);
+
 statusCallback
   .route('/accounts/:accountId/calls/:callId/conference/inbound')
   .post(ConferenceStatusEventController.handleInbound);
@@ -302,7 +304,7 @@ if (process.env.REACT_APP_AUTHENTICATION_MODE === 'local-password-with-registrat
   app.use('/api/register', registerRouter);
 }
 
-/* return not found for all other /api routes */
+/* return 404 for all other /api routes */
 app.all('/api/*', function (req, res) {
   res.status(404).end();
 });
@@ -361,6 +363,6 @@ server.on('upgrade', (request, socket, head) => {
   });
 });
 
-server.listen(app.get('port'), () => {
+server.listen(app.get('port'), 'localhost', () => {
   log.info(`Listening on ${app.get('port')}`);
 });

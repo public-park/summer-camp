@@ -3,12 +3,14 @@ import { User } from '../models/User';
 export interface Call {
   id: string;
   user: User;
-  phoneNumber: string; // TODO rename to endpoint, can be from or to ...
+  from: string;
+  to: string;
   isConnected: boolean;
   isMuted: boolean;
   isOnHold: boolean;
   isRecording: boolean;
   direction: CallDirection;
+  status: CallStatus;
   createdAt: Date;
   answeredAt: Date | undefined;
   answer: () => Promise<void>;

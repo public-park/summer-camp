@@ -9,11 +9,9 @@ export interface PhoneControl {
   getState: () => PhoneState;
   destroy: () => void;
   onStateChanged: (listener: (state: PhoneState) => void) => void;
-  onError: (listener: (error: Error) => void) => void;
-  onIncomingCall: (listener: (call: Call) => void) => void;
-  onCallComplete: (listener: () => void) => void;
-  onOutgoingCall: (listener: (call: Call) => void) => void;
+  onCallStateChanged: (listener: (call: Call | undefined) => void) => void;
   onConnectionEstablished: (listener: (call: Call) => void) => void;
+  onError: (listener: (error: Error) => void) => void;
   setInputDevice: (deviceId: string) => void;
   setOutputDevice: (deviceId: string) => Promise<void>;
   registerUser: (user: User) => void;

@@ -1,9 +1,10 @@
-import { Call, CallDirection } from '../Call';
+import { Call, CallDirection, CallStatus } from '../Call';
 import { EventEmitter } from 'events';
 import { User } from '../../models/User';
-import { UserEvent } from '../../models/UserEvent';
-import { UserHoldPayload, UserRecordPayload, UserAnswerPayload } from '../../models/UserMessage';
 import { CallNotConnectedException } from '../../exceptions/CallNotConnectedException';
+import { HoldMessage } from '../../models/socket/messages/HoldMessage';
+import { RecordMessage } from '../../models/socket/messages/RecordMessage';
+import { AcceptMessage } from '../../models/socket/messages/AcceptMessage';
 
 export interface TwilioConnection {
   reject: () => void;
@@ -19,26 +20,30 @@ export class TwilioCall implements Call {
 
   readonly user: User;
   readonly id: string;
-  readonly phoneNumber: string;
+  readonly from: string;
+  readonly to: string;
   isConnected: boolean;
   isMuted: boolean;
   isOnHold: boolean;
   isRecording: boolean;
   readonly direction: CallDirection;
+  readonly status: CallStatus;
   readonly createdAt: Date;
   answeredAt: Date | undefined;
 
   private eventEmitter: EventEmitter;
 
-  constructor(id: string, user: User, phoneNumber: string, direction: CallDirection) {
+  constructor(id: string, user: User, from: string, to: string, status: CallStatus, direction: CallDirection) {
     this.id = id;
     this.user = user;
-    this.phoneNumber = phoneNumber;
+    this.from = from;
+    this.to = to;
     this.isConnected = false;
     this.isMuted = false;
     this.isOnHold = false;
     this.isRecording = false;
     this.direction = direction;
+    this.status = status;
     this.createdAt = new Date();
     this.answeredAt = undefined;
 
@@ -74,21 +79,17 @@ export class TwilioCall implements Call {
   async hold(state: boolean): Promise<void> {
     console.log(`call ${this.id}, set hold to ${state}`);
 
-    const request: UserHoldPayload = { id: this.id, state: state };
+    await this.user.send<HoldMessage, HoldMessage>(new HoldMessage(this.id, state));
 
-    const response = await this.user.send(UserEvent.Hold, request);
-
-    this.isOnHold = response.state;
+    this.isOnHold = state;
   }
 
   async record(state: boolean): Promise<void> {
     console.log(`call ${this.id}, set record to ${state}`);
 
-    const request: UserRecordPayload = { id: this.id, state: state };
+    await this.user.send<RecordMessage, RecordMessage>(new RecordMessage(this.id, state));
 
-    const response = await this.user.send(UserEvent.Record, request);
-
-    this.isRecording = response.state;
+    this.isRecording = state;
   }
 
   sendDigits(digits: string) {
@@ -111,14 +112,14 @@ export class TwilioCall implements Call {
     return Promise.resolve();
   }
 
-  answer() {
+  async answer() {
     this.eventEmitter.emit('answer');
 
     this.answeredAt = new Date();
 
-    const request: UserAnswerPayload = { id: this.id };
+    await this.user.send(new AcceptMessage(this.id));
 
-    return this.user.send(UserEvent.Accept, request);
+    return;
   }
 
   end() {

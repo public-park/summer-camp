@@ -5,6 +5,9 @@ import { User } from '../models/User';
 import { Account } from '../models/Account';
 import { WebSocketWithKeepAlive } from '../WebSocketWithKeepAlive';
 import { CallRepository } from '../repository/CallRepository';
+import { CallMessage } from '../models/socket/messages/CallMessage';
+import { CallStatus } from '../models/CallStatus';
+import { CallDirection } from '../models/CallDirection';
 
 export class UserPool {
   pool: Map<string, UserWithOnlineState>;
@@ -27,13 +30,17 @@ export class UserPool {
         return;
       }
 
+      if (call.status === CallStatus.Initiated && call.direction === CallDirection.Outbound) {
+        return; // TODO, already published by message handler...
+      }
+
       if (call.isActive()) {
         user.call = call;
 
-        user.broadcast({ call: user.toResponse().call });
+        user.broadcast(new CallMessage(call));
       } else {
         user.call = undefined;
-        user.broadcast({ call: null });
+        user.broadcast(new CallMessage(undefined));
       }
     });
   }

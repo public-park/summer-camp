@@ -4,21 +4,32 @@ import * as WebSocket from 'ws';
 import { WebSocketWithKeepAlive } from './WebSocketWithKeepAlive';
 import { log } from './logger';
 import { UserPool } from './pool/UserPool';
-import { ActivityCommandHandler } from './commands/ActivityCommandHandler';
-import { CallCommandHandler } from './commands/CallCommandHandler';
-import { HoldCommandHandler } from './commands/HoldCommandHandler';
 import { accountRepository } from './worker';
 import { AccountNotFoundException } from './exceptions/AccountNotFoundException';
 import { UserWithOnlineState } from './pool/UserWithOnlineState';
 import { InvalidHttpHeaderException } from './exceptions/InvalidHttpHeaderException';
-import { TagsCommandHandler } from './commands/TagsCommandHandler';
-import { PresenceCommandHandler } from './commands/PresenceCommandHandler';
-import { ConfigurationCommandHandler } from './commands/ConfigurationCommandHandler';
-import { AcceptCommandHandler } from './commands/AcceptCommandHandler';
-import { UserMessage } from './models/UserMessage';
-import { UserEvent } from './models/UserEvent';
-import { RecordCommandHandler } from './commands/RecordCommandHandler';
+
 import { CloseCode } from './models/socket/CloseCode';
+import { MessageParser } from './message-handler/MessageParser';
+import { Message, MessageType } from './models/socket/messages/Message';
+import { ActivityMessageHandler } from './message-handler/handler/ActivityMessageHandler';
+import { ActivityMessage } from './models/socket/messages/ActivityMessage';
+import { InitiateCallMessageHandler } from './message-handler/handler/InitiateCallMessageHandler';
+import { HoldMessageHandler } from './message-handler/handler/HoldMessageHandler';
+import { HoldMessage } from './models/socket/messages/HoldMessage';
+import { AcceptMessageHandler } from './message-handler/handler/AcceptMessageHandler';
+import { AcceptMessage } from './models/socket/messages/AcceptMessage';
+import { RecordMessage } from './models/socket/messages/RecordMessage';
+import { RecordMessageHandler } from './message-handler/handler/RecordMessageHandler';
+
+import { ConfigurationMessageHandler } from './message-handler/handler/ConfigurationMessageHandler';
+import { InvalidMessageException } from './exceptions/InvalidMessageException';
+import { TagMessage } from './models/socket/messages/TagMessage';
+import { TagMessageHandler } from './message-handler/handler/TagMessageHandler';
+import { ErrorMessage } from './models/socket/messages/ErrorMessage';
+import { InitiateCallMessage } from './models/socket/messages/InitiateCallMessage';
+import { UserMessage } from './models/socket/messages/UserMessage';
+import { ConfigurationMessage } from './models/socket/messages/ConfigurationMessage';
 
 interface SocketWorkerOptions {
   server: WebSocket.ServerOptions;
@@ -89,90 +100,49 @@ export class SocketWorker {
         socket.on('message', async (data: WebSocket.Data) => {
           log.debug(`received message: ${data.toString()}`);
 
-          const { id, payload } = <UserMessage>JSON.parse(data.toString());
+          try {
+            const message = MessageParser.validate(MessageParser.parse(data));
 
-          if (UserEvent.Activity in payload) {
-            const response = await ActivityCommandHandler.handle(user, payload.activity);
+            let response: Message;
 
-            socket.send(JSON.stringify(response));
-          }
+            switch (message.header.type) {
+              case MessageType.Activity:
+                response = await ActivityMessageHandler.handle(user, <ActivityMessage>message);
+                break;
 
-          if (UserEvent.Tags in payload) {
-            const response = await TagsCommandHandler.handle(user, payload.tags);
+              case MessageType.Tags:
+                response = await TagMessageHandler.handle(user, <TagMessage>message);
+                break;
 
-            socket.send(JSON.stringify(response));
-          }
+              case MessageType.InitiateCall:
+                response = await InitiateCallMessageHandler.handle(user, <InitiateCallMessage>message);
+                break;
 
-          if (UserEvent.Call in payload) {
-            const response = await CallCommandHandler.handle(user, payload.call.to);
+              case MessageType.Configuration:
+                response = await ConfigurationMessageHandler.handle(user, message);
+                break;
 
-            const message = {
-              id: id,
-              call: {
-                ...response,
-              },
-            };
+              case MessageType.Hold:
+                response = await HoldMessageHandler.handle(user, <HoldMessage>message);
+                break;
 
-            socket.send(JSON.stringify(message));
-          }
+              case MessageType.Accept:
+                response = await AcceptMessageHandler.handle(user, <AcceptMessage>message);
+                break;
 
-          if (UserEvent.Presence in payload) {
-            const response = await PresenceCommandHandler.handle(user);
+              case MessageType.Record:
+                response = await RecordMessageHandler.handle(user, <RecordMessage>message);
+                break;
 
-            const message = {
-              id: id,
-              call: {
-                ...response,
-              },
-            };
+              default:
+                throw new InvalidMessageException(`Invalid type ${message.header.type} received`);
+            }
 
-            socket.send(JSON.stringify(message));
-          }
+            socket.send(response.toString());
+          } catch (error) {
+            log.error(error.toResponse());
 
-          if (UserEvent.Configuration in payload) {
-            const response = await ConfigurationCommandHandler.handle(user);
-
-            // TODO, add message type
-            const message = {
-              id: id,
-              configuration: {
-                ...response,
-              },
-            };
-
-            socket.send(JSON.stringify(message));
-          }
-
-          if (UserEvent.Hold in payload) {
-            const response = await HoldCommandHandler.handle(user, payload.hold.id, payload.hold.state);
-
-            const message = {
-              id: id,
-              state: response,
-            };
-
-            socket.send(JSON.stringify(message));
-          }
-
-          if (UserEvent.Accept in payload) {
-            const response = await AcceptCommandHandler.handle(user, payload.accept.id);
-
-            const message = {
-              id: id,
-            };
-
-            socket.send(JSON.stringify(message));
-          }
-
-          if (UserEvent.Record in payload) {
-            const response = await RecordCommandHandler.handle(user, payload.record.id, payload.record.state);
-
-            const message = {
-              id: id,
-              state: response,
-            };
-
-            socket.send(JSON.stringify(message));
+            socket.send(new ErrorMessage(`${error.name} : ${error.description}`).toString());
           }
         });
 
@@ -191,9 +161,8 @@ export class SocketWorker {
 
         user.sockets.add(socket);
 
-        // TODO, add code below to a handler
-        user.broadcast({ user: user.toResponse() });
-        user.broadcast({ configuration: user.getConfiguration() });
+        user.broadcast(new UserMessage(user.toResponse()));
+        user.broadcast(new ConfigurationMessage(user.getConfiguration()));
       } catch (error) {
         socket.terminate();
         log.debug(error);

@@ -7,6 +7,8 @@ import { AccountConfiguration } from '../models/AccountConfiguration';
 import { RequestWithUser } from '../requests/RequestWithUser';
 import { ConfigurationValidationFailedException } from '../exceptions/ConfigurationValidationFailedException';
 import { getCallbackUrl } from './callback/PhoneHelper';
+import { pool } from '../worker';
+import { ConfigurationMessage } from '../models/socket/messages/ConfigurationMessage';
 
 const update = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
@@ -25,6 +27,10 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
     }
 
     await accountRepository.update(account);
+
+    const users = pool.getAll(account);
+
+    users.forEach((user) => user.broadcast(new ConfigurationMessage(user.getConfiguration())));
 
     res.status(200).end();
   } catch (error) {

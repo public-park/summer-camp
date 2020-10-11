@@ -3,9 +3,11 @@ import { UserActivity } from './UserActivity';
 import { UserConnectionState } from './UserConnectionState';
 import { WebSocketNotInStateOpenException } from '../exceptions/WebSocketNotInStateOpenException';
 import { UserRole } from './UserRole';
-import { v4 as uuidv4 } from 'uuid';
-import { UserEvent } from './UserEvent';
-import { UserMessage } from './UserMessage';
+
+import { Message, MessageType } from './socket/messages/Message';
+import { ActivityMessage } from './socket/messages/ActivityMessage';
+import { TagMessage } from './socket/messages/TagMessage';
+import { InvalidMessageException } from '../exceptions/InvalidMessageException';
 
 export class User {
   id: string | undefined;
@@ -23,7 +25,7 @@ export class User {
     state: UserConnectionState;
     url: string | undefined;
   };
-  sockets: number | undefined;
+  sockets: number | undefined; // TODO put into connection object?
   private eventEmitter: EventEmitter;
 
   constructor() {
@@ -81,40 +83,47 @@ export class User {
       console.log('socket is open');
     };
 
-    this.connection.socket.onmessage = (message: MessageEvent) => {
-      console.log('message received: ' + message.data);
+    this.connection.socket.onmessage = (event: MessageEvent) => {
+      console.log('message received: ' + event.data);
 
       try {
-        const payload = JSON.parse(message.data);
+        const message: Message = JSON.parse(event.data);
 
-        if (UserEvent.Activity in payload) {
-          this._setActivity(payload.activity);
+        switch (message.header.type) {
+          case MessageType.Activity:
+            this._setActivity(message.payload.activity);
+            break;
+
+          case MessageType.User:
+            this.id = message.payload.id;
+            this.name = message.payload.name;
+            this.profileImageUrl = message.payload.profileImageUrl;
+            this.accountId = message.payload.accountId;
+            this._tags = new Set(message.payload.tags);
+            this.role = message.payload.role;
+            this.sockets = message.payload.sockets;
+
+            this._setActivity(message.payload.activity);
+            this._setConnectionState(UserConnectionState.Open);
+            break;
+
+          case MessageType.Configuration:
+            this.eventEmitter.emit(MessageType.Configuration, message.payload);
+            break;
+
+          case MessageType.Call:
+            this.eventEmitter.emit(MessageType.Call, message);
+            break;
+
+          case MessageType.Error:
+            this.eventEmitter.emit('error', message.payload);
+            break;
         }
 
-        if (UserEvent.User in payload) {
-          this.id = payload.user.id;
-          this.name = payload.user.name;
-          this.profileImageUrl = payload.user.profileImageUrl;
-          this.accountId = payload.user.accountId;
-          this._tags = new Set(payload.user.tags);
-          this.role = payload.user.role;
-          this.sockets = payload.user.sockets;
-
-          this._setActivity(payload.user.activity);
-          this._setConnectionState(UserConnectionState.Open);
-        }
-
-        if (UserEvent.Configuration in payload) {
-          this.eventEmitter.emit(UserEvent.Configuration, payload.configuration);
-        }
-
-        if (UserEvent.Call in payload) {
-          this.eventEmitter.emit(UserEvent.Call, payload.call);
-        }
-
-        this.eventEmitter.emit(payload.id, payload);
+        this.eventEmitter.emit(message.header.id, message);
       } catch (error) {
-        this.eventEmitter.emit('error', error);
+        console.log(error);
+        this.eventEmitter.emit('error', new InvalidMessageException());
       }
     };
 
@@ -154,29 +163,22 @@ export class User {
     });
   }
 
-  send(type: UserEvent, payload: any): Promise<any> {
+  send<T extends Message, U>(message: T): Promise<U> {
     return new Promise((resolve, reject) => {
       if (!this.connection.socket || this.connection.socket.readyState !== WebSocket.OPEN) {
         throw new WebSocketNotInStateOpenException();
       }
 
-      const message: UserMessage = {
-        id: uuidv4(),
-        payload: {
-          [type]: payload,
-        },
-      };
-
-      this.eventEmitter.once(message.id, (payload: any) => {
+      this.eventEmitter.once(message.header.id, (payload: U) => {
         resolve(payload);
       });
 
-      this.connection.socket.send(JSON.stringify(message));
+      this.connection.socket.send(message.toString());
     });
   }
 
   set activity(activity: UserActivity) {
-    this.send(UserEvent.Activity, activity);
+    this.send(new ActivityMessage(activity));
   }
 
   get activity(): UserActivity {
@@ -188,7 +190,7 @@ export class User {
   }
 
   set tags(tags: Set<string>) {
-    this.send(UserEvent.Tags, tags.values());
+    this.send(new TagMessage(tags));
   }
 
   get tags(): Set<string> {
@@ -203,7 +205,7 @@ export class User {
     this.eventEmitter.on('connection_state', listener);
   }
 
-  onConfigurationChanged(listener: (configuration: any) => void) {
+  onConfigurationChanged(listener: (configuration: UserConfiguration) => void) {
     this.eventEmitter.on('configuration', listener);
   }
 
@@ -211,15 +213,27 @@ export class User {
     this.eventEmitter.on('connection_error', listener);
   }
 
-  onError(listener: (error: Error) => void) {
+  onError(listener: (text: string) => void) {
     this.eventEmitter.on('error', listener);
   }
 
-  on(event: UserEvent, listener: (payload: any) => void) {
+  on<T extends Message>(event: MessageType, listener: (message: T) => void) {
     this.eventEmitter.on(event, listener);
   }
 
-  off(event: UserEvent, listener: (payload: any) => void) {
+  off<T extends Message>(event: MessageType, listener: (message: T) => void) {
     this.eventEmitter.off(event, listener);
   }
+}
+
+export interface UserConfiguration {
+  inbound: {
+    isEnabled: boolean;
+    phoneNumber: string | undefined;
+  };
+  outbound: {
+    isEnabled: boolean;
+    mode: string | undefined;
+    phoneNumber: string | undefined;
+  };
 }

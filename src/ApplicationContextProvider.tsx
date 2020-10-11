@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { UserActivity } from './models/UserActivity';
 import { UserConnectionState } from './models/UserConnectionState';
 import { getWebSocketUrl, getUrl } from './helpers/UrlHelper';
-import { User } from './models/User';
+import { User, UserConfiguration } from './models/User';
 import { TwilioPhone } from './phone/twilio/TwilioPhone';
 import { setActivity, setConnectionState, setLogout, setLogin } from './actions/UserAction';
 import { PhoneState } from './phone/PhoneState';
@@ -37,13 +37,14 @@ import { useQueryStringToken } from './hooks/useQueryStringToken';
 import { useSalesforceOpenCti } from './hooks/useSalesforceOpenCti';
 */
 import { request } from './helpers/api/RequestHelper';
-import { Call } from './phone/Call';
+import { Call, CallDirection, CallStatus } from './phone/Call';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { PhoneControl } from './phone/PhoneControl';
 import { useFetchPhoneToken } from './hooks/useFetchPhoneToken';
-import { UserEvent } from './models/UserEvent';
+
 import { setWorkspaceView } from './actions/WorkspaceViewAction';
 import { CloseCode } from './models/socket/CloseCode';
+import { showNotification } from './actions/NotificationAction';
 
 export const ApplicationContextProvider = (props: any) => {
   const phoneState = useSelector(selectPhoneState);
@@ -111,25 +112,23 @@ export const ApplicationContextProvider = (props: any) => {
 
     setPhone(phone);
 
-    phone.onIncomingCall((call) => {
-      setCall(call);
-
-      /* Salesforce OpenCTI 
-        doScreenPop(call.phoneNumber);
-      */
-    });
-
-    phone.onConnectionEstablished((call) => {
-      setCall(call);
-    });
-
-    phone.onStateChanged((state: PhoneState, ...params: any) => {
+    phone.onStateChanged((state: PhoneState) => {
       dispatch(setPhoneState(state));
 
       /* switch to phone view upon first connect */
       if (view === 'CONNECT_VIEW' && state === PhoneState.Idle) {
         dispatch(setWorkspaceView('PHONE_VIEW'));
       }
+    });
+
+    phone.onCallStateChanged((call) => {
+      if (call && call.direction === CallDirection.Inbound && call.status === CallStatus.Ringing) {
+        //doScreenPop(call.phoneNumber);
+      }
+
+      dispatch(setPhoneCall(call));
+
+      setCall(call);
     });
 
     // TODO, add phone exception type
@@ -153,7 +152,7 @@ export const ApplicationContextProvider = (props: any) => {
         logout('Your session ended, please login again');
         return;
       }
-      // TODO change text
+
       if (state === UserConnectionState.Closed && code === CloseCode.ConcurrentSession) {
         logout('Your session ended, this user logged in from another device');
         return;
@@ -172,7 +171,7 @@ export const ApplicationContextProvider = (props: any) => {
       dispatch(setActivity(user));
     });
 
-    user.onConfigurationChanged((configuration: any) => {
+    user.onConfigurationChanged((configuration: UserConfiguration) => {
       phone?.destroy();
 
       dispatch(setPhoneConfiguration(configuration));
@@ -184,14 +183,9 @@ export const ApplicationContextProvider = (props: any) => {
       }
     });
 
-    user.onError((error: Error) => {
-      console.log('user error', error);
-    });
-
-    user.on(UserEvent.Call, (call: Call) => {
-      dispatch(setPhoneCall(call));
-
-      setCall(phone?.call);
+    user.onError((text: string) => {
+      dispatch(showNotification(`An error occured, please check the JS error log (${text})`));
+      console.error(text);
     });
 
     if (phone) {

@@ -18,7 +18,7 @@ export const IncomingCall = () => {
       <div className="display">
         <span className="duration">Incoming call from</span>
 
-        <span className="phone-number">{call ? call.phoneNumber : '-'}</span>
+        <span className="phone-number">{call ? call.from : '-'}</span>
       </div>
 
       <div className="blank"></div>

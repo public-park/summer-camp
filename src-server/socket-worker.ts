@@ -30,6 +30,7 @@ import { ErrorMessage } from './models/socket/messages/ErrorMessage';
 import { InitiateCallMessage } from './models/socket/messages/InitiateCallMessage';
 import { UserMessage } from './models/socket/messages/UserMessage';
 import { ConfigurationMessage } from './models/socket/messages/ConfigurationMessage';
+import { AcknowledgeMessageHandler } from './message-handler/AcknowledgeMessageHandler';
 
 interface SocketWorkerOptions {
   server: WebSocket.ServerOptions;
@@ -39,6 +40,7 @@ interface SocketWorkerOptions {
 export class SocketWorker {
   options: SocketWorkerOptions;
   pool: UserPool;
+  acknowledge: AcknowledgeMessageHandler;
 
   server: WebSocket.Server | undefined;
   keepAliveInterval: NodeJS.Timeout | undefined;
@@ -48,6 +50,7 @@ export class SocketWorker {
     this.options = options;
     this.server = undefined;
     this.keepAliveInterval = undefined;
+    this.acknowledge = new AcknowledgeMessageHandler();
   }
 
   async getUserFromHttpHeader(headers: http.IncomingHttpHeaders): Promise<UserWithOnlineState> {
@@ -103,7 +106,7 @@ export class SocketWorker {
           try {
             const message = MessageParser.validate(MessageParser.parse(data));
 
-            let response: Message;
+            let response: Message | undefined;
 
             switch (message.header.type) {
               case MessageType.Activity:
@@ -115,7 +118,11 @@ export class SocketWorker {
                 break;
 
               case MessageType.InitiateCall:
-                response = await InitiateCallMessageHandler.handle(user, <InitiateCallMessage>message);
+                response = await InitiateCallMessageHandler.handle(
+                  user,
+                  <InitiateCallMessage>message,
+                  this.acknowledge
+                );
                 break;
 
               case MessageType.Configuration:
@@ -134,13 +141,19 @@ export class SocketWorker {
                 response = await RecordMessageHandler.handle(user, <RecordMessage>message);
                 break;
 
+              case MessageType.Acknowledge:
+                this.acknowledge.handle(message);
+                break;
+
               default:
                 throw new InvalidMessageException(`Invalid type ${message.header.type} received`);
             }
 
-            socket.send(response.toString());
+            if (response) {
+              response && socket.send(response.toString());
+            }
           } catch (error) {
-            log.error(error.toResponse());
+            log.error(error);
 
             socket.send(new ErrorMessage(`${error.name} : ${error.description}`).toString());
           }

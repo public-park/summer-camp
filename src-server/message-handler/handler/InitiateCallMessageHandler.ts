@@ -4,11 +4,16 @@ import { CallDirection } from '../../models/CallDirection';
 import { CallStatus } from '../../models/CallStatus';
 import { CallMessage } from '../../models/socket/messages/CallMessage';
 import { InitiateCallMessage } from '../../models/socket/messages/InitiateCallMessage';
+import { Message } from '../../models/socket/messages/Message';
 import { UserWithOnlineState } from '../../pool/UserWithOnlineState';
-
 import { callRepository as calls } from '../../worker';
+import { AcknowledgeMessageHandler } from '../AcknowledgeMessageHandler';
 
-const handle = async (user: UserWithOnlineState, message: InitiateCallMessage): Promise<CallMessage> => {
+const handle = async (
+  user: UserWithOnlineState,
+  message: InitiateCallMessage,
+  acknowledge: AcknowledgeMessageHandler
+): Promise<CallMessage> => {
   const callerId = getCallerId(user.account);
 
   const call = await calls.create(
@@ -20,9 +25,9 @@ const handle = async (user: UserWithOnlineState, message: InitiateCallMessage): 
     user
   );
 
-  const helper = new TwilioHelper(user.account);
-
-  await helper.connectUser(call, user);
+  acknowledge.on(message.header.id, async (message: Message) => {
+    await new TwilioHelper(user.account).connectUser(call, user);
+  });
 
   return new CallMessage(call, message.header.id);
 };

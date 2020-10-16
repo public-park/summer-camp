@@ -8,6 +8,7 @@ import { Message, MessageType } from './socket/messages/Message';
 import { ActivityMessage } from './socket/messages/ActivityMessage';
 import { TagMessage } from './socket/messages/TagMessage';
 import { InvalidMessageException } from '../exceptions/InvalidMessageException';
+import { AcknowledgeMessage } from './socket/messages/AcknowledgeMessage';
 
 export class User {
   id: string | undefined;
@@ -119,6 +120,8 @@ export class User {
             this.eventEmitter.emit('error', message.payload);
             break;
         }
+
+        this.send(new AcknowledgeMessage(message.header.id));
 
         this.eventEmitter.emit(message.header.id, message);
       } catch (error) {

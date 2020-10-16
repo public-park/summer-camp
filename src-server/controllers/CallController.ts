@@ -11,7 +11,7 @@ const fetch = async (req: RequestWithCall, res: Response, next: NextFunction) =>
   }
 };
 
-const getAll = async (req: RequestWithUser, res: Response, next: any) => {
+const getAll = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
     const calls = await callRepository.getByUser(req.user, 0, 50);
 

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { TokenHelper } from '../helpers/TokenHelper';
 import { authenticationProvider, userRepository, accountRepository } from '../worker';
 import { isValidName } from './UserControllerValidator';
@@ -6,7 +6,7 @@ import { UserRole } from '../models/UserRole';
 import { log } from '../logger';
 import { isValidPassword } from './RegisterControllerValidator';
 
-const register = async (req: Request, res: Response, next: any) => {
+const register = async (req: Request, res: Response, next: NextFunction) => {
   log.debug(`get user by name: ${req.body.name}`);
 
   try {

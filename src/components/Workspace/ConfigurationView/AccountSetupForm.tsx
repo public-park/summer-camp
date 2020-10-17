@@ -1,8 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
-
 import { Typography, CardContent, Card, FormControl, Button } from '@material-ui/core';
 import { LoadIndicator } from './LoadIndicator';
-import { ConfigurationContext } from './ConfigurationContext';
 import { AccountSetupFormInput } from './AccountSetupFormInput';
 import {
   IS_TWILIO_ACCOUNT_SID_REGEXP,
@@ -10,13 +8,24 @@ import {
   IS_TWILIO_API_SECRET_REGEXP,
 } from '../../../Constants';
 import Alert from '@material-ui/lab/Alert';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectSetupConfiguration, selectSetupIsSaving, selectSetupValidation } from '../../../store/Store';
+import { ApplicationContext } from '../../../context/ApplicationContext';
+import { updateTwilioAccount, validateConfigurationComplete } from '../../../actions/SetupAction';
+import { validateAccountConfiguration } from './services/validateAccountConfiguration';
 
 export const AccountSetupForm = () => {
-  const { configuration, saveBaseConfiguration, isSaving, isValidBaseConfiguration } = useContext(ConfigurationContext);
+  const dispatch = useDispatch();
 
-  const [key, setKey] = useState(configuration.key || '');
-  const [secret, setSecret] = useState(configuration.secret || '');
-  const [accountSid, setAccountSid] = useState(configuration.accountSid || '');
+  const { user } = useContext(ApplicationContext);
+
+  const { twilio } = useSelector(selectSetupConfiguration);
+  const { remote } = useSelector(selectSetupValidation);
+  const isSaving = useSelector(selectSetupIsSaving);
+
+  const [key, setKey] = useState(twilio.key || '');
+  const [secret, setSecret] = useState(twilio.secret || '');
+  const [accountSid, setAccountSid] = useState(twilio.accountSid || '');
   const [isPristine, setIsPristine] = useState(true);
   const [isValid, setIsValid] = useState(false);
 
@@ -33,7 +42,21 @@ export const AccountSetupForm = () => {
   }, [key, secret, accountSid]);
 
   const save = async () => {
-    await saveBaseConfiguration(key, secret, accountSid);
+    try {
+      const result = await validateAccountConfiguration(user, {
+        ...twilio,
+        key: key,
+        secret: secret,
+        accountSid: accountSid,
+      });
+      dispatch(validateConfigurationComplete(result));
+
+      if (result.isValid) {
+        dispatch(updateTwilioAccount(accountSid, key, secret));
+      }
+    } catch (error) {
+      console.log(error);
+    }
 
     setIsPristine(true);
   };
@@ -55,7 +78,7 @@ export const AccountSetupForm = () => {
               id="api_key"
               label="API Key"
               type="text"
-              default={configuration.key || ''}
+              default={key}
               validator={IS_TWILIO_API_KEY_REGEXP}
               onUpdate={setKey}
               onFocus={onFocus}
@@ -65,7 +88,7 @@ export const AccountSetupForm = () => {
               id="api_secret"
               label="API Secret"
               type="password"
-              default={configuration.secret || ''}
+              default={secret}
               validator={IS_TWILIO_API_SECRET_REGEXP}
               onUpdate={setSecret}
               onFocus={onFocus}
@@ -75,7 +98,7 @@ export const AccountSetupForm = () => {
               id="account_sid"
               label="AccountSid"
               type="text"
-              default={configuration.accountSid || ''}
+              default={accountSid}
               validator={IS_TWILIO_ACCOUNT_SID_REGEXP}
               onUpdate={setAccountSid}
               onFocus={onFocus}
@@ -84,7 +107,7 @@ export const AccountSetupForm = () => {
           <Button fullWidth disabled={!isValid || isSaving} onClick={save} variant="contained" color="primary">
             VALIDATE AND SAVE
           </Button>
-          {isPristine && isValidBaseConfiguration === false && (
+          {isPristine && !remote.isValid && (
             <Alert style={{ marginTop: '10px' }} variant="filled" severity="error">
               Configuration could not be validated with Twilio, please check the provided configuration.
             </Alert>

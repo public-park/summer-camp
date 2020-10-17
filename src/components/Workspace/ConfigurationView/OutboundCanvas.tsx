@@ -1,12 +1,33 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { PhoneNumberSelect } from './PhoneNumberSelect';
-import { ConfigurationContext } from './ConfigurationContext';
 import { FormControlLabel, Radio } from '@material-ui/core';
+import {
+  selectSetupCallerIds,
+  selectSetupConfiguration,
+  selectSetupIsSaving,
+  selectSetupPhoneNumbers,
+} from '../../../store/Store';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateTwilioOutbound } from '../../../actions/SetupAction';
 
-export const OutboundCanvas = (props: any) => {
-  const { callerIds, phoneNumbers } = props;
+export const OutboundCanvas = () => {
+  const dispatch = useDispatch();
 
-  const { configuration, isSaving, setMode, setOutboundPhoneNumber } = useContext(ConfigurationContext);
+  const {
+    twilio: { outbound },
+  } = useSelector(selectSetupConfiguration);
+
+  const isSaving = useSelector(selectSetupIsSaving);
+  const phoneNumbers = useSelector(selectSetupPhoneNumbers);
+  const callerIds = useSelector(selectSetupCallerIds);
+
+  const setMode = (mode: 'internal-caller-id' | 'external-caller-id') => {
+    dispatch(updateTwilioOutbound(outbound.isEnabled, mode, outbound.phoneNumber));
+  };
+
+  const setPhoneNumber = (phoneNumber: string) => {
+    dispatch(updateTwilioOutbound(outbound.isEnabled, outbound.mode, phoneNumber));
+  };
 
   return (
     <div className="outbound-canvas">
@@ -15,22 +36,22 @@ export const OutboundCanvas = (props: any) => {
           value="end"
           control={
             <Radio
-              checked={configuration.outbound.mode === 'internal-caller-id'}
+              checked={outbound.mode === 'internal-caller-id'}
               color="primary"
               value="internal-caller-id"
-              onChange={(event) => setMode(event.target.value)}
+              onChange={(event) => setMode(event.target.value as 'internal-caller-id' | 'external-caller-id')}
             />
           }
           label="Use a phone number"
         />
       </div>
 
-      {configuration.outbound.mode === 'internal-caller-id' && (
+      {outbound.mode === 'internal-caller-id' && (
         <PhoneNumberSelect
           key="phone-number-select-outbound"
-          value={configuration.outbound.phoneNumber}
+          value={outbound.phoneNumber}
           items={phoneNumbers}
-          setValue={setOutboundPhoneNumber}
+          setValue={setPhoneNumber}
         />
       )}
 
@@ -40,22 +61,22 @@ export const OutboundCanvas = (props: any) => {
           control={
             <Radio
               disabled={isSaving}
-              checked={configuration.outbound.mode === 'external-caller-id'}
+              checked={outbound.mode === 'external-caller-id'}
               color="primary"
               value="external-caller-id"
-              onChange={(event) => setMode(event.target.value)}
+              onChange={(event) => setMode(event.target.value as 'internal-caller-id' | 'external-caller-id')}
             />
           }
           label="Use a verified caller ID"
         />
       </div>
 
-      {configuration.outbound.mode === 'external-caller-id' ? (
+      {outbound.mode === 'external-caller-id' ? (
         <PhoneNumberSelect
           key="caller-id-select-outbound"
-          value={configuration.outbound.phoneNumber}
+          value={outbound.phoneNumber}
           items={callerIds}
-          setValue={setOutboundPhoneNumber}
+          setValue={setPhoneNumber}
         />
       ) : (
         ''

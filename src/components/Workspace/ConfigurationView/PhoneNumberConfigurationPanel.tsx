@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { OutboundCanvas } from './OutboundCanvas';
 import { InboundCanvas } from './InboundCanvas';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -6,34 +6,96 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import { Typography, Card, CardContent } from '@material-ui/core';
 import { LoadIndicator } from './LoadIndicator';
 import Alert from '@material-ui/lab/Alert';
-import { useFetchPhoneNumbers } from './hooks/useFetchPhoneNumbers';
 import { ApplicationContext } from '../../../context/ApplicationContext';
-import { ConfigurationContext } from './ConfigurationContext';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  updatePhoneNumbers,
+  updateTwilioInbound,
+  updateTwilioOutbound,
+  validateConfigurationLocal,
+} from '../../../actions/SetupAction';
+import { selectSetupConfiguration, selectSetupIsSaving, selectSetupPhoneNumbers } from '../../../store/Store';
+import { fetchPhoneNumbers } from './services/fetchPhoneNumbers';
 
 export const PhoneNumberConfigurationPanel = () => {
-  const { user } = useContext(ApplicationContext); // TODO useUser()
+  const dispatch = useDispatch();
 
-  const { configuration, isSaving, enableInbound, disableInbound, enableOutbound, disableOutbound } = useContext(
-    ConfigurationContext
-  );
+  const { user } = useContext(ApplicationContext);
+  const phoneNumbers = useSelector(selectSetupPhoneNumbers);
 
-  const { isFetching, callerIds, phoneNumbers } = useFetchPhoneNumbers(user);
+  const {
+    twilio: { inbound, outbound },
+  } = useSelector(selectSetupConfiguration);
 
-  const toggleInbound = (enable: boolean) => {
-    if (enable) {
-      enableInbound();
-    } else {
-      disableInbound();
-    }
+  const [isFetching, setIsFetching] = useState(false);
+
+  const isSaving = useSelector(selectSetupIsSaving);
+
+  const updateOutbound = (enable: boolean) => {
+    dispatch(updateTwilioOutbound(enable, outbound.mode, outbound.phoneNumber));
   };
 
-  const toggleOutbound = (enable: boolean) => {
-    if (enable) {
-      enableOutbound();
-    } else {
-      disableOutbound();
-    }
+  const updateInbound = (enable: boolean) => {
+    dispatch(updateTwilioInbound(enable, inbound.phoneNumber));
   };
+
+  useEffect(() => {
+    async function init() {
+      try {
+        setIsFetching(true);
+
+        const response = await fetchPhoneNumbers(user);
+
+        setIsFetching(false);
+
+        dispatch(updatePhoneNumbers(response.callerIds, response.phoneNumbers));
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsFetching(false);
+      }
+    }
+
+    init();
+  }, []);
+
+  useEffect(() => {
+    if (phoneNumbers.length === 0) {
+      return;
+    }
+
+    if (!outbound.isEnabled && !inbound.isEnabled) {
+      dispatch(validateConfigurationLocal(false, 'Either outbound or inbound has to be active'));
+      return;
+    }
+
+    if (outbound.isEnabled) {
+      if (!outbound.mode) {
+        dispatch(validateConfigurationLocal(false, 'Please select mode via caller id or number'));
+        return;
+      }
+
+      if (outbound.mode === 'internal-caller-id' && !outbound.phoneNumber) {
+        dispatch(validateConfigurationLocal(false, 'Please select a phoneNumber for outbound'));
+        return;
+      }
+
+      if (outbound.mode === 'external-caller-id' && !outbound.phoneNumber) {
+        dispatch(validateConfigurationLocal(false, 'Please select a callerId for outbound'));
+        return;
+      }
+    }
+
+    if (inbound.isEnabled) {
+      if (!inbound.phoneNumber) {
+        dispatch(validateConfigurationLocal(false, 'Please select a phoneNumber for inbound'));
+        return;
+      }
+    }
+
+    dispatch(validateConfigurationLocal(true));
+    return;
+  }, [phoneNumbers, inbound, outbound]);
 
   return (
     <Card className="phone-number-configuration-panel" variant="outlined">
@@ -54,9 +116,9 @@ export const PhoneNumberConfigurationPanel = () => {
                 control={
                   <Checkbox
                     disabled={isSaving}
-                    checked={configuration.inbound.isEnabled}
+                    checked={inbound.isEnabled}
                     color="primary"
-                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => toggleInbound(event.target.checked)}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateInbound(event.target.checked)}
                   />
                 }
                 label="Use Phone for Inbound"
@@ -64,9 +126,7 @@ export const PhoneNumberConfigurationPanel = () => {
               />
             )}
 
-            {configuration.inbound.isEnabled && phoneNumbers.length > 0 && (
-              <InboundCanvas phoneNumbers={phoneNumbers} />
-            )}
+            {inbound.isEnabled && phoneNumbers.length > 0 && <InboundCanvas />}
 
             <Typography className="outbound-title" variant="h5" gutterBottom>
               Outbound
@@ -77,24 +137,24 @@ export const PhoneNumberConfigurationPanel = () => {
               control={
                 <Checkbox
                   disabled={isSaving}
-                  checked={configuration.outbound.isEnabled}
+                  checked={outbound.isEnabled}
                   color="primary"
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => toggleOutbound(event.target.checked)}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateOutbound(event.target.checked)}
                 />
               }
               label="Use Phone for Inbound"
               labelPlacement="end"
             />
 
-            {configuration.outbound.isEnabled && phoneNumbers.length === 0 && (
+            {outbound.isEnabled && phoneNumbers.length === 0 && (
               <Alert severity="warning">You have no phone numbers on your account</Alert>
             )}
 
-            {configuration.outbound.isEnabled && phoneNumbers.length === 0 && (
+            {outbound.isEnabled && phoneNumbers.length === 0 && (
               <Alert severity="warning">You have no verified callerIds on your account</Alert>
             )}
 
-            {configuration.outbound.isEnabled && <OutboundCanvas callerIds={callerIds} phoneNumbers={phoneNumbers} />}
+            {outbound.isEnabled && <OutboundCanvas />}
           </div>
         )}
       </CardContent>

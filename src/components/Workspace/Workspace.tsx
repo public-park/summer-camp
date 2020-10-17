@@ -18,7 +18,6 @@ import { WorkspaceView } from '../../actions/WorkspaceViewAction';
 import { ConnectView } from './ConnectView/ConnectView';
 import { CallHistoryView } from './CallHistoryView/CallHistoryView';
 import { ConfigurationView } from './ConfigurationView/ConfigurationView';
-import { ConfigurationContextProvider } from './ConfigurationView/ConfigurationContextProvider';
 import { lostPhoneInputDevice, lostPhoneOutputDevice } from '../../actions/PhoneAction';
 import { AudioDeviceView } from './AudioDeviceView/AudioDeviceView';
 import { NotificationLayer } from './NotificationLayer/NotificationLayer';
@@ -86,11 +85,7 @@ export const Workspace = () => {
   const getWorkspaceView = (view: WorkspaceView) => {
     switch (view) {
       case 'SETUP_VIEW':
-        return (
-          <ConfigurationContextProvider>
-            <ConfigurationView />
-          </ConfigurationContextProvider>
-        );
+        return <ConfigurationView />;
 
       case 'PHONE_VIEW':
         return <PhoneView />;

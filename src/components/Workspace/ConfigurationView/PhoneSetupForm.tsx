@@ -3,23 +3,39 @@ import { AccountResetForm } from './AccountResetForm';
 import { Button } from '@material-ui/core';
 import { LoadIndicator } from './LoadIndicator';
 import { PhoneNumberConfigurationPanel } from './PhoneNumberConfigurationPanel';
-import { ConfigurationContext } from './ConfigurationContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectSetupConfiguration, selectSetupIsSaving, selectSetupValidation } from '../../../store/Store';
+import { ApplicationContext } from '../../../context/ApplicationContext';
+import { saveConfiguration, saveConfigurationComplete } from '../../../actions/SetupAction';
+import { saveAccountConfiguration } from './services/saveAccountConfiguration';
 
 export const PhoneSetupForm = () => {
-  const { saveAll, isSaving, localValidation } = useContext(ConfigurationContext);
+  const dispatch = useDispatch();
+
+  const { user } = useContext(ApplicationContext);
+
+  const { local } = useSelector(selectSetupValidation);
+  const { twilio } = useSelector(selectSetupConfiguration);
+  const isSaving = useSelector(selectSetupIsSaving);
+
+  const save = async () => {
+    dispatch(saveConfiguration());
+
+    try {
+      await saveAccountConfiguration(user, twilio);
+
+      dispatch(saveConfigurationComplete());
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div>
       <AccountResetForm />
       <PhoneNumberConfigurationPanel />
 
-      <Button
-        fullWidth
-        variant="contained"
-        onClick={saveAll}
-        disabled={!localValidation.isValid || isSaving}
-        color="primary"
-      >
+      <Button fullWidth variant="contained" onClick={save} disabled={!local.isValid || isSaving} color="primary">
         SAVE SETUP
       </Button>
 

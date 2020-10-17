@@ -1,40 +1,90 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { Alert } from '@material-ui/lab';
 import { LoadIndicator } from './LoadIndicator';
 import { AccountSetupForm } from './AccountSetupForm';
 import { PhoneSetupForm } from './PhoneSetupForm';
-import { ConfiguratonViewState } from './ConfigurationViewState';
-import { ConfigurationContext } from './ConfigurationContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectSetupConfiguration, selectSetupValidation, selectSetupView } from '../../../store/Store';
+import { SetupStore, SetupView, ValidationResult } from '../../../store/SetupStore';
+import {
+  validateConfigurationComplete,
+  fetchConfiguration,
+  fetchConfigurationComplete,
+} from '../../../actions/SetupAction';
+import { ApplicationContext } from '../../../context/ApplicationContext';
 
-const getPhoneView = (view: ConfiguratonViewState, exception: string | undefined) => {
+import { validateConfiguration } from '../../../actions/SetupAction';
+import { validateAccountConfiguration } from './services/validateAccountConfiguration';
+import { fetchAccountConfiguration } from './services/fetchAccountConfiguration';
+import { ErrorOutlineRounded } from '@material-ui/icons';
+
+const getPhoneView = (view: SetupView) => {
   switch (view) {
-    case 'FAILED':
+    case SetupView.FAILED:
       return (
         <Alert style={{ marginTop: '15px' }} variant="filled" severity="error">
-          {exception}
+          Could not fetch configuration...
         </Alert>
       );
-    case 'FETCHING':
+    case SetupView.FETCH:
       return <LoadIndicator />;
-    case 'VALIDATING':
+    case SetupView.VALIDATE:
       return <LoadIndicator />;
-    case 'BASIC_SETUP':
+    case SetupView.ACCOUNT_FORM:
       return <AccountSetupForm />;
-    case 'PHONE_SETUP':
+    case SetupView.PHONE_NUMBER_FORM:
       return <PhoneSetupForm />;
   }
 };
 
 export const ConfigurationView = () => {
-  const { getView, exception, localValidation } = useContext(ConfigurationContext);
+  const dispatch = useDispatch();
+
+  const view = useSelector(selectSetupView);
+  const { local } = useSelector(selectSetupValidation);
+  const { user } = useContext(ApplicationContext);
+  const configuration = useSelector(selectSetupConfiguration);
+
+  useEffect(() => {
+    async function validate() {
+      dispatch(validateConfiguration());
+      try {
+        const result = await validateAccountConfiguration(user, configuration.twilio as any);
+
+        dispatch(validateConfigurationComplete(result as ValidationResult));
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    if (view === SetupView.FETCH_COMPLETE) {
+      validate();
+    }
+  }, [view]);
+
+  useEffect(() => {
+    async function init() {
+      dispatch(fetchConfiguration());
+
+      try {
+        const configuration = await fetchAccountConfiguration(user);
+
+        dispatch(fetchConfigurationComplete(configuration as SetupStore['configuration']['twilio']));
+      } catch (error) {
+        console.log(ErrorOutlineRounded);
+      }
+    }
+
+    init();
+  }, []);
 
   return (
     <div className="configuration">
-      {getPhoneView(getView(), exception)}
+      {getPhoneView(view)}
 
-      {getView() === 'PHONE_SETUP' && !localValidation.isValid ? (
+      {view === SetupView.PHONE_NUMBER_FORM && !local.isValid ? (
         <Alert style={{ marginTop: '15px' }} variant="filled" severity="error">
-          {localValidation.exception}
+          {local.text}
         </Alert>
       ) : (
         ''

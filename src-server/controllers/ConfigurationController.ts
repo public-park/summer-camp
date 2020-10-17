@@ -87,8 +87,6 @@ const validate = async (req: RequestWithUser, res: Response, next: Function) => 
       throw new ConfigurationValidationFailedException('PHONE_NUMBER_NOT_ON_ACCOUNT');
     }
 
-    throw new ConfigurationValidationFailedException('PHONE_NUMBER_NOT_ON_ACCOUNT');
-
     if (
       req.body.outbound.isEnabled &&
       req.body.mode === 'external-caller-id' &&

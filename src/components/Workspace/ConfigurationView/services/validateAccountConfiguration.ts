@@ -2,13 +2,9 @@ import { request } from '../../../../helpers/api/RequestHelper';
 import { User } from '../../../../models/User';
 import { AccountConfiguration } from '../../../../models/AccountConfiguration';
 import { getUrl } from '../../../../helpers/UrlHelper';
+import { ValidationResult } from '../../../../store/SetupStore';
 
-interface ValidationResult {
-  isValid: boolean;
-  code?: string;
-}
-
-export const validateConfiguration = async (
+export const validateAccountConfiguration = async (
   user: User,
   configuration: AccountConfiguration
 ): Promise<ValidationResult> => {
@@ -16,9 +12,11 @@ export const validateConfiguration = async (
     const response = await request(getUrl(`/accounts/${user.accountId}/configuration/validate`))
       .withAuthentication(user)
       .post(configuration);
-
-    return { isValid: true };
+    console.log(response);
+    return { isValid: true, text: '' };
   } catch (error) {
-    return { isValid: false, code: error.response.body.description };
+    console.log(error);
+
+    return { isValid: false, text: error.response.body.description };
   }
 };

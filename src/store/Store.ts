@@ -1,111 +1,46 @@
-import { UserActivity } from '../models/UserActivity';
-import { UserConnectionState } from '../models/UserConnectionState';
-import { ApplicationPage } from '../actions/PageAction';
-import { WorkspaceView } from '../actions/WorkspaceViewAction';
-import { PhoneState } from '../phone/PhoneState';
-import { UserRole } from '../models/UserRole';
-import { CallStatus, CallDirection } from '../phone/Call';
-import { MediaDeviceException } from '../exceptions/MediaDeviceException';
+import { ApplicationStore } from './ApplicationStore';
+import { SetupStore } from './SetupStore';
 
-export const selectUser = (store: Store) => store.user;
-export const selectRole = (store: Store) => store.user.role;
-export const selectPhone = (store: Store) => store.phone;
-export const selectConfiguration = (store: Store) => store.phone.configuration;
-export const selectActivity = (store: Store) => store.user.activity;
-export const selectProfileImageUrl = (store: Store) => store.user.profileImageUrl;
-export const selectName = (store: Store) => store.user.name;
-export const selectCall = (store: Store) => store.call;
-export const selectCallFrom = (store: Store) => store.call?.from;
-export const selectCallTo = (store: Store) => store.call?.to;
-export const selectCallDirection = (store: Store) => store.call?.direction;
-export const selectCallStatus = (store: Store) => store.call?.status;
-export const selectPhoneState = (store: Store) => store.phone.state;
-export const selectPhoneToken = (store: Store) => store.phone.token;
-export const selectPhoneInputDevice = (store: Store) => store.phone.devices.input;
-export const selectPhoneOutputDevice = (store: Store) => store.phone.devices.output;
-export const selectWorkspaceView = (store: Store) => store.workspace.view;
-export const selectWorkspaceNotification = (store: Store) => store.workspace.notification;
-export const selectConnectionState = (store: Store) => store.connection.state;
-export const selectToken = (store: Store) => store.token;
-export const selectPage = (store: Store) => store.page;
-export const selectLogoutReason = (store: Store) => store.logout.reason;
-export const selectPhoneError = (store: Store) => store.phone.error;
-export const selectPhoneDisplay = (store: Store) => store.phone.display;
-export const selectPhoneDisplayIsValidPhoneNumber = (store: Store) => store.phone.display.isValidPhoneNumber;
-export const selectPhoneDisplayValue = (store: Store) => store.phone.display.value;
-export const selectAudioInputDevices = (store: Store) => store.devices.audio.input;
-export const selectAudioOutputDevices = (store: Store) => store.devices.audio.output;
-export const selectDeviceException = (store: Store) => store.devices.exception;
+export const selectUser = (store: Store) => store.application.user;
+export const selectRole = (store: Store) => store.application.user.role;
+export const selectPhone = (store: Store) => store.application.phone;
+export const selectConfiguration = (store: Store) => store.application.phone.configuration;
+export const selectActivity = (store: Store) => store.application.user.activity;
+export const selectProfileImageUrl = (store: Store) => store.application.user.profileImageUrl;
+export const selectName = (store: Store) => store.application.user.name;
+export const selectCall = (store: Store) => store.application.call;
+export const selectCallFrom = (store: Store) => store.application.call?.from;
+export const selectCallTo = (store: Store) => store.application.call?.to;
+export const selectCallDirection = (store: Store) => store.application.call?.direction;
+export const selectCallStatus = (store: Store) => store.application.call?.status;
+export const selectPhoneState = (store: Store) => store.application.phone.state;
+export const selectPhoneToken = (store: Store) => store.application.phone.token;
+export const selectPhoneInputDevice = (store: Store) => store.application.phone.devices.input;
+export const selectPhoneOutputDevice = (store: Store) => store.application.phone.devices.output;
+export const selectWorkspaceView = (store: Store) => store.application.workspace.view;
+export const selectWorkspaceNotification = (store: Store) => store.application.workspace.notification;
+export const selectConnectionState = (store: Store) => store.application.connection.state;
+export const selectToken = (store: Store) => store.application.token;
+export const selectPage = (store: Store) => store.application.page;
+export const selectLogoutReason = (store: Store) => store.application.logout.reason;
+export const selectPhoneError = (store: Store) => store.application.phone.error;
+export const selectPhoneDisplay = (store: Store) => store.application.phone.display;
+export const selectPhoneDisplayIsValidPhoneNumber = (store: Store) =>
+  store.application.phone.display.isValidPhoneNumber;
+export const selectPhoneDisplayValue = (store: Store) => store.application.phone.display.value;
+export const selectAudioInputDevices = (store: Store) => store.application.devices.audio.input;
+export const selectAudioOutputDevices = (store: Store) => store.application.devices.audio.output;
+export const selectDeviceException = (store: Store) => store.application.devices.exception;
 
-export const selectStore = (store: Store) => store;
+export const selectSetupView = (store: Store) => store.setup.view;
+export const selectSetupConfiguration = (store: Store) => store.setup.configuration;
+
+export const selectSetupCallerIds = (store: Store) => store.setup.callerIds;
+export const selectSetupPhoneNumbers = (store: Store) => store.setup.phoneNumbers;
+export const selectSetupValidation = (store: Store) => store.setup.validation;
+export const selectSetupIsSaving = (store: Store) => store.setup.isSaving;
 
 export interface Store {
-  call: Call | undefined;
-  user: User;
-  connection: {
-    state: UserConnectionState | undefined;
-  };
-  phone: Phone;
-  devices: {
-    audio: {
-      input: Array<MediaDeviceInfo>;
-      output: Array<MediaDeviceInfo>;
-    };
-    exception: MediaDeviceException | undefined;
-  };
-  workspace: {
-    view: WorkspaceView;
-    notification: string | undefined;
-  };
-  logout: {
-    reason: string;
-  };
-  token: string | undefined;
-  page: ApplicationPage | undefined;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  profileImageUrl: string | undefined;
-  tags: Array<string>;
-  activity: UserActivity;
-  role: UserRole | undefined;
-  sockets: number | undefined;
-}
-
-export interface Call {
-  id: string;
-  from: string;
-  to: string;
-  status: CallStatus;
-  direction: CallDirection;
-  answeredAt: Date | undefined;
-}
-
-export interface Phone {
-  state: PhoneState;
-  token: string | undefined;
-  configuration: PhoneConfiguration | undefined;
-  error: string | undefined;
-  display: {
-    value: string;
-    isValidPhoneNumber: any;
-  };
-  devices: {
-    input: string | undefined;
-    output: string | undefined;
-  };
-}
-
-export interface PhoneConfiguration {
-  inbound: {
-    isEnabled: boolean;
-    phoneNumber: string | undefined;
-  };
-  outbound: {
-    isEnabled: boolean;
-    mode: string | undefined;
-    phoneNumber: string | undefined;
-  };
+  application: ApplicationStore;
+  setup: SetupStore;
 }

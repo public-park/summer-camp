@@ -1,12 +1,12 @@
-import { Store } from '../store/Store';
+import { ApplicationStore } from '../store/ApplicationStore';
 import produce from 'immer';
 import { Action } from '../actions/ActionType';
-import { DefaultStore } from '../store/DefaultStore';
 import { PhoneState } from '../phone/PhoneState';
 import { CallStatus } from '../phone/Call';
 import { IS_PHONE_NUMBER_REGEXP, IS_NUMBER_REGEXP } from '../Constants';
+import { DefaultApplicationStore } from '../store/DefaultApplicationStore';
 
-const reducer = (state: Store = DefaultStore, action: Action): Store => {
+const application = (state: ApplicationStore = DefaultApplicationStore, action: Action): ApplicationStore => {
   return produce(state, (draft) => {
     switch (action.type) {
       case 'USER_CONNECTION_STATE_CHANGE':
@@ -125,7 +125,7 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
         break;
 
       case 'USER_LOGOUT':
-        Object.assign(draft, DefaultStore);
+        Object.assign(draft, DefaultApplicationStore);
 
         if (action.payload.reason) {
           draft.page = 'LOGOUT_PAGE';
@@ -138,4 +138,4 @@ const reducer = (state: Store = DefaultStore, action: Action): Store => {
   });
 };
 
-export default reducer;
+export default application;

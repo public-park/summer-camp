@@ -1,8 +1,8 @@
-import { Store } from './Store';
+import { ApplicationStore } from './ApplicationStore';
 import { UserActivity } from '../models/UserActivity';
 import { PhoneState } from '../phone/PhoneState';
 
-export const DefaultStore: Store = {
+export const DefaultApplicationStore: ApplicationStore = {
   user: {
     id: '',
     name: '',

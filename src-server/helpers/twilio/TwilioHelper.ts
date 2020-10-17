@@ -232,11 +232,7 @@ export const createVoiceToken = (user: User, lifetime: number = 600): string => 
 
   log.info(`create phone token for ${user.id} (${user.name})`);
 
-  const options: AccessToken.VoiceGrantOptions = {};
-
-  if (user.account.configuration && user.account.configuration.inbound.isEnabled) {
-    options.incomingAllow = true;
-  }
+  const options: AccessToken.VoiceGrantOptions = { incomingAllow: true };
 
   const grant = new AccessToken.VoiceGrant(options);
 

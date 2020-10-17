@@ -47,7 +47,7 @@ export class TwilioPhone implements PhoneControl {
   private createCallFromMessage = (message: CallMessage) => {
     const { id, from, to, status, direction } = message.payload;
 
-    return new TwilioCall(id, <User>this.user, from, to, status, direction);
+    return new TwilioCall(id, this.user as User, from, to, status, direction);
   };
 
   private setState(state: PhoneState, ...params: any) {
@@ -105,7 +105,7 @@ export class TwilioPhone implements PhoneControl {
 
       this.device.on('incoming', async (connection: TwilioConnection) => {
         if (!this.call) {
-          throw new CallNotFoundException();
+          return this.setState(PhoneState.Error, new CallNotFoundException());
         }
 
         await this.registerInputDeviceId();
@@ -258,7 +258,7 @@ export class TwilioPhone implements PhoneControl {
       return false;
     }
 
-    return payload.status == CallStatus.Ringing && payload.direction === CallDirection.Inbound;
+    return payload.status === CallStatus.Ringing && payload.direction === CallDirection.Inbound;
   }
 
   private playRingtone() {

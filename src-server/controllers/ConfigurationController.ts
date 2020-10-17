@@ -16,6 +16,14 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
     account.configuration = { ...account.configuration, ...req.body } as AccountConfiguration;
 
+    if (!account.configuration.inbound.isEnabled) {
+      account.configuration.inbound.phoneNumber = undefined;
+    }
+
+    if (!account.configuration.outbound.isEnabled) {
+      account.configuration.outbound.phoneNumber = undefined;
+    }
+
     const helper = new TwilioHelper(account);
 
     /* update phone number configuration on Twilio */
@@ -28,9 +36,11 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
     await accountRepository.update(account);
 
-    const users = pool.getAll(account);
+    if (account.configuration.inbound.isEnabled || account.configuration.outbound.isEnabled) {
+      const users = pool.getAll(account);
 
-    users.forEach((user) => user.broadcast(new ConfigurationMessage(user.getConfiguration())));
+      users.forEach((user) => user.broadcast(new ConfigurationMessage(user.getConfiguration())));
+    }
 
     res.status(200).end();
   } catch (error) {
@@ -40,7 +50,6 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
 const validate = async (req: RequestWithUser, res: Response, next: Function) => {
   let { key, secret, accountSid } = req.body;
-
   /* configuration secret is write-only; assign secret from existing configuration */
   if (!req.body.secret) {
     const account = req.user.account;
@@ -78,6 +87,8 @@ const validate = async (req: RequestWithUser, res: Response, next: Function) => 
       throw new ConfigurationValidationFailedException('PHONE_NUMBER_NOT_ON_ACCOUNT');
     }
 
+    throw new ConfigurationValidationFailedException('PHONE_NUMBER_NOT_ON_ACCOUNT');
+
     if (
       req.body.outbound.isEnabled &&
       req.body.mode === 'external-caller-id' &&
@@ -88,6 +99,7 @@ const validate = async (req: RequestWithUser, res: Response, next: Function) => 
 
     res.status(200).end();
   } catch (error) {
+    console.log(error);
     if (error instanceof ConfigurationValidationFailedException) {
       next(error);
     } else {

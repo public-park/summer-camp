@@ -1,10 +1,8 @@
 import { UserActivity } from '../models/UserActivity';
-import { User, UserResponse } from '../models/User';
+import { User, UserWithOnlineStateResponse } from '../models/User';
 import { Call } from '../models/Call';
 import { UserRepository } from '../repository/UserRepository';
 import { WebSocketWithKeepAlive } from '../WebSocketWithKeepAlive';
-import { CallStatus } from '../models/CallStatus';
-import { CallDirection } from '../models/CallDirection';
 
 export class UserSockets {
   private sockets: Array<WebSocketWithKeepAlive>;
@@ -42,17 +40,6 @@ export class UserSockets {
   length() {
     return this.sockets.length;
   }
-}
-
-export interface UserWithOnlineStateResponse extends UserResponse {
-  call: {
-    id: string;
-    from: string;
-    to: string;
-    status: CallStatus | undefined;
-    direction: CallDirection;
-  } | null;
-  sockets: number;
 }
 
 export class UserWithOnlineState extends User {

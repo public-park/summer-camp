@@ -26,6 +26,7 @@ export enum MessageType {
   Hold = 'hold',
   Accept = 'accept',
   Configuration = 'configuration',
+  Connect = 'connect',
   Activity = 'activity',
   InitiateCall = 'initiate-connect',
   Acknowledge = 'acknowledge',

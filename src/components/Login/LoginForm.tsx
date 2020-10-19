@@ -27,6 +27,7 @@ interface LoginFormValues {
   name: string;
   password: string;
   showPassword: boolean;
+  isEmpty: boolean;
 }
 
 export const LoginForm = ({ isVisible }: LoginFormProps) => {
@@ -37,10 +38,14 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
     name: '',
     password: '',
     showPassword: false,
+    isEmpty: true,
   });
 
   const handleShowPassword = () => {
-    setValues({ ...values, showPassword: !values.showPassword });
+    setValues({
+      ...values,
+      showPassword: !values.showPassword,
+    });
   };
 
   const handleSubmit = async (e: MouseEvent) => {
@@ -63,9 +68,21 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
     }
   }, [response]);
 
-  const handleChange = (name: string) => (event: any) => {
-    setValues({ ...values, [name]: event.target.value });
+  const handleChange = (name: string) => (event: React.ChangeEvent<{ value: unknown }>) => {
+    setValues({
+      ...values,
+      [name]: event.target.value,
+    });
   };
+
+  useEffect(() => {
+    console.log(values.password.length === 0 || values.name.length === 0);
+
+    setValues({
+      ...values,
+      isEmpty: values.password.length === 0 || values.name.length === 0,
+    });
+  }, [values.name, values.password]);
 
   return (
     <div hidden={!isVisible}>
@@ -112,7 +129,7 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
           </div>
           <div>
             <Button
-              disabled={state === 'InProgress'}
+              disabled={state === 'InProgress' || values.isEmpty}
               fullWidth
               onClick={handleSubmit}
               variant="contained"

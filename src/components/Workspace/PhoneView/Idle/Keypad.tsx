@@ -5,7 +5,12 @@ import { selectPhoneDisplay } from '../../../../store/Store';
 import { updatePhoneDisplay } from '../../../../actions/PhoneAction';
 import { ApplicationContext } from '../../../../context/ApplicationContext';
 
-const keys = [
+interface KeypadButtonProp {
+  number: string;
+  letters: string | null;
+}
+
+const keys: Array<KeypadButtonProp> = [
   { number: '1', letters: null },
   { number: '2', letters: 'ABC' },
   { number: '3', letters: 'DEF' },
@@ -20,13 +25,14 @@ const keys = [
   { number: '#', letters: null },
 ];
 
-export const Keypad = (props: any) => {
+export const Keypad = () => {
   const { call } = useContext(ApplicationContext);
 
   const phoneDisplay = useSelector(selectPhoneDisplay);
 
   const dispatch = useDispatch();
 
+  // TODO add logic to separate component
   const addDigit = (digit: string) => {
     if (call) {
       call.sendDigits(digit);
@@ -40,12 +46,12 @@ export const Keypad = (props: any) => {
   return (
     <div className="keypad">
       <div>
-        {keys.map((item: any) => {
+        {keys.map((item: KeypadButtonProp) => {
           return (
             <KeypadButton
               key={`digit-button-${item.number}`}
               addDigit={addDigit}
-              letter={item.letters}
+              letter={item.letters || ''}
               number={item.number}
             />
           );

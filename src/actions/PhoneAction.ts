@@ -1,6 +1,7 @@
 import { ActionType } from './ActionType';
 import { PhoneState } from '../phone/PhoneState';
 import { Call } from '../phone/Call';
+import { UserConfiguration } from '../models/User';
 
 export interface PhoneDisplayAction {
   type: ActionType;
@@ -40,10 +41,10 @@ export const setPhoneException = (error: Error): PhoneExceptionAction => {
 
 export interface PhoneConfigurationAction {
   type: ActionType;
-  payload: any | undefined;
+  payload: UserConfiguration | undefined;
 }
 
-export const setPhoneConfiguration = (configuration?: any): PhoneConfigurationAction => {
+export const setPhoneConfiguration = (configuration?: UserConfiguration | undefined): PhoneConfigurationAction => {
   return {
     type: ActionType.PHONE_CONFIGURATION_UPDATE,
     payload: configuration,

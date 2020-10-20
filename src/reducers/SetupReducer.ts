@@ -114,10 +114,15 @@ const setup = (state: SetupStore = DefaultSetupStore, action: SetupAction): Setu
     }
 
     if (isFetchConfigurationCompleteAction(action)) {
-      draft.view = SetupView.FETCH_COMPLETE;
-      draft.configuration.twilio = {
-        ...action.payload,
-      };
+      if (action.payload) {
+        draft.view = SetupView.FETCH_COMPLETE;
+        draft.configuration.twilio = {
+          ...action.payload,
+        };
+      } else {
+        draft.view = SetupView.ACCOUNT_FORM;
+      }
+
       draft.callerIds = [];
       draft.phoneNumbers = [];
     }

@@ -8,6 +8,8 @@ import { CallRepository } from '../repository/CallRepository';
 import { CallMessage } from '../models/socket/messages/CallMessage';
 import { CallStatus } from '../models/CallStatus';
 import { CallDirection } from '../models/CallDirection';
+import { UserMessage } from '../models/socket/messages/UserMessage';
+import { Call } from '../models/Call';
 
 export class UserPool {
   pool: Map<string, UserWithOnlineState>;
@@ -20,63 +22,72 @@ export class UserPool {
     this.calls = calls;
 
     this.calls.onUpdate((call) => {
-      if (!call.userId) {
-        return;
-      }
+      const user = this.broadcastCallStatus(call);
 
-      const user = this.getById(call.userId);
-
-      if (!user) {
-        return;
-      }
-
-      if (call.status === CallStatus.Initiated && call.direction === CallDirection.Outbound) {
-        return; // TODO, already published by message handler...
-      }
-
-      if (call.isActive()) {
-        user.call = call;
-
-        user.broadcast(new CallMessage(call));
-      } else {
-        user.call = undefined;
-        user.broadcast(new CallMessage(undefined));
+      if (user) {
+        this.broadcastToAll(user);
       }
     });
   }
 
-  async add(account: Account, id: string, socket?: WebSocketWithKeepAlive | undefined): Promise<UserWithOnlineState> {
-    const user = await this.getByIdWithFallback(account, id);
+  broadcastCallStatus(call: Call): UserWithOnlineState | undefined {
+    if (!call.userId) {
+      return;
+    }
+
+    const user = this.getById(call.userId);
 
     if (!user) {
-      throw new UserNotFoundException();
+      return;
     }
 
-    if (socket) {
-      user.sockets.add(socket);
+    /* state was already published by message handler */
+    if (call.status === CallStatus.Initiated && call.direction === CallDirection.Outbound) {
+      return;
     }
 
-    this.pool.set(user.id, user);
+    if (call.isActive()) {
+      user.call = call;
+
+      user.broadcast(new CallMessage(call));
+    } else {
+      user.call = undefined;
+      user.broadcast(new CallMessage(undefined));
+    }
 
     return user;
   }
 
-  update(user: User) {
-    let existing = this.getById(user.id);
+  async broadcastToAll(user: UserWithOnlineState) {
+    this.getAll(user.account).forEach((it) => it.broadcast(new UserMessage(user.toResponse())));
+  }
 
-    if (existing) {
-      this.pool.set(user.id, this.getUserWithOnlineState(user, existing.sockets.get()));
+  async add(user: UserWithOnlineState): Promise<UserWithOnlineState> {
+    this.pool.set(user.id, user);
+
+    this.broadcastToAll(user);
+
+    return user;
+  }
+
+  updateIfExists(user: UserWithOnlineState) {
+    let it = this.getById(user.id);
+
+    if (it) {
+      this.pool.set(user.id, this.getUserWithOnlineState(user, it.sockets.get()));
+
+      this.broadcastToAll(user);
+    } else {
+      throw new UserNotFoundException();
     }
   }
 
-  delete(id: string) {
-    const user = this.getById(id);
-
-    if (!user) {
-      throw new UserNotFoundException();
-    }
+  delete(user: UserWithOnlineState) {
+    user.sockets.close(1006);
 
     this.pool.delete(user.id);
+
+    this.broadcastToAll(user);
   }
 
   getById(id: string): UserWithOnlineState | undefined {

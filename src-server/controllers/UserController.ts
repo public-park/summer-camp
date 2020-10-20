@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { userRepository, authenticationProvider, pool, socketWorker } from '../worker';
+import { userRepository as users, authenticationProvider, pool, socketWorker } from '../worker';
 import { UserActivity } from '../models/UserActivity';
 
 import { RequestWithUser } from '../requests/RequestWithUser';
@@ -36,15 +36,7 @@ const create = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
     const authentication = await authenticationProvider.create(req.body.password);
 
-    const user = await userRepository.create(
-      req.body.name,
-      undefined,
-      tags,
-      req.user.account,
-      authentication,
-      role,
-      activity
-    );
+    const user = await users.create(req.body.name, undefined, tags, req.user.account, authentication, role, activity);
 
     res.json(user.toResponse());
   } catch (error) {
@@ -54,7 +46,7 @@ const create = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
 const fetch = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
-    const user = await userRepository.getById(req.user.account, req.params.userId);
+    const user = await users.getById(req.user.account, req.params.userId);
 
     if (!user) {
       throw new UserNotFoundException();
@@ -68,7 +60,7 @@ const fetch = async (req: RequestWithUser, res: Response, next: NextFunction) =>
 
 const update = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
-    const user = await userRepository.getById(req.user.account, req.params.userId);
+    let user = await users.getById(req.user.account, req.params.userId);
 
     if (!user) {
       throw new UserNotFoundException();
@@ -92,9 +84,9 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
       user.role = req.body.role;
     }
 
-    await userRepository.update(req.user.account, user);
+    user = await users.update(req.user.account, user);
 
-    pool.update(user);
+    pool.updateIfExists(pool.getUserWithOnlineState(user));
 
     res.json(user.toResponse());
   } catch (error) {
@@ -104,15 +96,15 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
 const remove = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
-    const user = await userRepository.getById(req.user.account, req.params.userId);
+    const user = await users.getById(req.user.account, req.params.userId);
 
     if (!user) {
       throw new UserNotFoundException();
     }
 
-    await userRepository.delete(req.user.account, user);
+    await users.delete(req.user.account, user);
 
-    socketWorker.closeSocketByUserId(user.id);
+    pool.delete(pool.getUserWithOnlineState(user));
 
     res.status(204).end();
   } catch (error) {

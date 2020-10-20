@@ -28,9 +28,9 @@ import { TagMessage } from './models/socket/messages/TagMessage';
 import { TagMessageHandler } from './message-handler/handler/TagMessageHandler';
 import { ErrorMessage } from './models/socket/messages/ErrorMessage';
 import { InitiateCallMessage } from './models/socket/messages/InitiateCallMessage';
-import { UserMessage } from './models/socket/messages/UserMessage';
-import { ConfigurationMessage } from './models/socket/messages/ConfigurationMessage';
 import { AcknowledgeMessageHandler } from './message-handler/AcknowledgeMessageHandler';
+import { ConnectMessage } from './models/socket/messages/ConnectMessage';
+import { UserNotFoundException } from './exceptions/UserNotFoundException';
 
 interface SocketWorkerOptions {
   server: WebSocket.ServerOptions;
@@ -64,7 +64,11 @@ export class SocketWorker {
       throw new AccountNotFoundException();
     }
 
-    const user = await this.pool.add(account, <string>headers.userId);
+    const user = await this.pool.getByIdWithFallback(account, <string>headers.userId);
+
+    if (!user) {
+      throw new UserNotFoundException();
+    }
 
     return user;
   }
@@ -110,7 +114,7 @@ export class SocketWorker {
 
             switch (message.header.type) {
               case MessageType.Activity:
-                response = await ActivityMessageHandler.handle(user, <ActivityMessage>message);
+                response = await ActivityMessageHandler.handle(this.pool, user, <ActivityMessage>message);
                 break;
 
               case MessageType.Tags:
@@ -163,7 +167,7 @@ export class SocketWorker {
           user.sockets.remove(socket);
 
           if (user.sockets.length() === 0) {
-            this.pool.delete(user.id);
+            this.pool.delete(user);
           }
 
           log.debug(`${user.id} closed socket with code ${code}, message: ${reason}, socket(s) ${user.sockets}`);
@@ -174,8 +178,9 @@ export class SocketWorker {
 
         user.sockets.add(socket);
 
-        user.broadcast(new UserMessage(user.toResponse()));
-        user.broadcast(new ConfigurationMessage(user.getConfiguration()));
+        this.pool.add(user);
+
+        user.broadcast(new ConnectMessage(user.toResponse(), user.getConfiguration()));
       } catch (error) {
         socket.terminate();
         log.debug(error);
@@ -203,20 +208,6 @@ export class SocketWorker {
       log.info(`broadcast ping to ${this.server.clients.size} client(s)`);
     }, this.options.keepAliveInSeconds * 1000);
   };
-
-  closeSocketByUserId(id: string) {
-    if (!this.server) {
-      return;
-    }
-
-    this.pool.delete(id);
-
-    this.server.clients.forEach((socket: WebSocketWithKeepAlive) => {
-      if (socket.user.id === id) {
-        socket.close();
-      }
-    });
-  }
 
   ping(socket: WebSocketWithKeepAlive) {
     if (!socket.isAlive) {

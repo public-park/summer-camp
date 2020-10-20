@@ -7,6 +7,8 @@ import { UserRole } from './UserRole';
 import { AgentRole } from './roles/AgentRole';
 import { UserAuthentication } from './UserAuthenticationProvider';
 import { Account } from './Account';
+import { CallStatus } from './CallStatus';
+import { CallDirection } from './CallDirection';
 
 export interface UserConfiguration {
   inbound: {
@@ -31,6 +33,17 @@ export interface UserResponse {
     provider: string;
   };
   role: UserRole;
+}
+
+export interface UserWithOnlineStateResponse extends UserResponse {
+  call: {
+    id: string;
+    from: string;
+    to: string;
+    status: CallStatus | undefined;
+    direction: CallDirection;
+  } | null;
+  sockets: number;
 }
 
 export class User {

@@ -9,6 +9,8 @@ import { ActivityMessage } from './socket/messages/ActivityMessage';
 import { TagMessage } from './socket/messages/TagMessage';
 import { InvalidMessageException } from '../exceptions/InvalidMessageException';
 import { AcknowledgeMessage } from './socket/messages/AcknowledgeMessage';
+import { ConnectMessage } from './socket/messages/ConnectMessage';
+import { CallDirection, CallStatus } from '../phone/Call';
 
 export class User {
   id: string | undefined;
@@ -20,6 +22,7 @@ export class User {
   private _isAvailable: boolean;
   private _activity: UserActivity;
   role: UserRole | undefined;
+  configuration: UserConfiguration | undefined;
 
   connection: {
     socket: WebSocket | undefined;
@@ -91,21 +94,27 @@ export class User {
         const message: Message = JSON.parse(event.data);
 
         switch (message.header.type) {
-          case MessageType.Activity:
-            this._setActivity(message.payload.activity);
+          case MessageType.Connect:
+            const { payload } = message as ConnectMessage;
+
+            this.id = payload.user.id;
+            this.name = payload.user.name;
+            this.profileImageUrl = payload.user.profileImageUrl;
+            this.accountId = payload.user.accountId;
+            this._tags = new Set(payload.user.tags);
+            this.role = payload.user.role;
+            this.sockets = payload.user.sockets;
+
+            this._setActivity(payload.user.activity);
+            this._setConnectionState(UserConnectionState.Open);
+
+            this.configuration = payload.configuration;
+
+            this.eventEmitter.emit(MessageType.Connect, message.payload);
             break;
 
-          case MessageType.User:
-            this.id = message.payload.id;
-            this.name = message.payload.name;
-            this.profileImageUrl = message.payload.profileImageUrl;
-            this.accountId = message.payload.accountId;
-            this._tags = new Set(message.payload.tags);
-            this.role = message.payload.role;
-            this.sockets = message.payload.sockets;
-
+          case MessageType.Activity:
             this._setActivity(message.payload.activity);
-            this._setConnectionState(UserConnectionState.Open);
             break;
 
           case MessageType.Configuration:
@@ -117,7 +126,7 @@ export class User {
             break;
 
           case MessageType.Error:
-            this.eventEmitter.emit('error', message.payload);
+            this.eventEmitter.emit(MessageType.Error, message.payload);
             break;
         }
 
@@ -126,7 +135,7 @@ export class User {
         this.eventEmitter.emit(message.header.id, message);
       } catch (error) {
         console.log(error);
-        this.eventEmitter.emit('error', new InvalidMessageException());
+        this.eventEmitter.emit(MessageType.Error, new InvalidMessageException());
       }
     };
 
@@ -208,8 +217,8 @@ export class User {
     this.eventEmitter.on('connection_state', listener);
   }
 
-  onConfigurationChanged(listener: (configuration: UserConfiguration) => void) {
-    this.eventEmitter.on('configuration', listener);
+  onReady(listener: () => void) {
+    this.eventEmitter.on(MessageType.Connect, listener);
   }
 
   onConnectionError(listener: (event: Event) => void) {
@@ -239,4 +248,28 @@ export interface UserConfiguration {
     mode: string | undefined;
     phoneNumber: string | undefined;
   };
+}
+
+export interface UserResponse {
+  id: string;
+  name: string;
+  profileImageUrl: string | undefined;
+  tags: Array<string>;
+  activity: UserActivity;
+  accountId: string;
+  authentication: {
+    provider: string;
+  };
+  role: UserRole;
+}
+
+export interface UserWithOnlineStateResponse extends UserResponse {
+  call: {
+    id: string;
+    from: string;
+    to: string;
+    status: CallStatus | undefined;
+    direction: CallDirection;
+  } | null;
+  sockets: number;
 }

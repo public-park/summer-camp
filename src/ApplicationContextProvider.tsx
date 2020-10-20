@@ -171,12 +171,12 @@ export const ApplicationContextProvider = (props: any) => {
       dispatch(setActivity(user));
     });
 
-    user.onConfigurationChanged((configuration: UserConfiguration) => {
+    user.onReady(() => {
       phone?.destroy();
 
-      dispatch(setPhoneConfiguration(configuration));
+      dispatch(setPhoneConfiguration(user.configuration));
 
-      if (configuration) {
+      if (user.configuration) {
         dispatch(setWorkspaceView('CONNECT_VIEW'));
       } else {
         dispatch(setWorkspaceView('PHONE_VIEW'));
@@ -272,7 +272,7 @@ export const ApplicationContextProvider = (props: any) => {
 
   useEffect(() => {
     if (persistedAudioInputDeviceId && audioInputDevices.length > 0 && !phoneInputDevice) {
-      if (audioInputDevices.some((device) => device.deviceId === persistedAudioInputDeviceId)) {
+      if (audioInputDevices.some((device: any) => device.deviceId === persistedAudioInputDeviceId)) {
         dispatch(setPhoneInputDevice(persistedAudioInputDeviceId));
       }
     }
@@ -280,7 +280,7 @@ export const ApplicationContextProvider = (props: any) => {
 
   useEffect(() => {
     if (persistedAudioOutputDeviceId && audioOutputDevices.length > 0 && !phoneOutputDevice) {
-      if (audioOutputDevices.some((device) => device.deviceId === persistedAudioOutputDeviceId)) {
+      if (audioOutputDevices.some((device: any) => device.deviceId === persistedAudioOutputDeviceId)) {
         dispatch(setPhoneOutputDevice(persistedAudioOutputDeviceId));
       }
     }

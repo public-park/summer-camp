@@ -3,7 +3,7 @@ import { TokenHelper } from '../helpers/TokenHelper';
 import { InvalidTokenException } from '../exceptions/InvalidTokenException';
 import { log } from '../logger';
 
-export const verifyJwt = (request: Request, response: Response, next: any) => {
+export const verifyJwt = (request: Request, response: Response, next: NextFunction) => {
   const token = request.get('Token');
 
   if (!token) {

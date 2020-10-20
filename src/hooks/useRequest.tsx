@@ -13,13 +13,14 @@ export enum RequestState {
 export const useRequest = () => {
   const [request, setRequest] = useState<Promise<Response> | undefined>();
   const [response, setResponse] = useState<Response | undefined>();
-  const [exception, setException] = useState<RequestException | undefined>();
+  const [exception, setException] = useState<RequestException | RequestTimeoutException | undefined>();
   const [state, setState] = useState<RequestState>(RequestState.Init);
 
   useEffect(() => {
     const execute = async () => {
       setState(RequestState.InProgress);
       setException(undefined);
+      setResponse(undefined);
 
       try {
         setResponse(await request);
@@ -30,7 +31,7 @@ export const useRequest = () => {
         if (error.timeout) {
           setException(new RequestTimeoutException());
         } else {
-          setException(new RequestException(error.message));
+          setException(new RequestException(error.response, error.message));
         }
       }
     };

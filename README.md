@@ -195,7 +195,7 @@ The API endpoint for the REST API and the WebSocket server. If this parameter is
 
 `npm run test-server`
 
-Launches the Jest test runner, edit /`srv-server/test/test-environment.ts` to configure it for yor repository. For details see section [choose-a-storage](##choose-a-storage).
+Launches the Jest test runner, edit /`srv-server/test/test-environment.ts` to configure it for yor repository. For details see section [choose-a-storage](#choose-a-storage).
 
 Right now this project has no automated tests for the React frontend, we will add them at a later stage.
 

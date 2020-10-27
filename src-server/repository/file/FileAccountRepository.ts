@@ -5,8 +5,30 @@ import { BaseRepository } from '../BaseRepository';
 import { FileBaseRepository } from './FileBaseRepository';
 import { AccountNotFoundException } from '../../exceptions/AccountNotFoundException';
 import { InvalidAccountNameException } from '../../exceptions/InvalidAccountNameException';
+import { InvalidDocumentException } from '../../exceptions/InvalidDocumentException';
+import { AccountConfiguration } from '../../models/AccountConfiguration';
 
-export class FileAccountRepository extends FileBaseRepository<Account>
+interface AccountDocument {
+  id: string;
+  name: string;
+  configuration: AccountConfiguration | undefined;
+  createdAt: string;
+}
+
+const isValidAccountDocument = (data: unknown) => {
+  if (typeof data !== 'object') {
+    return false;
+  }
+
+  if (!data || !data.hasOwnProperty('id') || !data.hasOwnProperty('name') || !data.hasOwnProperty('createdAt')) {
+    return false;
+  }
+
+  return true;
+};
+
+export class FileAccountRepository
+  extends FileBaseRepository<Account>
   implements AccountRepository, BaseRepository<Account> {
   accounts: Map<string, Account>;
 
@@ -19,9 +41,7 @@ export class FileAccountRepository extends FileBaseRepository<Account>
   getById = async (id: string) => {
     const account = this.accounts.get(id);
 
-    if (account) {
-      return Promise.resolve(account);
-    }
+    return Promise.resolve(account);
   };
 
   getAll = async () => {
@@ -76,15 +96,12 @@ export class FileAccountRepository extends FileBaseRepository<Account>
     return Promise.resolve(account);
   };
 
-  protected getCopy(account: Account) {
-    return this.fromPlainObject(this.toPlainObject(account));
-  }
-
-  protected toPlainObject(account: Account): any {
-    const item: any = {
+  protected toPlainObject(account: Account): AccountDocument {
+    const item: AccountDocument = {
       id: account.id,
       name: account.name,
-      createdAt: account.createdAt,
+      createdAt: account.createdAt.toString(),
+      configuration: undefined,
     };
 
     if (account.configuration) {
@@ -98,21 +115,29 @@ export class FileAccountRepository extends FileBaseRepository<Account>
     return item;
   }
 
-  protected fromPlainObject(item: any): Account {
-    return new Account(item.id, item.name, item.configuration, item.createdAt);
+  protected fromPlainObject(data: unknown): Account {
+    if (!isValidAccountDocument(data)) {
+      throw new InvalidDocumentException();
+    }
+
+    const item = data as AccountDocument;
+
+    return new Account(item.id, item.name, item.configuration, new Date(item.createdAt));
   }
 
-  protected toPlainObjects(): Array<Account> {
+  protected toPlainObjects(): Array<AccountDocument> {
     return Array.from(this.accounts.values()).map((account) => {
       return this.toPlainObject(account);
     });
   }
 
-  protected fromPlainObjects(list: Array<any>): Map<string, Account> {
+  protected fromPlainObjects(list: Array<unknown>): Map<string, Account> {
     const accounts = new Map<string, Account>();
 
-    list.map((item) => {
-      accounts.set(item.id, new Account(item.id, item.name, item.configuration, item.createdAt));
+    list.map((data) => {
+      const account = this.fromPlainObject(data);
+
+      accounts.set(account.id, account);
     });
 
     return accounts;

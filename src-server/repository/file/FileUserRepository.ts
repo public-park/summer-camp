@@ -14,6 +14,41 @@ import { InvalidUserNameException } from '../../exceptions/InvalidUserNameExcept
 import { InvalidAccountException } from '../../exceptions/InvalidAccountException';
 import { UserNotFoundException } from '../../exceptions/UserNotFoundException';
 import { SamlUserAuthentication } from '../../security/authentication/SamlAuthenticationProvider';
+import { InvalidDocumentException } from '../../exceptions/InvalidDocumentException';
+
+interface UserDocument {
+  id: string;
+  name: string;
+  profileImageUrl: string;
+  tags: string[];
+  activity: UserActivity;
+  accountId: string;
+  authentication: UserAuthentication;
+  role: UserRole;
+  createdAt: string;
+}
+
+const isValidUserDocument = (data: unknown) => {
+  if (typeof data !== 'object') {
+    return false;
+  }
+
+  if (
+    !data ||
+    !data.hasOwnProperty('id') ||
+    !data.hasOwnProperty('name') ||
+    !data.hasOwnProperty('tags') ||
+    !data.hasOwnProperty('activity') ||
+    !data.hasOwnProperty('accountId') ||
+    !data.hasOwnProperty('authentication') ||
+    !data.hasOwnProperty('role') ||
+    !data.hasOwnProperty('createdAt')
+  ) {
+    return false;
+  }
+
+  return true;
+};
 
 export class FileUserRepository extends FileBaseRepository<User> implements UserRepository {
   users: Map<string, User>;
@@ -136,39 +171,47 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     return await this.fromPlainObject(await this.toPlainObject(user));
   }
 
-  protected toPlainObjects(): Array<User> {
+  protected toPlainObjects(): Array<UserDocument> {
     return Array.from(this.users.values()).map((user) => {
       return this.toPlainObject(user);
     });
   }
 
-  protected toPlainObject(user: User): any {
+  protected toPlainObject(user: User): UserDocument {
     return {
       id: user.id,
       name: user.name,
-      profileImageUrl: user.profileImageUrl,
+      profileImageUrl: user.profileImageUrl || '',
       tags: Array.from(user.tags.values()),
       activity: user.activity,
       accountId: user.account.id,
       authentication: user.authentication,
       role: user.role,
-      createdAt: user.createdAt,
+      createdAt: user.createdAt.toString(),
     };
   }
 
-  protected async fromPlainObjects(list: Array<any>): Promise<Map<string, User>> {
+  protected async fromPlainObjects(list: Array<unknown>): Promise<Map<string, User>> {
     const users = new Map<string, User>();
 
     await Promise.all(
       list.map(async (item) => {
-        users.set(item.id, await this.fromPlainObject(item));
+        const user = await this.fromPlainObject(item);
+
+        users.set(user.id, user);
       })
     );
 
     return users;
   }
 
-  protected async fromPlainObject(item: any): Promise<User> {
+  protected async fromPlainObject(data: unknown): Promise<User> {
+    if (!isValidUserDocument(data)) {
+      throw new InvalidDocumentException();
+    }
+
+    const item = data as UserDocument;
+
     const account = await this.accounts.getById(item.accountId);
 
     if (!account) {
@@ -184,7 +227,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
       account,
       item.authentication,
       item.role,
-      item.createdAt
+      new Date(item.createdAt)
     );
   }
 

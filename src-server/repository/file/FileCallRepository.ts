@@ -9,6 +9,42 @@ import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { CallStatus } from '../../models/CallStatus';
 import { CallDirection } from '../../models/CallDirection';
 import { EventEmitter } from 'events';
+import { InvalidDocumentException } from '../../exceptions/InvalidDocumentException';
+
+interface CallDocument {
+  id: string;
+  from: string;
+  to: string;
+  accountId: string;
+  status: CallStatus;
+  direction: CallDirection;
+  userId: string | undefined;
+  callSid: string | undefined;
+  duration: number | undefined;
+  createdAt: string;
+  updatedAt: string | undefined;
+  answeredAt: string | undefined;
+}
+
+const isValidCallDocument = (data: unknown) => {
+  if (typeof data !== 'object') {
+    return false;
+  }
+
+  if (
+    !data ||
+    !data.hasOwnProperty('id') ||
+    !data.hasOwnProperty('from') ||
+    !data.hasOwnProperty('to') ||
+    !data.hasOwnProperty('accountId') ||
+    !data.hasOwnProperty('status') ||
+    !data.hasOwnProperty('direction')
+  ) {
+    return false;
+  }
+
+  return true;
+};
 
 export class FileCallRepository extends FileBaseRepository<Call> implements CallRepository, BaseRepository<Call> {
   calls: Map<string, Call>;
@@ -31,7 +67,7 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     user?: User,
     callSid?: string
   ) {
-    const call = new Call(uuidv4(), callSid, from, to, account.id, user?.id, status, direction);
+    const call = new Call(uuidv4(), callSid, from, to, account.id, user?.id, status, direction, new Date());
 
     call.createdAt = new Date();
 
@@ -44,17 +80,25 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     return Promise.resolve(call);
   }
 
-  protected fromPlainObjects(list: Array<any>): Map<string, Call> {
+  protected fromPlainObjects(list: Array<unknown>): Map<string, Call> {
     const calls = new Map<string, Call>();
 
-    list.map((item) => {
-      calls.set(item.id, this.fromPlainObject(item));
+    list.map((data) => {
+      const call = this.fromPlainObject(data);
+
+      calls.set(call.id, call);
     });
 
     return calls;
   }
 
-  protected fromPlainObject(item: any): Call {
+  protected fromPlainObject(data: unknown): Call {
+    if (!isValidCallDocument(data)) {
+      throw new InvalidDocumentException();
+    }
+
+    const item = data as CallDocument;
+
     return new Call(
       item.id,
       item.callSid,
@@ -66,7 +110,8 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
       item.direction,
       new Date(item.createdAt),
       item.duration,
-      item.updatedAt ? new Date(item.updatedAt) : item.updatedAt
+      item.answeredAt ? new Date(item.answeredAt) : undefined,
+      item.updatedAt ? new Date(item.updatedAt) : undefined
     );
   }
 
@@ -74,30 +119,29 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     const call = this.calls.get(id);
 
     if (call) {
-      return Promise.resolve(this.getCopy(call));
+      return Promise.resolve(call);
     }
   }
 
-  protected getCopy(call: Call) {
-    return this.fromPlainObject(this.toPlainObject(call));
-  }
-
-  protected toPlainObjects(): Array<any> {
+  protected toPlainObjects(): Array<CallDocument> {
     return Array.from(this.calls.values()).map((call) => {
       return this.toPlainObject(call);
     });
   }
 
-  protected toPlainObject(call: Call): any {
+  protected toPlainObject(call: Call): CallDocument {
     return {
       ...call,
+      createdAt: call.createdAt.toString(),
+      updatedAt: call.updatedAt ? call.updatedAt.toString() : undefined,
+      answeredAt: call.answeredAt ? call.answeredAt.toString() : undefined,
     };
   }
 
   async getByCallSid(callSid: string) {
     for (const call of this.calls.values()) {
       if (call.callSid === callSid) {
-        return Promise.resolve(this.getCopy(call));
+        return Promise.resolve(call);
       }
     }
   }
@@ -106,14 +150,14 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     const list = Array.from(this.calls.values()).filter(
       (call, index) => call.userId == user.id && index >= skip && index < limit
     );
-    return Promise.resolve(list.map((call) => this.getCopy(call)).reverse());
+    return Promise.resolve(list.map((call) => call).reverse());
   }
 
   async getByAccount(account: Account, skip: number = 0, limit: number = 50) {
     const list = Array.from(this.calls.values()).filter(
       (call, index) => call.accountId == account.id && index >= skip && index < limit
     );
-    return Promise.resolve(list.map((call) => this.getCopy(call)).reverse());
+    return Promise.resolve(list.map((call) => call).reverse());
   }
 
   async update(call: Call) {
@@ -125,7 +169,7 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
 
     this.eventEmitter.emit('call', call);
 
-    return Promise.resolve(<Call>this.getCopy(call));
+    return Promise.resolve(<Call>call);
   }
 
   async delete(call: Call) {

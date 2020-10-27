@@ -10,7 +10,7 @@ export abstract class FileBaseRepository<T> {
     this.file = path.join(process.cwd(), fileName);
   }
 
-  protected load(): Array<any> {
+  protected load(): Array<unknown> {
     try {
       const data = JSON.parse(fs.readFileSync(this.file, 'utf8'));
 
@@ -26,7 +26,7 @@ export abstract class FileBaseRepository<T> {
     }
   }
 
-  protected async persist(entities: Array<any>): Promise<void> {
+  protected async persist(entities: Array<object>): Promise<void> {
     return fsWithPromise.writeFile(this.file, JSON.stringify(entities, null, 3), 'utf-8');
   }
 

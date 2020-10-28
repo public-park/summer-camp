@@ -14,7 +14,7 @@ Route incoming calls to a group or to a user.
 
 Understand the call data stored by the phone backend.
 
-[How to Work with Call Record](call-data-model.md)
+[The Call Data Model](call-data-model.md)
 
 Salesforce integration, supporting click-to-call and screen-pop
 

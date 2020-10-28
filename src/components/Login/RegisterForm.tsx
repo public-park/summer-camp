@@ -13,6 +13,7 @@ import {
 } from '../../Constants';
 import { RegisterFormInput } from './RegisterFormInput';
 import Alert from '@material-ui/lab/Alert/Alert';
+import { RequestException } from '../../exceptions/RequestException';
 
 interface RegisterFormProps {
   isVisible: boolean;
@@ -27,7 +28,7 @@ export const RegisterForm = ({ isVisible }: RegisterFormProps) => {
   const [isPristine, setIsPristine] = useState(true);
   const [error, setError] = useState('');
 
-  const { response, state, setRequest } = useRequest();
+  const { response, exception, state, setRequest } = useRequest();
 
   useEffect(() => {
     if (isValidName(name).isValid && isValidPassword(password).isValid) {
@@ -38,13 +39,15 @@ export const RegisterForm = ({ isVisible }: RegisterFormProps) => {
   }, [name, password]);
 
   useEffect(() => {
-    if (!response) {
+    if (!exception) {
       return;
     }
 
     setIsPristine(true);
 
-    switch (response?.status) {
+    const response = (exception as RequestException).response;
+
+    switch (response.status) {
       case 409:
         setError('user is already registered');
         break;
@@ -58,7 +61,7 @@ export const RegisterForm = ({ isVisible }: RegisterFormProps) => {
         setError('unknown error');
         break;
     }
-  }, [response]);
+  }, [exception]);
 
   useEffect(() => {
     if (state === RequestState.Success) {

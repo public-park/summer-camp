@@ -76,8 +76,6 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
   };
 
   useEffect(() => {
-    console.log(values.password.length === 0 || values.name.length === 0);
-
     setValues({
       ...values,
       isEmpty: values.password.length === 0 || values.name.length === 0,

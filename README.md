@@ -17,6 +17,7 @@ Summer Camp is a free WebRTC telephony application built in Typescript and React
 - Start or pause recording while on a call
 - Set yourself **available** or **unavailable**. If the user is unavailable callers will hear a text-to-speech voice saying the caller is currently not online
 - Manage presence, if the user is not online the calls are rejected with a message to the caller
+- Call history, a list with all previous calls and additional details such as date, duration and status
 
 ## Application Architecture
 
@@ -32,7 +33,7 @@ The server has a RESTful API users can use with a valid JWT token issues by logi
 
 The client side WebRTC phone application, written in [React](https://reactjs.org/). A user can authenticate, call a phone number and receive phone calls. A user can change the status from available to unavailable, if set to unavailable all incoming calls are rejected.
 
-You find the server-side [TwiML](https://www.twilio.com/docs/voice/twiml) files to customise the message in `src-server/controllers/PhoneCallbackController.handleIncoming`.
+You find the server-side [TwiML](https://www.twilio.com/docs/voice/twiml) files to customise the message in `src-server/controllers/PhoneInboundController.handleConnectToUser`.
 
 The frontend was created with [Create React App](https://github.com/facebook/create-react-app) without any custom setup except adding build scripts and NPM dependencies for the server part.
 
@@ -143,13 +144,13 @@ Open the application settings tab and add the following config variables.
 - `SESSION_SECRET`, the secret to encrypt the JWT session, it should be a large unguessable string
 - `REACT_APP_AUTHENTICATION_MODE`, set this value to `local-password-with-registration` first, this will allow you to register on the server as a new user. After you are registered, you can disable it again to prevent new users from signing up.
 
-- `PUBLIC_BASE_URL`, the public url, set this to protocol and domain you host this project.
+- `PUBLIC_BASE_URL`, the public url, set this to the protocol and domain you application for instance **http://\<your-domain\>.herokuapp.com**.
 
 You are all set, open your app, you can now register your user and follow the in-app setup.
 
 ### Register and Configure after Installation
 
-Open your Heroku app root **https://\<heroku-app-url\>/** and click on register. After registering you are automatically logged in. Click on the setup button and provide your Twilio API credentials, and configure your inbound and outbound setting.
+Open your Heroku app root **https://\<your-domain\>.herokuapp.com/** and register. After the registration is complete you are automatically logged in. Click on the setup button and provide your Twilio API credentials, and configure your inbound and outbound setting.
 
 ## Development
 
@@ -167,7 +168,7 @@ Running the command will start two Node processes with NPM [Concurrently](https:
 
 If you want to load environment variables from a file, install [dotenv](https://www.npmjs.com/package/dotenv) package to handle local environment variables. This project comes with a template for a `.env` file in the root directory.
 
-`REACT_APP_AUTHENTICATION_MODE`, possible values are
+`REACT_APP_AUTHENTICATION_MODE`, valid values are
 
 `saml`, enables [SSO with SAML 2.0](https://github.com/public-park/summer-camp/tree/master/docs/saml-user-authentication.md)
 `local-password`, authenticate users against the local database
@@ -202,6 +203,8 @@ Right now this project has no automated tests for the React frontend, we will ad
 ## Have a question? Missing a specific feature?
 
 We are happy to get your feedback!
+
+You can follow us on Twitter - [Summer Camp @ Twitter](https://twitter.com/getsummercamp)
 
 ## License
 

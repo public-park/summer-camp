@@ -10,6 +10,9 @@ import ApplicationThemeProvider from './ApplicationThemeProvider';
 import { ApplicationContextProvider } from './ApplicationContextProvider';
 import setup from './reducers/SetupReducer';
 import application from './reducers/ApplicationReducer';
+import { enableMapSet } from 'immer';
+
+enableMapSet();
 
 const reducer = combineReducers({
   application: application,

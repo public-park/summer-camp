@@ -11,7 +11,7 @@ export class RequestFactory {
   constructor(url: string) {
     this.url = url;
     this.headers = {};
-    this.deadline = 5000;
+    this.deadline = 8000;
   }
 
   withBody(body: {}) {

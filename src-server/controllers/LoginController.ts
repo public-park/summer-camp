@@ -1,9 +1,9 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { TokenHelper } from '../helpers/TokenHelper';
 import { userRepository, authenticationProvider } from '../worker';
 import { log } from '../logger';
 
-const login = async (req: Request, res: Response, next: any) => {
+const login = async (req: Request, res: Response, next: NextFunction) => {
   log.info(`get user by name: ${req.body.name}`);
 
   try {

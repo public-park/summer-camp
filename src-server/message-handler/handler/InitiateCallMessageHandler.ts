@@ -5,12 +5,12 @@ import { CallStatus } from '../../models/CallStatus';
 import { CallMessage } from '../../models/socket/messages/CallMessage';
 import { InitiateCallMessage } from '../../models/socket/messages/InitiateCallMessage';
 import { Message } from '../../models/socket/messages/Message';
-import { UserWithOnlineState } from '../../pool/UserWithOnlineState';
+import { UserWithSocket } from '../../models/UserWithSocket';
 import { callRepository as calls } from '../../worker';
 import { AcknowledgeMessageHandler } from '../AcknowledgeMessageHandler';
 
 const handle = async (
-  user: UserWithOnlineState,
+  user: UserWithSocket,
   message: InitiateCallMessage,
   acknowledge: AcknowledgeMessageHandler
 ): Promise<CallMessage> => {

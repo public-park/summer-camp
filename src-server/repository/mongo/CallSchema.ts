@@ -17,6 +17,7 @@ export interface CallDocument extends Document {
   direction: CallDirection;
   duration: number | undefined;
   createdAt: Date;
+  answeredAt: Date | undefined;
   updatedAt: Date | undefined;
   toCall: () => Call;
 }
@@ -33,6 +34,7 @@ const CallSchema = new Schema(
     direction: { type: String, required: true },
     duration: { type: Number },
     createdAt: { type: Date, default: Date.now, required: true },
+    answeredAt: { type: Date },
     updatedAt: { type: Date },
   },
   { versionKey: false, collection: 'calls' }
@@ -50,6 +52,7 @@ CallSchema.methods.toCall = function (): Call {
     this.direction,
     this.createdAt,
     this.duration === null ? undefined : this.duration,
+    this.answeredAt === null ? undefined : this.answeredAt,
     this.updatedAt === null ? undefined : this.updatedAt
   );
 };

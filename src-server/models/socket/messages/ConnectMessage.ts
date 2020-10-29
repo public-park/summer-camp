@@ -1,18 +1,23 @@
-import { UserConfiguration, UserWithOnlineStateResponse } from '../../User';
+import { UserPoolManager } from '../../../pool/UserPoolManager';
+import { UserWithPresenceDocument } from '../../documents/UserDocument';
+import { UserConfiguration } from '../../UserConfiguration';
+import { UserWithSocket } from '../../UserWithSocket';
 import { Message, MessageType } from './Message';
 
 export class ConnectMessage extends Message {
   payload: {
-    user: UserWithOnlineStateResponse;
-    configuration: UserConfiguration | null;
+    user: UserWithPresenceDocument;
+    configuration: UserConfiguration | undefined;
+    list: Array<UserWithPresenceDocument>;
   };
 
-  constructor(user: UserWithOnlineStateResponse, configuration: UserConfiguration | null, messageId?: string) {
+  constructor(pool: UserPoolManager, user: UserWithSocket, messageId?: string) {
     super(MessageType.Connect, messageId);
 
     this.payload = {
-      user: user,
-      configuration: configuration,
+      user: user.toUserWithPresenceDocument(),
+      configuration: user.getConfiguration(),
+      list: pool.getAll(user.account).map((user) => user.toUserWithPresenceDocument()),
     };
   }
 }

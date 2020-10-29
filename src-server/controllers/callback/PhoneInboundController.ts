@@ -3,15 +3,15 @@ import VoiceResponse = require('twilio/lib/twiml/VoiceResponse');
 import { callRepository as calls, pool } from '../../worker';
 import { log } from '../../logger';
 import { UserNotFoundException } from '../../exceptions/UserNotFoundException';
-import { CallDirection } from '../../models/CallDirection';
 import { RequestWithAccount } from '../../requests/RequestWithAccount';
-import { CallStatus } from '../../models/CallStatus';
 import { getStatus, getDuration, getFinalInboundCallState } from './CallStatusEventHelper';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
-import { UserWithOnlineState } from '../../pool/UserWithOnlineState';
 import { getCallbackUrl } from './PhoneHelper';
+import { CallStatus } from '../../models/CallStatus';
+import { CallDirection } from '../../models/CallDirection';
+import { UserWithSocket } from '../../models/UserWithSocket';
 
-const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithOnlineState) => {
+const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithSocket) => {
   const { CallSid, From, To } = req.body;
 
   const call = await calls.create(From, To, req.account, CallStatus.Initiated, CallDirection.Inbound, user, CallSid);
@@ -53,7 +53,7 @@ const generateEnqueueTwiml = async (req: RequestWithAccount) => {
   return twiml.toString();
 };
 
-export const generateRejectTwiml = async (req: RequestWithAccount, user?: UserWithOnlineState) => {
+export const generateRejectTwiml = async (req: RequestWithAccount, user?: UserWithSocket) => {
   const { CallSid, From, To } = req.body;
 
   await calls.create(From, To, req.account, CallStatus.NoAnswer, CallDirection.Inbound, user, CallSid);
@@ -75,7 +75,7 @@ const handleConnectWithFilter = async (req: RequestWithAccount, res: Response, n
   try {
     log.info(`${req.body.To} called`);
 
-    let users: Array<UserWithOnlineState> = pool.getAll(req.account);
+    let users: Array<UserWithSocket> = pool.getAll(req.account);
 
     const tag = req.query.tag?.toString();
 

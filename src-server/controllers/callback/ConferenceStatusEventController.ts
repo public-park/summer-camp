@@ -3,7 +3,7 @@ import { TwilioHelper } from '../../helpers/twilio/TwilioHelper';
 import { log } from '../../logger';
 import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
 import { InvalidRequestBodyException } from '../../exceptions/InvalidRequestBodyException';
-import { callRepository as calls, pool } from '../../worker';
+import { callRepository as calls } from '../../worker';
 import { CallStatus } from '../../models/CallStatus';
 
 const rejectIfNotJoinEvent = (event: string) => {

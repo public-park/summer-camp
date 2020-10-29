@@ -7,44 +7,8 @@ import { UserRole } from './UserRole';
 import { AgentRole } from './roles/AgentRole';
 import { UserAuthentication } from './UserAuthenticationProvider';
 import { Account } from './Account';
-import { CallStatus } from './CallStatus';
-import { CallDirection } from './CallDirection';
-
-export interface UserConfiguration {
-  inbound: {
-    isEnabled: boolean;
-    phoneNumber: string | undefined;
-  };
-  outbound: {
-    isEnabled: boolean;
-    mode: string | undefined;
-    phoneNumber: string | undefined;
-  };
-}
-
-export interface UserResponse {
-  id: string;
-  name: string;
-  profileImageUrl: string | undefined;
-  tags: Array<string>;
-  activity: UserActivity;
-  accountId: string;
-  authentication: {
-    provider: string;
-  };
-  role: UserRole;
-}
-
-export interface UserWithOnlineStateResponse extends UserResponse {
-  call: {
-    id: string;
-    from: string;
-    to: string;
-    status: CallStatus | undefined;
-    direction: CallDirection;
-  } | null;
-  sockets: number;
-}
+import { UserConfiguration } from './UserConfiguration';
+import { UserDocument } from './documents/UserDocument';
 
 export class User {
   id: string;
@@ -95,7 +59,7 @@ export class User {
     return role.hasPermission(name);
   }
 
-  toResponse(): UserResponse {
+  toDocument(): UserDocument {
     return {
       id: this.id,
       name: this.name,
@@ -110,14 +74,12 @@ export class User {
     };
   }
 
-  getConfiguration(): UserConfiguration | null {
+  getConfiguration(): UserConfiguration | undefined {
     if (this.account.configuration) {
       return {
         inbound: this.account.configuration.inbound,
         outbound: this.account.configuration.outbound,
       };
-    } else {
-      return null;
     }
   }
 }

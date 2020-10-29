@@ -4,10 +4,10 @@ import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { TwilioHelper } from '../../helpers/twilio/TwilioHelper';
 import { CallNotInProgressException } from '../../exceptions/CallNotInProgressException';
 import { CallStatus } from '../../models/CallStatus';
-import { UserWithOnlineState } from '../../pool/UserWithOnlineState';
 import { RecordMessage } from '../../models/socket/messages/RecordMessage';
+import { UserWithSocket } from '../../models/UserWithSocket';
 
-const handle = async (user: UserWithOnlineState, message: RecordMessage): Promise<RecordMessage> => {
+const handle = async (user: UserWithSocket, message: RecordMessage): Promise<RecordMessage> => {
   const call = await calls.getById(message.payload.id);
 
   if (!call) {

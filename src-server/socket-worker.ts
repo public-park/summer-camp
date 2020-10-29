@@ -3,10 +3,9 @@ import { TokenHelper } from './helpers/TokenHelper';
 import * as WebSocket from 'ws';
 import { WebSocketWithKeepAlive } from './WebSocketWithKeepAlive';
 import { log } from './logger';
-import { UserPool } from './pool/UserPool';
+import { UserPoolManager } from './pool/UserPoolManager';
 import { accountRepository } from './worker';
 import { AccountNotFoundException } from './exceptions/AccountNotFoundException';
-import { UserWithOnlineState } from './pool/UserWithOnlineState';
 import { InvalidHttpHeaderException } from './exceptions/InvalidHttpHeaderException';
 
 import { CloseCode } from './models/socket/CloseCode';
@@ -31,6 +30,7 @@ import { InitiateCallMessage } from './models/socket/messages/InitiateCallMessag
 import { AcknowledgeMessageHandler } from './message-handler/AcknowledgeMessageHandler';
 import { ConnectMessage } from './models/socket/messages/ConnectMessage';
 import { UserNotFoundException } from './exceptions/UserNotFoundException';
+import { UserWithSocket } from './models/UserWithSocket';
 
 interface SocketWorkerOptions {
   server: WebSocket.ServerOptions;
@@ -39,13 +39,13 @@ interface SocketWorkerOptions {
 
 export class SocketWorker {
   options: SocketWorkerOptions;
-  pool: UserPool;
+  pool: UserPoolManager;
   acknowledge: AcknowledgeMessageHandler;
 
   server: WebSocket.Server | undefined;
   keepAliveInterval: NodeJS.Timeout | undefined;
 
-  constructor(options: SocketWorkerOptions, pool: UserPool) {
+  constructor(options: SocketWorkerOptions, pool: UserPoolManager) {
     this.pool = pool;
     this.options = options;
     this.server = undefined;
@@ -53,7 +53,7 @@ export class SocketWorker {
     this.acknowledge = new AcknowledgeMessageHandler();
   }
 
-  async getUserFromHttpHeader(headers: http.IncomingHttpHeaders): Promise<UserWithOnlineState> {
+  async getUserFromHttpHeader(headers: http.IncomingHttpHeaders): Promise<UserWithSocket> {
     if (!headers.userId || !headers.accountId || !headers.token) {
       throw new InvalidHttpHeaderException();
     }
@@ -112,19 +112,22 @@ export class SocketWorker {
 
             let response: Message | undefined;
 
+            // TODO response = SocketManager.handleMessage(this.pool, user, message)
+            //            SocketManager.handleClose(this.pool, socket)
+
             switch (message.header.type) {
               case MessageType.Activity:
-                response = await ActivityMessageHandler.handle(this.pool, user, <ActivityMessage>message);
+                response = await ActivityMessageHandler.handle(this.pool, user, message as ActivityMessage);
                 break;
 
               case MessageType.Tags:
-                response = await TagMessageHandler.handle(user, <TagMessage>message);
+                response = await TagMessageHandler.handle(user, message as TagMessage);
                 break;
 
               case MessageType.InitiateCall:
                 response = await InitiateCallMessageHandler.handle(
                   user,
-                  <InitiateCallMessage>message,
+                  message as InitiateCallMessage,
                   this.acknowledge
                 );
                 break;
@@ -134,15 +137,15 @@ export class SocketWorker {
                 break;
 
               case MessageType.Hold:
-                response = await HoldMessageHandler.handle(user, <HoldMessage>message);
+                response = await HoldMessageHandler.handle(user, message as HoldMessage);
                 break;
 
               case MessageType.Accept:
-                response = await AcceptMessageHandler.handle(user, <AcceptMessage>message);
+                response = await AcceptMessageHandler.handle(user, message as AcceptMessage);
                 break;
 
               case MessageType.Record:
-                response = await RecordMessageHandler.handle(user, <RecordMessage>message);
+                response = await RecordMessageHandler.handle(user, message as RecordMessage);
                 break;
 
               case MessageType.Acknowledge:
@@ -154,7 +157,7 @@ export class SocketWorker {
             }
 
             if (response) {
-              response && socket.send(response.toString());
+              socket.send(response.toString());
             }
           } catch (error) {
             log.error(error);
@@ -180,7 +183,7 @@ export class SocketWorker {
 
         this.pool.add(user);
 
-        user.broadcast(new ConnectMessage(user.toResponse(), user.getConfiguration()));
+        user.broadcast(new ConnectMessage(this.pool, user));
       } catch (error) {
         socket.terminate();
         log.debug(error);
@@ -189,7 +192,7 @@ export class SocketWorker {
 
     this.startKeepAlive();
   }
-
+  // TODO run keepalive on socket manager, and use pool
   startKeepAlive = () => {
     if (!this.server) {
       throw new Error('server does not exist');

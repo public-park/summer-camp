@@ -1,7 +1,6 @@
 import { Response, NextFunction } from 'express';
-import { userRepository as users, authenticationProvider, pool, socketWorker } from '../worker';
+import { userRepository as users, authenticationProvider, pool } from '../worker';
 import { UserActivity } from '../models/UserActivity';
-
 import { RequestWithUser } from '../requests/RequestWithUser';
 import { UserNotFoundException } from '../exceptions/UserNotFoundException';
 import { isValidName, isValidTagList, isValidActivity, isValidRole } from './UserControllerValidator';
@@ -38,7 +37,7 @@ const create = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
     const user = await users.create(req.body.name, undefined, tags, req.user.account, authentication, role, activity);
 
-    res.json(user.toResponse());
+    res.json(user.toDocument());
   } catch (error) {
     return next(error);
   }
@@ -52,7 +51,7 @@ const fetch = async (req: RequestWithUser, res: Response, next: NextFunction) =>
       throw new UserNotFoundException();
     }
 
-    res.json(user.toResponse());
+    res.json(user.toDocument());
   } catch (error) {
     return next(error);
   }
@@ -86,9 +85,9 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
     user = await users.update(req.user.account, user);
 
-    pool.updateIfExists(pool.getUserWithOnlineState(user));
+    pool.updateIfExists(pool.getUserWithSocket(user));
 
-    res.json(user.toResponse());
+    res.json(user.toDocument());
   } catch (error) {
     return next(error);
   }
@@ -104,7 +103,7 @@ const remove = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
     await users.delete(req.user.account, user);
 
-    pool.delete(pool.getUserWithOnlineState(user));
+    pool.delete(pool.getUserWithSocket(user));
 
     res.status(204).end();
   } catch (error) {

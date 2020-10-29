@@ -8,7 +8,6 @@ import { InvalidConfigurationException } from '../../exceptions/InvalidConfigura
 import { log } from '../../logger';
 import { AccountConfiguration } from '../../models/AccountConfiguration';
 import { ParticipantListInstanceCreateOptions } from 'twilio/lib/rest/api/v2010/account/conference/participant';
-import { CallConnectionType } from '../../models/CallConnectionType';
 import { Call } from '../../models/Call';
 import { getCallerId, getCallbackUrl } from '../../controllers/callback/PhoneHelper';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
@@ -74,22 +73,6 @@ export class TwilioHelper {
       }
     }
   }
-
-  getCallConnectionType = (endpoint: string): CallConnectionType => {
-    if (endpoint.startsWith('client:')) {
-      return CallConnectionType.WebRTC;
-    }
-
-    if (endpoint.startsWith('sip:')) {
-      return CallConnectionType.SIP;
-    }
-
-    if (endpoint.startsWith('+')) {
-      return CallConnectionType.PhoneNumber;
-    }
-
-    throw new Error();
-  };
 
   async getCall(callSid: string) {
     return await this.client.calls(callSid).fetch();

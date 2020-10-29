@@ -1,17 +1,17 @@
 import { ActivityMessage } from '../../models/socket/messages/ActivityMessage';
-import { UserPool } from '../../pool/UserPool';
-import { UserWithOnlineState } from '../../pool/UserWithOnlineState';
+import { UserWithSocket } from '../../models/UserWithSocket';
+import { UserPoolManager } from '../../pool/UserPoolManager';
 
 const handle = async (
-  pool: UserPool,
-  user: UserWithOnlineState,
+  pool: UserPoolManager,
+  user: UserWithSocket,
   message: ActivityMessage
 ): Promise<ActivityMessage> => {
   user.activity = message.payload.activity;
 
   await user.persist();
 
-  pool.broadcastToAll(user);
+  pool.broadcast(user);
 
   return new ActivityMessage(user.activity, message.header.id);
 };

@@ -1,10 +1,5 @@
 import { AccountConfiguration } from './AccountConfiguration';
-
-export interface AccountResponse {
-  id: string;
-  name: string;
-  createdAt: Date;
-}
+import { AccountDocument } from './documents/AccountDocument';
 
 export class Account {
   id: string;
@@ -24,7 +19,7 @@ export class Account {
     this.createdAt = createdAt;
   }
 
-  toResponse(): AccountResponse {
+  toDocument(): AccountDocument {
     return {
       id: this.id,
       name: this.name,

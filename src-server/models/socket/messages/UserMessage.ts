@@ -1,12 +1,13 @@
-import { UserResponse } from '../../User';
+import { UserWithPresenceDocument } from '../../documents/UserDocument';
+import { UserWithSocket } from '../../UserWithSocket';
 import { Message, MessageType } from './Message';
 
 export class UserMessage extends Message {
-  payload: UserResponse;
+  payload: Array<UserWithPresenceDocument>;
 
-  constructor(user: UserResponse, messageId?: string) {
+  constructor(user: UserWithSocket, messageId?: string) {
     super(MessageType.User, messageId);
 
-    this.payload = user;
+    this.payload = [user.toUserWithPresenceDocument()];
   }
 }

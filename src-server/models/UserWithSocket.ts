@@ -1,8 +1,9 @@
-import { UserActivity } from '../models/UserActivity';
-import { User, UserWithOnlineStateResponse } from '../models/User';
-import { Call } from '../models/Call';
 import { UserRepository } from '../repository/UserRepository';
 import { WebSocketWithKeepAlive } from '../WebSocketWithKeepAlive';
+import { Call } from './Call';
+import { PresenceDocument, UserWithPresenceDocument } from './documents/UserDocument';
+import { User } from './User';
+import { UserActivity } from './UserActivity';
 
 export class UserSockets {
   private sockets: Array<WebSocketWithKeepAlive>;
@@ -42,7 +43,7 @@ export class UserSockets {
   }
 }
 
-export class UserWithOnlineState extends User {
+export class UserWithSocket extends User {
   call: Call | undefined;
   users: UserRepository;
   sockets: UserSockets;
@@ -73,8 +74,29 @@ export class UserWithOnlineState extends User {
     await this.users.update(this.account, this);
   }
 
-  toResponse(): UserWithOnlineStateResponse {
-    const response = super.toResponse() as UserWithOnlineStateResponse;
+  toUserWithPresenceDocument(): UserWithPresenceDocument {
+    const { id, name, profileImageUrl, tags, role, accountId } = super.toDocument();
+
+    const response: UserWithPresenceDocument = {
+      id,
+      name,
+      profileImageUrl,
+      tags,
+      role,
+      accountId,
+      ...this.toPresenceDocument(),
+    };
+
+    return response;
+  }
+
+  toPresenceDocument(): PresenceDocument {
+    const response: PresenceDocument = {
+      activity: this.activity,
+      isOnline: this.sockets.length() > 0,
+      isAvailable: this.isAvailable,
+      call: null,
+    };
 
     if (this.call) {
       response.call = {
@@ -88,7 +110,7 @@ export class UserWithOnlineState extends User {
       response.call = null;
     }
 
-    response.sockets = this.sockets.length();
+    response.isOnline = this.sockets.length() !== 0 ? true : false;
 
     return response;
   }

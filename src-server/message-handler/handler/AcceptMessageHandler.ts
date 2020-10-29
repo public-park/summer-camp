@@ -1,12 +1,11 @@
-import { UserWithOnlineState } from '../../pool/UserWithOnlineState';
 import { callRepository as calls } from '../../worker';
 import { TwilioHelper } from '../../helpers/twilio/TwilioHelper';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 
 import { AcceptMessage } from '../../models/socket/messages/AcceptMessage';
+import { UserWithSocket } from '../../models/UserWithSocket';
 
-// TODO, use call pool
-const handle = async (user: UserWithOnlineState, message: AcceptMessage): Promise<AcceptMessage> => {
+const handle = async (user: UserWithSocket, message: AcceptMessage): Promise<AcceptMessage> => {
   const call = await calls.getById(message.payload.id);
 
   if (!call) {

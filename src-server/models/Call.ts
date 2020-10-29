@@ -1,19 +1,6 @@
 import { CallStatus } from './CallStatus';
 import { CallDirection } from './CallDirection';
-
-export interface CallResponse {
-  id: string;
-  callSid: string | undefined;
-  from: string;
-  to: string;
-  accountSid: string;
-  userId: string | undefined;
-  status: CallStatus | undefined;
-  direction: CallDirection;
-  createdAt: Date;
-  duration?: number;
-  updatedAt?: Date;
-}
+import { CallDocument, CallStatusDocument } from './documents/CallDocument';
 
 export class Call {
   id: string;
@@ -26,6 +13,7 @@ export class Call {
   direction: CallDirection;
   duration: number | undefined;
   createdAt: Date;
+  answeredAt: Date | undefined;
   updatedAt: Date | undefined;
 
   constructor(
@@ -38,8 +26,9 @@ export class Call {
     status: CallStatus,
     direction: CallDirection,
     createdAt: Date = new Date(),
-    duration?: number,
-    updatedAt?: Date
+    duration: number | undefined = undefined,
+    answeredAt: Date | undefined = undefined,
+    updatedAt: Date | undefined = undefined
   ) {
     this.id = id;
     this.callSid = callSid;
@@ -49,8 +38,9 @@ export class Call {
     this.userId = userId;
     this.status = status;
     this.direction = direction;
-    this.duration = duration;
     this.createdAt = createdAt;
+    this.duration = duration;
+    this.answeredAt = answeredAt;
     this.updatedAt = updatedAt;
   }
 
@@ -58,8 +48,8 @@ export class Call {
     return [CallStatus.InProgress, CallStatus.Initiated, CallStatus.Queued, CallStatus.Ringing].includes(this.status);
   }
 
-  toResponse(): CallResponse {
-    const payload: CallResponse = {
+  toDocument(): CallDocument {
+    const payload: CallDocument = {
       id: this.id,
       callSid: this.callSid,
       from: this.from,
@@ -79,6 +69,24 @@ export class Call {
       payload.updatedAt = this.updatedAt;
     }
 
+    if (this.answeredAt) {
+      payload.answeredAt = this.answeredAt;
+    }
+    return payload;
+  }
+
+  toStatusDocument(): CallStatusDocument {
+    const payload: CallStatusDocument = {
+      id: this.id,
+      from: this.from,
+      to: this.to,
+      status: this.status,
+      direction: this.direction,
+    };
+
+    if (this.answeredAt) {
+      payload.answeredAt = this.answeredAt;
+    }
     return payload;
   }
 }

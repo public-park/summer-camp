@@ -56,7 +56,7 @@ import { MongoUserRepository } from './repository/mongo/MongoUserRepository';
 import { MongoAccountRepository } from './repository/mongo/MongoAccountRepository';
 import { MongoCallRepository } from './repository/mongo/MongoCallRepository';
 import * as mongoose from 'mongoose';
-import { UserPool } from './pool/UserPool';
+import { UserPoolManager } from './pool/UserPoolManager';
 import { PhoneOutboundController } from './controllers/callback/PhoneOutboundController';
 import { PhoneInboundController } from './controllers/callback/PhoneInboundController';
 import { CallStatusEventController } from './controllers/callback/CallStatusEventController';
@@ -110,15 +110,14 @@ export const accountRepository = new MongoAccountRepository();
 export const userRepository = new MongoUserRepository(accountRepository);
 export const callRepository = new MongoCallRepository();
 
-/* Local File Repository 
+/* Local File Repository
 export const accountRepository = new FileAccountRepository('./accounts.json');
 export const userRepository = new FileUserRepository(accountRepository, './users.json');
 export const callRepository = new FileCallRepository('calls.json');
-*/
-
+ */
 export const authenticationProvider = new PasswordAuthenticationProvider();
 
-export const pool = new UserPool(userRepository, callRepository);
+export const pool = new UserPoolManager(userRepository, callRepository);
 
 /* spinning up express */
 export const app = express();
@@ -358,7 +357,12 @@ try {
 }
 
 server.on('upgrade', (request, socket, head) => {
-  socketWorker.server?.handleUpgrade(request, socket, head, function (ws) {
+  if (!socketWorker.server) {
+    log.error('SocketWorker: Server is undefined, cannot handle upgrade');
+    return;
+  }
+
+  socketWorker.server.handleUpgrade(request, socket, head, (ws) => {
     socketWorker.server?.emit('connection', ws, request);
   });
 });

@@ -410,6 +410,11 @@ button {
   padding: 40px;
 }
 
+.phone .expired .status-text {
+  font-weight: 200;
+  margin-bottom: 10px;
+}
+
 .login {
   margin-top: 10px;
   flex: auto;

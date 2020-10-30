@@ -106,6 +106,10 @@ button {
   align-items: center;
 }
 
+.workspace > .header > div button {
+  padding: 10px;
+}
+
 .workspace > .header .name {
   flex-grow: 1;
   margin-left: 10px;
@@ -548,4 +552,32 @@ button {
   padding: 10px;
   justify-content: center;
   display: flex;
+}
+
+.users {
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+  background-color: #fafafa;
+  overflow: auto;
+}
+
+.users .item {
+  border-bottom: 1px solid #dcdcdc;
+  padding: 20px;
+  cursor: pointer;
+}
+
+.users .item > div {
+  display: flex;
+  flex-direction: row;
+}
+
+.users .item .detail {
+  padding-left: 15px;
+}
+
+.users .item .detail .status {
+  font-weight: 200;
+  line-height: 1.8em;
 }

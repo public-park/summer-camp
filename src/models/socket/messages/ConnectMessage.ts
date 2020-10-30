@@ -1,18 +1,11 @@
-import { UserConfiguration, UserWithOnlineStateResponse } from '../../User';
+import { UserWithPresenceDocument } from '../../documents/UserDocument';
+import { UserConfiguration } from '../../UserConfiguration';
 import { Message, MessageType } from './Message';
 
-export class ConnectMessage extends Message {
+export interface ConnectMessage extends Message {
   payload: {
-    user: UserWithOnlineStateResponse;
+    user: UserWithPresenceDocument;
     configuration: UserConfiguration;
+    list: Array<UserWithPresenceDocument>;
   };
-
-  constructor(user: UserWithOnlineStateResponse, configuration: UserConfiguration, messageId?: string) {
-    super(MessageType.Connect, messageId);
-
-    this.payload = {
-      user: user,
-      configuration: configuration,
-    };
-  }
 }

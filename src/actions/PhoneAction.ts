@@ -1,7 +1,7 @@
 import { ActionType } from './ActionType';
 import { PhoneState } from '../phone/PhoneState';
-import { Call } from '../phone/Call';
-import { UserConfiguration } from '../models/User';
+import { Call } from '../models/Call';
+import { UserConfiguration } from '../models/UserConfiguration';
 
 export interface PhoneDisplayAction {
   type: ActionType;

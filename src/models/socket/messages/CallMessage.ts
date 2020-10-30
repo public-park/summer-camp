@@ -1,12 +1,6 @@
-import { CallStatus, CallDirection } from '../../../phone/Call';
+import { CallDocument } from '../../documents/CallDocument';
 import { Message } from './Message';
 
 export interface CallMessage extends Message {
-  payload: {
-    id: string;
-    from: string;
-    to: string;
-    status: CallStatus;
-    direction: CallDirection;
-  };
+  payload: CallDocument;
 }

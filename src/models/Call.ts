@@ -1,4 +1,6 @@
-import { User } from '../models/User';
+import { CallDirection } from './CallDirection';
+import { CallStatus } from './CallStatus';
+import { User } from './User';
 
 export interface Call {
   id: string;
@@ -22,21 +24,4 @@ export interface Call {
   sendDigits: (digits: string) => void;
   onAnswer: (listener: () => void) => void;
   registerConnection: (connection: any) => void;
-}
-
-export enum CallDirection {
-  Inbound = 'inbound',
-  Outbound = 'outbound',
-}
-
-export enum CallStatus {
-  Initiated = 'initiated',
-  Ringing = 'ringing',
-  NoAnswer = 'no-answer',
-  InProgress = 'in-progress',
-  Completed = 'completed',
-  Busy = 'busy',
-  Failed = 'failed',
-  Canceled = 'canceled',
-  Queued = 'queued',
 }

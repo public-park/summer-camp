@@ -31,6 +31,7 @@ export const selectPhoneDisplayValue = (store: Store) => store.application.phone
 export const selectAudioInputDevices = (store: Store) => store.application.devices.audio.input;
 export const selectAudioOutputDevices = (store: Store) => store.application.devices.audio.output;
 export const selectDeviceException = (store: Store) => store.application.devices.exception;
+export const selectUsers = (store: Store) => store.application.users;
 
 export const selectSetupView = (store: Store) => store.setup.view;
 export const selectSetupConfiguration = (store: Store) => store.setup.configuration;

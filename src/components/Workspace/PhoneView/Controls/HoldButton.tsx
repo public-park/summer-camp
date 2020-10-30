@@ -2,8 +2,8 @@ import React, { useState, useContext } from 'react';
 import { ApplicationContext } from '../../../../context/ApplicationContext';
 import { useSelector } from 'react-redux';
 import { selectCallStatus } from '../../../../store/Store';
-import { CallStatus } from '../../../../phone/Call';
 import { CallNotFoundException } from '../../../../exceptions/CallNotFoundException';
+import { CallStatus } from '../../../../models/CallStatus';
 
 export const HoldButton = () => {
   const { call } = useContext(ApplicationContext);

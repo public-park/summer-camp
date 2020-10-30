@@ -1,10 +1,12 @@
-import { Call, CallDirection, CallStatus } from '../Call';
+import { Call } from '../../models/Call';
 import { EventEmitter } from 'events';
 import { User } from '../../models/User';
 import { CallNotConnectedException } from '../../exceptions/CallNotConnectedException';
 import { HoldMessage } from '../../models/socket/messages/HoldMessage';
 import { RecordMessage } from '../../models/socket/messages/RecordMessage';
 import { AcceptMessage } from '../../models/socket/messages/AcceptMessage';
+import { CallDirection } from '../../models/CallDirection';
+import { CallStatus } from '../../models/CallStatus';
 
 export interface TwilioConnection {
   reject: () => void;

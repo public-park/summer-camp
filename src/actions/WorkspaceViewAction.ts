@@ -1,6 +1,12 @@
 import { ActionType } from './ActionType';
 
-export type WorkspaceView = 'PHONE_VIEW' | 'SETUP_VIEW' | 'CALL_HISTORY_VIEW' | 'AUDIO_DEVICE_VIEW' | 'CONNECT_VIEW';
+export type WorkspaceView =
+  | 'PHONE_VIEW'
+  | 'SETUP_VIEW'
+  | 'CALL_HISTORY_VIEW'
+  | 'AUDIO_DEVICE_VIEW'
+  | 'CONNECT_VIEW'
+  | 'USERS_VIEW';
 
 export interface WorkspaceViewAction {
   type: ActionType;

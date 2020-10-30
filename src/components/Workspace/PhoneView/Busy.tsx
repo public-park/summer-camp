@@ -8,9 +8,9 @@ import { HoldButton } from './Controls/HoldButton';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { useSelector } from 'react-redux';
 import { selectCallFrom, selectCallTo, selectCallDirection } from '../../../store/Store';
-import { CallDirection } from '../../../phone/Call';
 import { RecordButton } from './Controls/RecordButton';
 import { CallNotFoundException } from '../../../exceptions/CallNotFoundException';
+import { CallDirection } from '../../../models/CallDirection';
 
 export const Busy = () => {
   const { call } = useContext(ApplicationContext);

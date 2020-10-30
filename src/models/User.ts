@@ -3,14 +3,13 @@ import { UserActivity } from './UserActivity';
 import { UserConnectionState } from './UserConnectionState';
 import { WebSocketNotInStateOpenException } from '../exceptions/WebSocketNotInStateOpenException';
 import { UserRole } from './UserRole';
-
 import { Message, MessageType } from './socket/messages/Message';
 import { ActivityMessage } from './socket/messages/ActivityMessage';
 import { TagMessage } from './socket/messages/TagMessage';
 import { InvalidMessageException } from '../exceptions/InvalidMessageException';
 import { AcknowledgeMessage } from './socket/messages/AcknowledgeMessage';
 import { ConnectMessage } from './socket/messages/ConnectMessage';
-import { CallDirection, CallStatus } from '../phone/Call';
+import { UserConfiguration } from './UserConfiguration';
 
 export class User {
   id: string | undefined;
@@ -25,11 +24,13 @@ export class User {
   configuration: UserConfiguration | undefined;
 
   connection: {
+    // TODO crate separate Connection model
     socket: WebSocket | undefined;
     state: UserConnectionState;
     url: string | undefined;
+    sockets: number | undefined;
   };
-  sockets: number | undefined; // TODO put into connection object?
+
   private eventEmitter: EventEmitter;
 
   constructor() {
@@ -48,6 +49,7 @@ export class User {
       socket: undefined,
       state: UserConnectionState.Closed,
       url: undefined,
+      sockets: 0,
     };
   }
 
@@ -103,14 +105,13 @@ export class User {
             this.accountId = payload.user.accountId;
             this._tags = new Set(payload.user.tags);
             this.role = payload.user.role;
-            this.sockets = payload.user.sockets;
 
             this._setActivity(payload.user.activity);
             this._setConnectionState(UserConnectionState.Open);
 
             this.configuration = payload.configuration;
 
-            this.eventEmitter.emit(MessageType.Connect, message.payload);
+            this.eventEmitter.emit(MessageType.Connect, message);
             break;
 
           case MessageType.Activity:
@@ -118,7 +119,7 @@ export class User {
             break;
 
           case MessageType.Configuration:
-            this.eventEmitter.emit(MessageType.Configuration, message.payload);
+            this.eventEmitter.emit(MessageType.Configuration, message);
             break;
 
           case MessageType.Call:
@@ -126,7 +127,11 @@ export class User {
             break;
 
           case MessageType.Error:
-            this.eventEmitter.emit(MessageType.Error, message.payload);
+            this.eventEmitter.emit(MessageType.Error, message);
+            break;
+
+          case MessageType.User:
+            this.eventEmitter.emit(MessageType.User, message);
             break;
         }
 
@@ -236,40 +241,4 @@ export class User {
   off<T extends Message>(event: MessageType, listener: (message: T) => void) {
     this.eventEmitter.off(event, listener);
   }
-}
-
-export interface UserConfiguration {
-  inbound: {
-    isEnabled: boolean;
-    phoneNumber: string | undefined;
-  };
-  outbound: {
-    isEnabled: boolean;
-    mode: string | undefined;
-    phoneNumber: string | undefined;
-  };
-}
-
-export interface UserResponse {
-  id: string;
-  name: string;
-  profileImageUrl: string | undefined;
-  tags: Array<string>;
-  activity: UserActivity;
-  accountId: string;
-  authentication: {
-    provider: string;
-  };
-  role: UserRole;
-}
-
-export interface UserWithOnlineStateResponse extends UserResponse {
-  call: {
-    id: string;
-    from: string;
-    to: string;
-    status: CallStatus | undefined;
-    direction: CallDirection;
-  } | null;
-  sockets: number;
 }

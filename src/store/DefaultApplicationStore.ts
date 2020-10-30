@@ -1,6 +1,7 @@
 import { ApplicationStore } from './ApplicationStore';
 import { UserActivity } from '../models/UserActivity';
 import { PhoneState } from '../phone/PhoneState';
+import { UserRole } from '../models/UserRole';
 
 export const DefaultApplicationStore: ApplicationStore = {
   user: {
@@ -9,11 +10,12 @@ export const DefaultApplicationStore: ApplicationStore = {
     profileImageUrl: '',
     tags: [],
     activity: UserActivity.Unknown,
-    role: undefined,
-    sockets: undefined,
+    role: UserRole.Agent,
+    accountId: '',
   },
   connection: {
     state: undefined,
+    sockets: 0,
   },
   phone: {
     state: PhoneState.Offline,
@@ -46,4 +48,5 @@ export const DefaultApplicationStore: ApplicationStore = {
   },
   token: undefined,
   page: 'LOGIN_PAGE',
+  users: new Map(),
 };

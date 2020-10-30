@@ -1,17 +1,19 @@
 Call data is stored in a document structure, for each call a single document is created. Not all values are available at all stages of a call, for example the `duration` is saved after the call is completed.
 
-| Field     | Description                                                                                                                                      |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| id        | unique identifier of the call                                                                                                                    |
-| callSid   | Twilio [callSid](https://support.twilio.com/hc/en-us/articles/223180488-What-is-a-Call-SID-)                                                     |
-| from      | origination of the call in [E.164 format](https://en.wikipedia.org/wiki/E.164)                                                                   |
-| to        | destination of the call in [E.164 format](https://en.wikipedia.org/wiki/E.164)                                                                   |
-| accountId | unique account identifier                                                                                                                        |
-| userId    | unique id of the user that handled the call                                                                                                      |
-| status    | status of the call, possible values are, `initiated`, `ringing`, `no-answer`, `in-progress`, `completed`, `busy`, `failed`, `canceled`, `queued` |
-| direction | `inbound` or `outbound`                                                                                                                          |
-| duration  | length of the call in seconds                                                                                                                    |
-| createdAt | timestamp when the call was created                                                                                                              |
+| Field      | Description                                                  |
+| ---------- | ------------------------------------------------------------ |
+| id         | unique identifier of the call                                |
+| callSid    | Twilio [callSid](https://support.twilio.com/hc/en-us/articles/223180488-What-is-a-Call-SID-) |
+| from       | origination of the call in [E.164 format](https://en.wikipedia.org/wiki/E.164) |
+| to         | destination of the call in [E.164 format](https://en.wikipedia.org/wiki/E.164) |
+| accountId  | unique account identifier                                    |
+| userId     | unique id of the user that handled the call                  |
+| status     | status of the call, possible values are, `initiated`, `ringing`, `no-answer`, `in-progress`, `completed`, `busy`, `failed`, `canceled`, `queued` |
+| direction  | `inbound` or `outbound`                                      |
+| duration   | length of the call in seconds                                |
+| createdAt  | timestamp when the call was created                          |
+| updatedAt  | last update on the call record                               |
+| answeredAt | timestamp when the call was accepted                         |
 
 Examples
 
@@ -26,7 +28,8 @@ Examples
   "status": "completed",
   "direction": "outbound",
   "duration": 452,
-  "createdAt": "2020-08-03T18:39:55.847Z"
+  "createdAt": "2020-08-03T18:39:55.847Z",
+  "answeredAt": "2020-08-03T18:40:10.330Z"
 }
 ```
 

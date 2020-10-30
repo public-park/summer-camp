@@ -2,9 +2,9 @@ import { ApplicationStore } from '../store/ApplicationStore';
 import produce from 'immer';
 import { Action } from '../actions/ActionType';
 import { PhoneState } from '../phone/PhoneState';
-import { CallStatus } from '../phone/Call';
 import { IS_PHONE_NUMBER_REGEXP, IS_NUMBER_REGEXP } from '../Constants';
 import { DefaultApplicationStore } from '../store/DefaultApplicationStore';
+import { UserWithPresenceDocument } from '../models/documents/UserDocument';
 
 const application = (state: ApplicationStore = DefaultApplicationStore, action: Action): ApplicationStore => {
   return produce(state, (draft) => {
@@ -46,22 +46,7 @@ const application = (state: ApplicationStore = DefaultApplicationStore, action: 
         break;
 
       case 'CALL_STATE_CHANGE':
-        if (!action.payload) {
-          draft.call = undefined;
-        } else {
-          draft.call = {
-            id: action.payload.id,
-            from: action.payload.from,
-            to: action.payload.to,
-            status: action.payload.status,
-            direction: action.payload.direction,
-            answeredAt: undefined,
-          };
-        }
-
-        if (draft.call && action.payload.status === CallStatus.Ringing) {
-          draft.call.answeredAt = new Date();
-        }
+        draft.call = action.payload;
 
         break;
 
@@ -122,6 +107,10 @@ const application = (state: ApplicationStore = DefaultApplicationStore, action: 
         draft.logout.reason = '';
         draft.token = action.payload.token;
         draft.page = 'WORKSPACE_PAGE';
+        break;
+
+      case 'USER_LIST_UPDATE':
+        action.payload.map((user: UserWithPresenceDocument) => draft.users.set(user.id, user));
         break;
 
       case 'USER_LOGOUT':

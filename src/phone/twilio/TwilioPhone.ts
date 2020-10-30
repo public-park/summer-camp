@@ -1,6 +1,6 @@
 import * as Client from 'twilio-client';
 import { PhoneControl } from '../PhoneControl';
-import { Call, CallDirection, CallStatus } from '../Call';
+import { Call } from '../../models/Call';
 import { TwilioCall, TwilioConnection } from './TwilioCall';
 import { EventEmitter } from 'events';
 import { PhoneState } from '../PhoneState';
@@ -11,6 +11,8 @@ import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { MessageType } from '../../models/socket/messages/Message';
 import { CallMessage } from '../../models/socket/messages/CallMessage';
 import { InitiateCallMessage } from '../../models/socket/messages/InitiateCallMessage';
+import { CallStatus } from '../../models/CallStatus';
+import { CallDirection } from '../../models/CallDirection';
 
 interface DelayedState {
   state: PhoneState;

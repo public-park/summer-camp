@@ -1,7 +1,6 @@
-import { AccountConfiguration } from '../../AccountConfiguration';
-import { UserConfiguration } from '../../User';
+import { UserConfiguration } from '../../UserConfiguration';
 import { Message } from './Message';
 
 export interface ConfigurationMessage extends Message {
-  payload: UserConfiguration | null;
+  payload: UserConfiguration | undefined;
 }

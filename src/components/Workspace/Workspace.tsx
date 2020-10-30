@@ -26,6 +26,7 @@ import { ConnectionLostWithReconnectAlert } from './NotificationLayer/Connection
 import { useAudioDevices } from '../../hooks/useAudioDevices';
 import { setAudioDevicesException, updateAudioDevices } from '../../actions/AudioDeviceAction';
 import { showNotification } from '../../actions/NotificationAction';
+import { UsersView } from './UsersView/UsersView';
 
 const hasLostDevice = (deviceId: string | undefined, devices: MediaDeviceInfo[] | undefined) => {
   if (!deviceId || !devices) {
@@ -53,7 +54,7 @@ export const Workspace = () => {
     if (exception) {
       dispatch(setAudioDevicesException(exception));
     }
-  }, [exception]);
+  }, [exception, dispatch]);
 
   useEffect(() => {
     if (devices) {
@@ -66,21 +67,21 @@ export const Workspace = () => {
         })
       );
     }
-  }, [devices]);
+  }, [devices, dispatch]);
 
   useEffect(() => {
     if (hasLostDevice(phoneInputDevice, audioInputDevices)) {
       dispatch(lostPhoneInputDevice());
       dispatch(showNotification('Your active microphone device was removed.'));
     }
-  }, [phoneInputDevice, audioInputDevices]);
+  }, [phoneInputDevice, audioInputDevices, dispatch]);
 
   useEffect(() => {
     if (hasLostDevice(phoneOutputDevice, audioOutputDevices)) {
       dispatch(lostPhoneOutputDevice());
       dispatch(showNotification('Your active speaker device was removed.'));
     }
-  }, [phoneOutputDevice, audioOutputDevices]);
+  }, [phoneOutputDevice, audioOutputDevices, dispatch]);
 
   const getWorkspaceView = (view: WorkspaceView) => {
     switch (view) {
@@ -97,6 +98,9 @@ export const Workspace = () => {
         return <AudioDeviceView />;
       case 'CONNECT_VIEW':
         return <ConnectView />;
+
+      case 'USERS_VIEW':
+        return <UsersView />;
     }
   };
 

@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 import { User } from '../models/User';
 import { PhoneControl } from '../phone/PhoneControl';
-import { Call } from '../phone/Call';
+import { Call } from '../models/Call';
 
 export interface ApplicationContextType {
   user: User;

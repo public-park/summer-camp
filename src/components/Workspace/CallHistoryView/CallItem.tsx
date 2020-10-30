@@ -3,8 +3,9 @@ import { useCallDurationFormat } from '../PhoneView/hooks/useCallDurationFormat'
 import { DateTime } from 'luxon';
 import { updatePhoneDisplay } from '../../../actions/PhoneAction';
 import { useDispatch } from 'react-redux';
-import { CallDirection, CallStatus } from '../../../phone/Call';
 import { setWorkspaceView } from '../../../actions/WorkspaceViewAction';
+import { CallDirection } from '../../../models/CallDirection';
+import { CallStatus } from '../../../models/CallStatus';
 
 interface CallItemProps {
   to: string;

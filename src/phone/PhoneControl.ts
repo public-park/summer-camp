@@ -1,4 +1,4 @@
-import { Call } from './Call';
+import { Call } from '../models/Call';
 import { PhoneState } from './PhoneState';
 import { User } from '../models/User';
 

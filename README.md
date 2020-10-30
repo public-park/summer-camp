@@ -33,7 +33,7 @@ The server has a RESTful API users can use with a valid JWT token issues by logi
 
 The client side WebRTC phone application, written in [React](https://reactjs.org/). A user can authenticate, call a phone number and receive phone calls. A user can change the status from available to unavailable, if set to unavailable all incoming calls are rejected.
 
-You find the server-side [TwiML](https://www.twilio.com/docs/voice/twiml) files to customise the message in `src-server/controllers/PhoneInboundController.handleConnectToUser`.
+You find the server-side [TwiML](https://www.twilio.com/docs/voice/twiml) files to customise the message in `src-server/controllers/callback/PhoneInboundController.handleConnectToUser`.
 
 The frontend was created with [Create React App](https://github.com/facebook/create-react-app) without any custom setup except adding build scripts and NPM dependencies for the server part.
 
@@ -182,7 +182,9 @@ The API endpoint for the REST API and the WebSocket server. If this parameter is
 
 `PUBLIC_BASE_URL` the public url of the hosted application, for example **https://{your-domain-name-dot-com}**. This parameter is used by the server to determine the public address, for example to set webhooks on Twilio calls.
 
-`NODE_ENV` Specifies the environment in which an application is running, staging, production, testing, etc. In production mode the server is serving the static React phone UI from the build directory.
+`NODE_ENV` Specifies the environment in which an application is running, staging, production, testing, etc. In `production` mode the server is serving the static React phone UI from the build directory.
+
+`LOG_LEVEL`, set NodeJS backend level, this project uses the [pino](https://github.com/pinojs/pino) logger. The default value is set to `info`, you can set it to `fatal`, `error`, `warn`, `debug`, `trace`.
 
 ## Guides
 

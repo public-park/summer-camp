@@ -7,7 +7,7 @@ export const Offline = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowOfflineNotification(true);
-    }, 2000);
+    }, 4000);
 
     setTimer(timer);
 

@@ -4,7 +4,9 @@ import { LoadIndicator } from '../ConfigurationView/LoadIndicator';
 export const Expired = () => {
   return (
     <div className="expired">
-      Phone expired, fetching a new token .... <LoadIndicator />
+      <div className="status-text">Phone expired, fetching a new token ....</div>
+
+      <LoadIndicator />
     </div>
   );
 };

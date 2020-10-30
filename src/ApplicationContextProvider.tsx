@@ -118,15 +118,8 @@ export const ApplicationContextProvider = (props: any) => {
     });
 
     user.onReady(() => {
-      phone?.destroy();
-
       dispatch(setPhoneConfiguration(user.configuration));
-
-      if (user.configuration) {
-        dispatch(setWorkspaceView('CONNECT_VIEW'));
-      } else {
-        dispatch(setWorkspaceView('PHONE_VIEW'));
-      }
+      dispatch(setWorkspaceView('PHONE_VIEW'));
     });
 
     user.onError((text: string) => {
@@ -149,12 +142,8 @@ export const ApplicationContextProvider = (props: any) => {
     const phone = new TwilioPhone();
 
     phone.onStateChanged((state: PhoneState) => {
+      console.debug(`Phone onStateChange: ${state}`);
       dispatch(setPhoneState(state));
-
-      /* switch to phone view upon first connect */
-      if (view === 'CONNECT_VIEW' && state === PhoneState.Idle) {
-        dispatch(setWorkspaceView('PHONE_VIEW'));
-      }
     });
 
     phone.onCallStateChanged((call) => {
@@ -169,13 +158,6 @@ export const ApplicationContextProvider = (props: any) => {
 
     phone.onError((error: Error) => {
       dispatch(setPhoneException(error));
-
-      if (
-        view === 'CONNECT_VIEW' &&
-        [PhoneState.Error, PhoneState.Offline, PhoneState.Connecting].includes(phoneState)
-      ) {
-        dispatch(setWorkspaceView('PHONE_VIEW'));
-      }
     });
 
     phone.registerUser(user);

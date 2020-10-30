@@ -39,7 +39,7 @@ export class TwilioPhone implements PhoneControl {
     this.delayedState = undefined;
     this.inputDeviceId = undefined;
     this.call = undefined;
-    this.ringtone = new Audio('https://sdk.twilio.com/js/client/sounds/releases/1.0.0/incoming.mp3?cache=1.12.3');
+    this.ringtone = new Audio('https://sdk.twilio.com/js/client/sounds/releases/1.0.0/incoming.mp3?cache=1.12.5');
 
     this.eventEmitter = new EventEmitter();
 
@@ -91,7 +91,9 @@ export class TwilioPhone implements PhoneControl {
   }
 
   init(token: string) {
-    this.setState(PhoneState.Connecting);
+    if ([PhoneState.Offline, PhoneState.Expired].includes(this.state)) {
+      this.setState(PhoneState.Connecting);
+    }
 
     try {
       this.device.setup(token, {
@@ -120,9 +122,13 @@ export class TwilioPhone implements PhoneControl {
       });
 
       this.device.on('ready', () => {
-        console.log(`Twilio Device 'onReady' event`);
+        console.log(`XXX Twilio Device 'onReady' event`);
 
         this.setState(PhoneState.Idle);
+      });
+
+      this.device.on('offline', () => {
+        console.log(`XXX Twilio Device 'OFfline' event`);
       });
 
       this.device.on('error', (error: any) => {

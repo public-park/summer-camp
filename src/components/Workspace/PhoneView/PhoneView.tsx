@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import { useSelector } from 'react-redux';
 import { selectPhoneState, selectPhoneError, selectConfiguration } from '../../../store/Store';
@@ -9,6 +9,7 @@ import { Offline } from './Offline';
 import { Expired } from './Expired';
 import { PhoneException } from './PhoneException';
 import { PhoneState } from '../../../phone/PhoneState';
+import { Connect } from './Connect';
 
 export const PhoneView = () => {
   const state = useSelector(selectPhoneState);
@@ -17,7 +18,7 @@ export const PhoneView = () => {
 
   const getPhoneView = (): JSX.Element | undefined => {
     if (!configuration) {
-      return <PhoneException text="the phone is not configured yet, please go to setup" />;
+      return <PhoneException text="The phone is not configured yet, please go to setup" />;
     }
 
     if (error) {
@@ -35,6 +36,8 @@ export const PhoneView = () => {
         return <Offline />;
       case PhoneState.Expired:
         return <Expired />;
+      case PhoneState.Connecting:
+        return <Connect />;
     }
   };
 

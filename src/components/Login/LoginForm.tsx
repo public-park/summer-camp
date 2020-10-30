@@ -38,7 +38,7 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
     name: '',
     password: '',
     showPassword: false,
-    isEmpty: true,
+    isEmpty: false,
   });
 
   const handleShowPassword = () => {

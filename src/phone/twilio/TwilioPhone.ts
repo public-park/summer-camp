@@ -122,13 +122,13 @@ export class TwilioPhone implements PhoneControl {
       });
 
       this.device.on('ready', () => {
-        console.log(`XXX Twilio Device 'onReady' event`);
+        console.debug(`Twilio Device 'onReady' event`);
 
         this.setState(PhoneState.Idle);
       });
 
       this.device.on('offline', () => {
-        console.log(`XXX Twilio Device 'OFfline' event`);
+        console.debug(`Twilio Device 'offline' event`);
       });
 
       this.device.on('error', (error: any) => {

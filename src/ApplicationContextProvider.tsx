@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { UserActivity } from './models/UserActivity';
 import { UserConnectionState } from './models/UserConnectionState';
 import { getWebSocketUrl, getUrl } from './helpers/UrlHelper';
-import { User, UserConfiguration } from './models/User';
+import { User } from './models/User';
 import { TwilioPhone } from './phone/twilio/TwilioPhone';
 import { setActivity, setConnectionState, setLogout, setLogin } from './actions/UserAction';
 import { PhoneState } from './phone/PhoneState';
@@ -37,7 +37,7 @@ import { useQueryStringToken } from './hooks/useQueryStringToken';
 import { useSalesforceOpenCti } from './hooks/useSalesforceOpenCti';
 */
 import { request } from './helpers/api/RequestHelper';
-import { Call, CallDirection, CallStatus } from './phone/Call';
+import { Call } from './models/Call';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { PhoneControl } from './phone/PhoneControl';
 import { useFetchPhoneToken } from './hooks/useFetchPhoneToken';
@@ -45,6 +45,13 @@ import { useFetchPhoneToken } from './hooks/useFetchPhoneToken';
 import { setWorkspaceView } from './actions/WorkspaceViewAction';
 import { CloseCode } from './models/socket/CloseCode';
 import { showNotification } from './actions/NotificationAction';
+import { MessageType } from './models/socket/messages/Message';
+import { UserMessage } from './models/socket/messages/UserMessage';
+import { updateUserList } from './actions/UserListAction';
+import { CallDirection } from './models/CallDirection';
+import { CallStatus } from './models/CallStatus';
+import { ConnectMessage } from './models/socket/messages/ConnectMessage';
+import { ConfigurationMessage } from './models/socket/messages/ConfigurationMessage';
 
 export const ApplicationContextProvider = (props: any) => {
   const phoneState = useSelector(selectPhoneState);
@@ -84,67 +91,6 @@ export const ApplicationContextProvider = (props: any) => {
   const login = (token: string) => {
     const user = new User();
 
-    setUser(user);
-    setPersistetToken(token);
-
-    user.login(getWebSocketUrl(), token);
-
-    dispatch(setLogin(token));
-  };
-
-  const logout = async (reason?: string) => {
-    await user.logout();
-
-    setPersistetToken(undefined);
-
-    dispatch(setLogout(reason));
-
-    /* manually reject incoming calls */
-    if (phoneState === PhoneState.Ringing && call) {
-      call.reject();
-    }
-
-    phone?.destroy();
-  };
-
-  useEffect(() => {
-    const phone = new TwilioPhone();
-
-    setPhone(phone);
-
-    phone.onStateChanged((state: PhoneState) => {
-      dispatch(setPhoneState(state));
-
-      /* switch to phone view upon first connect */
-      if (view === 'CONNECT_VIEW' && state === PhoneState.Idle) {
-        dispatch(setWorkspaceView('PHONE_VIEW'));
-      }
-    });
-
-    phone.onCallStateChanged((call) => {
-      if (call && call.direction === CallDirection.Inbound && call.status === CallStatus.Ringing) {
-        //doScreenPop(call.phoneNumber);
-      }
-
-      dispatch(setPhoneCall(call));
-
-      setCall(call);
-    });
-
-    // TODO, add phone exception type
-    phone.onError((error: Error) => {
-      dispatch(setPhoneException(error));
-
-      if (
-        view === 'CONNECT_VIEW' &&
-        [PhoneState.Error, PhoneState.Offline, PhoneState.Connecting].includes(phoneState)
-      ) {
-        dispatch(setWorkspaceView('PHONE_VIEW'));
-      }
-    });
-  }, []);
-
-  useEffect(() => {
     user.onConnectionStateChanged((state: UserConnectionState, code: number | undefined) => {
       console.log(`connection state changed to: ${state}`);
 
@@ -188,10 +134,75 @@ export const ApplicationContextProvider = (props: any) => {
       console.error(text);
     });
 
-    if (phone) {
-      phone.registerUser(user);
+    user.on<UserMessage>(MessageType.User, (message: UserMessage) => {
+      dispatch(updateUserList(message.payload));
+    });
+
+    user.on<ConnectMessage>(MessageType.Connect, (message: ConnectMessage) => {
+      dispatch(updateUserList(message.payload.list));
+    });
+
+    user.on<ConfigurationMessage>(MessageType.Configuration, (message: ConfigurationMessage) => {
+      dispatch(setPhoneConfiguration(message.payload));
+    });
+
+    const phone = new TwilioPhone();
+
+    phone.onStateChanged((state: PhoneState) => {
+      dispatch(setPhoneState(state));
+
+      /* switch to phone view upon first connect */
+      if (view === 'CONNECT_VIEW' && state === PhoneState.Idle) {
+        dispatch(setWorkspaceView('PHONE_VIEW'));
+      }
+    });
+
+    phone.onCallStateChanged((call) => {
+      if (call && call.direction === CallDirection.Inbound && call.status === CallStatus.Ringing) {
+        //doScreenPop(call.phoneNumber);
+      }
+
+      dispatch(setPhoneCall(call));
+
+      setCall(call);
+    });
+
+    phone.onError((error: Error) => {
+      dispatch(setPhoneException(error));
+
+      if (
+        view === 'CONNECT_VIEW' &&
+        [PhoneState.Error, PhoneState.Offline, PhoneState.Connecting].includes(phoneState)
+      ) {
+        dispatch(setWorkspaceView('PHONE_VIEW'));
+      }
+    });
+
+    phone.registerUser(user);
+
+    user.login(getWebSocketUrl(), token);
+
+    setUser(user);
+    setPhone(phone);
+    setPersistetToken(token);
+
+    dispatch(setLogin(token));
+  };
+
+  const logout = async (reason?: string) => {
+    await user.logout();
+
+    setPersistetToken(undefined);
+
+    dispatch(setLogout(reason));
+
+    /* manually reject incoming calls */
+    if (phoneState === PhoneState.Ringing && call) {
+      call.reject();
     }
-  }, [user, phone]);
+
+    phone?.destroy();
+  };
 
   useEffect(() => {
     if (phoneToken && phone) {
@@ -204,13 +215,13 @@ export const ApplicationContextProvider = (props: any) => {
     if (phoneTokenException) {
       dispatch(setPhoneException(new Error('Could not fetch token, check your internet connection')));
     }
-  }, [phoneTokenException]);
+  }, [phoneTokenException, dispatch]);
 
   useEffect(() => {
     if (phoneTokenFetched) {
       dispatch(setPhoneToken(phoneTokenFetched));
     }
-  }, [phoneTokenFetched]);
+  }, [phoneTokenFetched, dispatch]);
 
   useEffect(() => {
     const updateDevice = async (deviceId: string) => {
@@ -224,7 +235,7 @@ export const ApplicationContextProvider = (props: any) => {
     if (phoneInputDevice && phoneState === PhoneState.Idle) {
       updateDevice(phoneInputDevice);
     }
-  }, [phoneInputDevice, phoneState]);
+  }, [phoneInputDevice, phoneState, phone]);
 
   useEffect(() => {
     const updateDevice = async (deviceId: string) => {
@@ -238,7 +249,7 @@ export const ApplicationContextProvider = (props: any) => {
     if (phoneOutputDevice && phoneState === PhoneState.Idle) {
       updateDevice(phoneOutputDevice);
     }
-  }, [phoneOutputDevice, phoneState]);
+  }, [phoneOutputDevice, phoneState, phone]);
 
   useEffect(() => {
     if (phoneInputDevice) {
@@ -272,25 +283,25 @@ export const ApplicationContextProvider = (props: any) => {
 
   useEffect(() => {
     if (persistedAudioInputDeviceId && audioInputDevices.length > 0 && !phoneInputDevice) {
-      if (audioInputDevices.some((device: any) => device.deviceId === persistedAudioInputDeviceId)) {
+      if (audioInputDevices.some((device: MediaDeviceInfo) => device.deviceId === persistedAudioInputDeviceId)) {
         dispatch(setPhoneInputDevice(persistedAudioInputDeviceId));
       }
     }
-  }, [persistedAudioInputDeviceId, phoneInputDevice, audioInputDevices]);
+  }, [persistedAudioInputDeviceId, phoneInputDevice, audioInputDevices, dispatch]);
 
   useEffect(() => {
     if (persistedAudioOutputDeviceId && audioOutputDevices.length > 0 && !phoneOutputDevice) {
-      if (audioOutputDevices.some((device: any) => device.deviceId === persistedAudioOutputDeviceId)) {
+      if (audioOutputDevices.some((device: MediaDeviceInfo) => device.deviceId === persistedAudioOutputDeviceId)) {
         dispatch(setPhoneOutputDevice(persistedAudioOutputDeviceId));
       }
     }
-  }, [persistedAudioOutputDeviceId, phoneOutputDevice, audioOutputDevices]);
+  }, [persistedAudioOutputDeviceId, phoneOutputDevice, audioOutputDevices, dispatch]);
 
   useEffect(() => {
     if (isResume && token && connectionState === UserConnectionState.Closed) {
       user.login(getWebSocketUrl(), token);
     }
-  }, [isResume]);
+  }, [isResume, user]);
 
   useEffect(() => {
     if (queryStringToken) {

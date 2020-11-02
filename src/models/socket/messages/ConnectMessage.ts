@@ -1,6 +1,6 @@
 import { UserWithPresenceDocument } from '../../documents/UserDocument';
 import { UserConfiguration } from '../../UserConfiguration';
-import { Message, MessageType } from './Message';
+import { Message } from './Message';
 
 export interface ConnectMessage extends Message {
   payload: {

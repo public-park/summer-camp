@@ -33,10 +33,16 @@ export const Login = () => {
             <SamlRedirect />
           ) : (
             <Paper variant="outlined" style={{ marginTop: '25px' }}>
-              <Tabs value={tab} indicatorColor="primary" textColor="primary" onChange={changeTab}>
-                <Tab value="login" label="Login" />
+              <Tabs
+                className="intro-tabs"
+                value={tab}
+                indicatorColor="primary"
+                textColor="primary"
+                onChange={changeTab}
+              >
+                <Tab className="login" value="login" label="Login" />
                 {process.env.REACT_APP_AUTHENTICATION_MODE === 'local-password-with-registration' && (
-                  <Tab value="register" label="Register" />
+                  <Tab className="register" value="register" label="Register" />
                 )}
               </Tabs>
               <LoginForm isVisible={tab === 'login'} />

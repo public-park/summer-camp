@@ -23,29 +23,17 @@ interface LoginFormProps {
   isVisible: boolean;
 }
 
-interface LoginFormValues {
-  name: string;
-  password: string;
-  showPassword: boolean;
-  isEmpty: boolean;
-}
-
 export const LoginForm = ({ isVisible }: LoginFormProps) => {
   const { login } = useContext(ApplicationContext);
   const { response, exception, state, setRequest } = useRequest();
 
-  const [values, setValues] = useState<LoginFormValues>({
-    name: '',
-    password: '',
-    showPassword: false,
-    isEmpty: false,
-  });
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(false);
 
   const handleShowPassword = () => {
-    setValues({
-      ...values,
-      showPassword: !values.showPassword,
-    });
+    setShowPassword(!showPassword);
   };
 
   const handleSubmit = async (e: MouseEvent) => {
@@ -53,39 +41,29 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
 
     const url = getUrl('login');
     const payload = {
-      name: values.name,
-      password: values.password,
+      name: name,
+      password: password,
     };
 
-    console.log(`login: ${values.name} via endpoint ${url}`);
+    console.log(`login: ${name} via endpoint ${url}`);
 
     setRequest(create(url).post(payload));
   };
 
   useEffect(() => {
-    if (response) {
+    if (response && response.body.token) {
       login(response.body.token);
     }
-  }, [response]);
-
-  const handleChange = (name: string) => (event: React.ChangeEvent<{ value: unknown }>) => {
-    setValues({
-      ...values,
-      [name]: event.target.value,
-    });
-  };
+  }, [response, login]);
 
   useEffect(() => {
-    setValues({
-      ...values,
-      isEmpty: values.password.length === 0 || values.name.length === 0,
-    });
-  }, [values.name, values.password]);
+    setIsEmpty(password.length === 0 || name.length === 0);
+  }, [name, password]);
 
   return (
     <div hidden={!isVisible}>
       <CardContent>
-        <form style={{ paddingTop: '10px' }} noValidate autoComplete="off">
+        <form className="login-form" noValidate autoComplete="off">
           <div>
             <FormControl fullWidth variant="outlined">
               <InputLabel htmlFor="outlined-adornment-password">Name</InputLabel>
@@ -95,9 +73,9 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
                 type="text"
                 style={{ marginBottom: '20px' }}
                 autoComplete="on"
-                value={values.name}
-                onChange={handleChange('name')}
-                id="name-login-input"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                name="name"
                 label="Name"
               />
             </FormControl>
@@ -109,15 +87,15 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
               <OutlinedInput
                 disabled={state === 'InProgress'}
                 style={{ marginBottom: '20px' }}
-                id="password-login-input"
-                type={values.showPassword ? 'text' : 'password'}
-                value={values.password}
-                onChange={handleChange('password')}
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
                 autoComplete="on"
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton aria-label="toggle password visibility" onClick={handleShowPassword} edge="end">
-                      {values.showPassword ? <Visibility /> : <VisibilityOff />}
+                      {showPassword ? <Visibility /> : <VisibilityOff />}
                     </IconButton>
                   </InputAdornment>
                 }
@@ -127,17 +105,22 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
           </div>
           <div>
             <Button
-              disabled={state === 'InProgress' || values.isEmpty}
+              disabled={state === 'InProgress' || isEmpty}
               fullWidth
               onClick={handleSubmit}
               variant="contained"
               color="primary"
+              name="submit"
             >
               GO
             </Button>
           </div>
         </form>
-        {exception instanceof RequestException && <Typography style={{ marginTop: '5px' }}>Login failed</Typography>}
+        {exception instanceof RequestException && (
+          <Typography className="login-error" style={{ marginTop: '5px' }}>
+            Login failed
+          </Typography>
+        )}
         {exception instanceof RequestTimeoutException && (
           <Typography style={{ marginTop: '5px' }}>Server did not respond, check your internet connection</Typography>
         )}

@@ -1,5 +1,7 @@
 # Summer Camp
 
+![Node.js](https://github.com/public-park/summer-camp/workflows/Node.js/badge.svg?event=push)
+
 Summer Camp is a free WebRTC telephony application built in Typescript and React. It is a phone for a single user and supports inbound and outbound calls.
 
 <p align="center">

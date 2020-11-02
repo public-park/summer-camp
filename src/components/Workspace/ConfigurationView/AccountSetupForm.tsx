@@ -79,7 +79,10 @@ export const AccountSetupForm = () => {
         <Typography variant="h5" gutterBottom>
           Account Setup
         </Typography>
-
+        <Typography variant="body1" gutterBottom>
+          This phone uses Twilio for WebRTC phone calls. You need an Twilio account to complete the setup. You can
+          create an API key on the <a href="https://www.twilio.com/docs/iam/access-tokens">Twilio Console </a>.
+        </Typography>
         <form style={{ paddingTop: '10px' }} noValidate autoComplete="off">
           <FormControl fullWidth>
             <AccountSetupFormInput

@@ -46,15 +46,15 @@ export const useAudioDevices = () => {
     };
   };
 
-  const getAudioDevices = async () => {
-    try {
-      setDevices(await getAllAudioDevices());
-    } catch (exception) {
-      setException(exception);
-    }
-  };
-
   useEffect(() => {
+    const getAudioDevices = async () => {
+      try {
+        setDevices(await getAllAudioDevices());
+      } catch (exception) {
+        setException(exception);
+      }
+    };
+
     getAudioDevices();
     addAudioDevicesListener(getAudioDevices);
 

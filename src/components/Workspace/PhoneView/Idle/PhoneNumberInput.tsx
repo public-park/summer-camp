@@ -1,4 +1,4 @@
-import React, { ChangeEvent, ClipboardEvent } from 'react';
+import React, { ChangeEvent } from 'react';
 import { selectPhoneDisplayValue } from '../../../../store/Store';
 import { useSelector, useDispatch } from 'react-redux';
 import { updatePhoneDisplay } from '../../../../actions/PhoneAction';

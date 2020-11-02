@@ -5,6 +5,7 @@ import { isValidName } from './UserControllerValidator';
 import { UserRole } from '../models/UserRole';
 import { log } from '../logger';
 import { isValidPassword } from './RegisterControllerValidator';
+import { UserActivity } from '../models/UserActivity';
 
 const register = async (req: Request, res: Response, next: NextFunction) => {
   log.debug(`get user by name: ${req.body.name}`);
@@ -25,7 +26,8 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
       new Set(['none']),
       account,
       authentication,
-      UserRole.Owner
+      UserRole.Owner,
+      UserActivity.Away
     );
 
     const payload = {

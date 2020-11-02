@@ -57,7 +57,7 @@ export const PhoneNumberConfigurationPanel = () => {
     }
 
     init();
-  }, []);
+  }, [user, dispatch]);
 
   useEffect(() => {
     if (phoneNumbers.length === 0) {
@@ -95,7 +95,7 @@ export const PhoneNumberConfigurationPanel = () => {
 
     dispatch(validateConfigurationLocal(true));
     return;
-  }, [phoneNumbers, inbound, outbound]);
+  }, [phoneNumbers, inbound, outbound, dispatch]);
 
   return (
     <Card className="phone-number-configuration-panel" variant="outlined">
@@ -105,7 +105,7 @@ export const PhoneNumberConfigurationPanel = () => {
         ) : (
           <div>
             <Typography variant="h5" gutterBottom>
-              Inbound
+              Incoming
             </Typography>
 
             {phoneNumbers.length === 0 ? (
@@ -121,7 +121,7 @@ export const PhoneNumberConfigurationPanel = () => {
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateInbound(event.target.checked)}
                   />
                 }
-                label="Use Phone for Inbound"
+                label="Use Phone for Incoming Calls"
                 labelPlacement="end"
               />
             )}
@@ -129,7 +129,7 @@ export const PhoneNumberConfigurationPanel = () => {
             {inbound.isEnabled && phoneNumbers.length > 0 && <InboundCanvas />}
 
             <Typography className="outbound-title" variant="h5" gutterBottom>
-              Outbound
+              Outgoing
             </Typography>
 
             <FormControlLabel
@@ -142,7 +142,7 @@ export const PhoneNumberConfigurationPanel = () => {
                   onChange={(event: React.ChangeEvent<HTMLInputElement>) => updateOutbound(event.target.checked)}
                 />
               }
-              label="Use Phone for Inbound"
+              label="Use Phone for Outgoing Calls"
               labelPlacement="end"
             />
 

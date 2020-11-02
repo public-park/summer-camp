@@ -16,18 +16,6 @@ export const usePageLifecycle = () => {
     setIsOnline(state === 'online');
   };
 
-  const getTimeInSeconds = () => {
-    return Math.floor(new Date().getTime() / 1000);
-  };
-
-  const checkIfResume = (lastCheckInSeconds: number) => {
-    if (getTimeInSeconds() > lastCheckInSeconds + intervalInSeconds + gracePeriodInSeconds) {
-      return true;
-    } else {
-      return false;
-    }
-  };
-
   const getMinutes = (seconds: number) => {
     return Math.floor(seconds / 60);
   };
@@ -35,6 +23,18 @@ export const usePageLifecycle = () => {
   useEffect(() => {
     window.addEventListener('online', updateBrowserOnlineState);
     window.addEventListener('offline', updateBrowserOnlineState);
+
+    const getTimeInSeconds = () => {
+      return Math.floor(new Date().getTime() / 1000);
+    };
+
+    const checkIfResume = (lastCheckInSeconds: number) => {
+      if (getTimeInSeconds() > lastCheckInSeconds + intervalInSeconds + gracePeriodInSeconds) {
+        return true;
+      } else {
+        return false;
+      }
+    };
 
     setInterval(function () {
       if (checkIfResume(lastCheckInSeconds)) {

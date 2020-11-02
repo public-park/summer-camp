@@ -29,7 +29,7 @@ export const CallHistoryView = () => {
     };
 
     fetchCalls();
-  }, []);
+  }, [user]);
 
   return (
     <div className="history">

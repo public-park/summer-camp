@@ -23,7 +23,7 @@ export const AccountSetupFormInput = (props: AccountSetupFormInputProps) => {
 
   useEffect(() => {
     setIsValid(props.validator.test(value));
-  }, [value]);
+  }, [value, props.validator]);
 
   return (
     <TextField

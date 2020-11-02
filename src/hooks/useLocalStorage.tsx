@@ -16,7 +16,7 @@ export const useLocalStorage = (key: string): [string | undefined, (value: strin
     if (value) {
       setStoredValue(value);
     }
-  }, []);
+  }, [key]);
 
   const setValue = (value: string | undefined) => {
     if (!window.localStorage) {

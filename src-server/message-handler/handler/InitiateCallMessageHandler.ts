@@ -1,8 +1,11 @@
 import { getCallerId } from '../../controllers/callback/PhoneHelper';
+import { ConfigurationNotFoundException } from '../../exceptions/ConfigurationNotFoundException';
+import { InvalidConfigurationException } from '../../exceptions/InvalidConfigurationException';
 import { TwilioHelper } from '../../helpers/twilio/TwilioHelper';
 import { CallDirection } from '../../models/CallDirection';
 import { CallStatus } from '../../models/CallStatus';
 import { CallMessage } from '../../models/socket/messages/CallMessage';
+import { ErrorMessage } from '../../models/socket/messages/ErrorMessage';
 import { InitiateCallMessage } from '../../models/socket/messages/InitiateCallMessage';
 import { Message } from '../../models/socket/messages/Message';
 import { UserWithSocket } from '../../models/UserWithSocket';
@@ -13,7 +16,17 @@ const handle = async (
   user: UserWithSocket,
   message: InitiateCallMessage,
   acknowledge: AcknowledgeMessageHandler
-): Promise<CallMessage> => {
+): Promise<CallMessage | ErrorMessage> => {
+  const configuration = user.getConfiguration();
+
+  if (!configuration) {
+    throw new ConfigurationNotFoundException();
+  }
+
+  if (configuration.outbound.isEnabled === false) {
+    throw new InvalidConfigurationException();
+  }
+
   const callerId = getCallerId(user.account);
 
   const call = await calls.create(

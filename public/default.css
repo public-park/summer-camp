@@ -82,6 +82,14 @@ button {
   justify-content: center;
 }
 
+.page-body-login > div .register-form {
+  padding-top: '10px';
+}
+
+.page-body-login > div .login-form {
+  padding-top: '10px';
+}
+
 .workspace {
   min-height: 400px;
   max-height: 800px;
@@ -541,7 +549,7 @@ button {
   margin-top: 10px;
 }
 
-.audio-device {
+.audio-devices {
   background-color: #f7f7f7;
   flex: auto;
   padding: 10px;

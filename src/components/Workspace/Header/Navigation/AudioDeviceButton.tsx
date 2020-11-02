@@ -4,7 +4,7 @@ import SvgIcon from '@material-ui/core/SvgIcon';
 
 export const AudioDeviceButton = (props: any) => {
   return (
-    <IconButton {...props} aria-label="audio-device">
+    <IconButton {...props} aria-label="audio-devices">
       <SvgIcon>
         <svg width="23" height="24">
           <g transform="translate(.226 1)" fill="#FFF" fillRule="evenodd">

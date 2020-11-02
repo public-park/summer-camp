@@ -34,6 +34,7 @@ export const AudioDeviceForm = (props: AudioDeviceFormProps) => {
       </Box>
       {props.audioInputDevices.length > 0 && (
         <AudioDeviceSelect
+          name="input-devices"
           handleUpdate={updateInputDevice}
           value={input ? input : 'default'}
           devices={props.audioInputDevices}
@@ -48,6 +49,7 @@ export const AudioDeviceForm = (props: AudioDeviceFormProps) => {
         </Box>
         {props.audioOutputDevices.length > 0 && (
           <AudioDeviceSelect
+            name="output-devices"
             handleUpdate={updateOutputDevice}
             value={output ? output : 'default'}
             devices={props.audioOutputDevices}

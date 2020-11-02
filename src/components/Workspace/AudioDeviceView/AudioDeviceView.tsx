@@ -19,7 +19,7 @@ export const AudioDeviceView = () => {
   };
 
   return (
-    <div className="audio-device">
+    <div className="audio-devices">
       <Card variant="outlined">
         <CardContent>{getView()}</CardContent>
       </Card>

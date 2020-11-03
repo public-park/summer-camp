@@ -4,7 +4,7 @@ import SvgIcon from '@material-ui/core/SvgIcon';
 
 export const UsersButton = (props: any) => {
   return (
-    <IconButton {...props} aria-label="audio-device">
+    <IconButton {...props} aria-label="users">
       <SvgIcon>
         <svg width="24" height="24">
           <path

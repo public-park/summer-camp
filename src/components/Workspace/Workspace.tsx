@@ -94,7 +94,7 @@ export const Workspace = () => {
       case 'CALL_HISTORY_VIEW':
         return <CallHistoryView />;
 
-      case 'AUDIO_DEVICE_VIEW':
+      case 'AUDIO_DEVICES_VIEW':
         return <AudioDeviceView />;
       case 'CONNECT_VIEW':
         return <ConnectView />;

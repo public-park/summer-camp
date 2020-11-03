@@ -19,7 +19,7 @@ import { InvalidDocumentException } from '../../exceptions/InvalidDocumentExcept
 interface UserDocument {
   id: string;
   name: string;
-  profileImageUrl: string;
+  profileImageUrl: string | null;
   tags: string[];
   activity: UserActivity;
   accountId: string;
@@ -221,7 +221,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     return new User(
       item.id,
       item.name,
-      item.profileImageUrl,
+      item.profileImageUrl || undefined,
       new Set(item.tags),
       item.activity,
       account,

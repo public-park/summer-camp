@@ -1,16 +1,15 @@
 import React, { useContext, useRef } from 'react';
 import { ApplicationContext } from '../../../../context/ApplicationContext';
 import { useSelector } from 'react-redux';
-import { selectPhoneDisplayIsValidPhoneNumber, selectPhoneDisplayValue } from '../../../../store/Store';
+import { selectPhoneDisplay } from '../../../../store/Store';
 import { PhoneNotFoundException } from '../../../../exceptions/PhoneNotFoundException';
 
 export const CallButton = () => {
-  const isValid = useSelector(selectPhoneDisplayIsValidPhoneNumber);
-  const phoneNumber = useSelector(selectPhoneDisplayValue);
+  const { user, phone } = useContext(ApplicationContext);
+
+  const phoneDisplay = useSelector(selectPhoneDisplay);
 
   const ref = useRef<HTMLButtonElement>(null);
-
-  const { phone } = useContext(ApplicationContext);
 
   const initiate = async () => {
     if (ref.current) {
@@ -22,11 +21,18 @@ export const CallButton = () => {
         throw new PhoneNotFoundException();
       }
 
-      await phone.connect(phoneNumber);
+      await phone.connect(phoneDisplay.value);
     } catch (error) {
       console.log(error);
     }
   };
 
-  return <button ref={ref} onClick={initiate} disabled={!isValid} className="start-call-button"></button>;
+  return (
+    <button
+      ref={ref}
+      onClick={initiate}
+      disabled={!phoneDisplay.isValidPhoneNumber || !user.isConnected()}
+      className="start-call-button"
+    ></button>
+  );
 };

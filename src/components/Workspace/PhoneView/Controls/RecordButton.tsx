@@ -1,13 +1,13 @@
 import React, { useState, useContext } from 'react';
 import { ApplicationContext } from '../../../../context/ApplicationContext';
 import { useSelector } from 'react-redux';
-import { selectCallStatus } from '../../../../store/Store';
+import { selectCall } from '../../../../store/Store';
 import { CallNotFoundException } from '../../../../exceptions/CallNotFoundException';
 import { CallStatus } from '../../../../models/CallStatus';
 
 export const RecordButton = () => {
   const { call } = useContext(ApplicationContext);
-  const status = useSelector(selectCallStatus);
+  const { status } = useSelector(selectCall) || {};
 
   const [isRecording, setIsRecording] = useState(call?.isRecording ? true : false);
   const [isProcessing, setIsProcessing] = useState(false);

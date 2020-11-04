@@ -7,7 +7,7 @@ import { useCallDurationFormat } from './hooks/useCallDurationFormat';
 import { HoldButton } from './Controls/HoldButton';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { useSelector } from 'react-redux';
-import { selectCallFrom, selectCallTo, selectCallDirection } from '../../../store/Store';
+import { selectCall } from '../../../store/Store';
 import { RecordButton } from './Controls/RecordButton';
 import { CallNotFoundException } from '../../../exceptions/CallNotFoundException';
 import { CallDirection } from '../../../models/CallDirection';
@@ -15,13 +15,11 @@ import { CallDirection } from '../../../models/CallDirection';
 export const Busy = () => {
   const { call } = useContext(ApplicationContext);
 
-  const from = useSelector(selectCallFrom);
-  const to = useSelector(selectCallTo);
-  const direction = useSelector(selectCallDirection);
+  const { from, to, direction, answeredAt } = useSelector(selectCall) || {};
 
   const [showKeypad, setShowKeypad] = useState(false);
 
-  const duration = useCallDuration(call?.answeredAt);
+  const duration = useCallDuration(answeredAt); // TODO, fix
   const durationFormatted = useCallDurationFormat(duration);
 
   const end = () => {
@@ -37,8 +35,7 @@ export const Busy = () => {
       <div className="display">
         <span className="duration">{durationFormatted}</span>
 
-        {direction === CallDirection.Inbound && <span className="phone-number">{from}</span>}
-        {direction === CallDirection.Outbound && <span className="phone-number">{to}</span>}
+        <span className="phone-number">{direction === CallDirection.Inbound ? from : to}</span>
       </div>
 
       <div className="control">

@@ -1,10 +1,10 @@
 import React, { ChangeEvent } from 'react';
-import { selectPhoneDisplayValue } from '../../../../store/Store';
+import { selectPhoneDisplay } from '../../../../store/Store';
 import { useSelector, useDispatch } from 'react-redux';
 import { updatePhoneDisplay } from '../../../../actions/PhoneAction';
 
 export const PhoneNumberInput = () => {
-  const phoneNumber = useSelector(selectPhoneDisplayValue);
+  const phoneDisplay = useSelector(selectPhoneDisplay);
 
   const dispatch = useDispatch();
 
@@ -24,7 +24,7 @@ export const PhoneNumberInput = () => {
   };
 
   const removeDigit = () => {
-    dispatch(updatePhoneDisplay(phoneNumber.substr(0, phoneNumber.length - 1)));
+    dispatch(updatePhoneDisplay(phoneDisplay.value.substr(0, phoneDisplay.value.length - 1)));
   };
 
   return (
@@ -34,7 +34,7 @@ export const PhoneNumberInput = () => {
         className="phone-number-input"
         onChange={(e) => handleChange(e)}
         type="text"
-        value={phoneNumber}
+        value={phoneDisplay.value}
       />
       <button onClick={() => removeDigit()} className="remove-digit-button"></button>
     </div>

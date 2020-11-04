@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 
 interface RegisterFormInputProps {
   id: string;
+  name: string;
   label: string;
   type: 'text' | 'password';
   default: string;
@@ -13,6 +14,8 @@ interface RegisterFormInputProps {
 }
 
 export const RegisterFormInput = (props: RegisterFormInputProps) => {
+  const validator = props.validator;
+
   const [value, setValue] = useState(props.default);
   const [validation, setValidation] = useState({ isValid: false, text: '' });
 
@@ -23,10 +26,10 @@ export const RegisterFormInput = (props: RegisterFormInputProps) => {
   };
 
   useEffect(() => {
-    const result = props.validator(value);
+    const result = validator(value);
 
     setValidation(result);
-  }, [value]);
+  }, [value, validator]);
 
   return (
     <div>
@@ -37,6 +40,7 @@ export const RegisterFormInput = (props: RegisterFormInputProps) => {
           type={props.type}
           autoComplete="off"
           value={value}
+          name={props.name}
           onChange={(event) => onChange(event.target.value)}
           onFocus={() => props.onFocus()}
           id={props.id}

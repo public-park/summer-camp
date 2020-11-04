@@ -64,10 +64,10 @@ export const RegisterForm = ({ isVisible }: RegisterFormProps) => {
   }, [exception]);
 
   useEffect(() => {
-    if (state === RequestState.Success) {
+    if (state === RequestState.Success && response) {
       login(response?.body.token);
     }
-  }, [state]);
+  }, [state, response, login]);
 
   const onFocus = () => {
     setIsPristine(false);
@@ -114,11 +114,12 @@ export const RegisterForm = ({ isVisible }: RegisterFormProps) => {
   return (
     <div hidden={!isVisible}>
       <CardContent>
-        <form style={{ paddingTop: '10px' }} noValidate autoComplete="off">
+        <form className="register-form" noValidate autoComplete="off">
           <div>
             <RegisterFormInput
               id="name-register-input"
               label="Name"
+              name="name"
               type="text"
               default={''}
               validator={isValidName}
@@ -130,6 +131,7 @@ export const RegisterForm = ({ isVisible }: RegisterFormProps) => {
             <RegisterFormInput
               id="password-register-input"
               label="Password"
+              name="password"
               type="password"
               default={''}
               validator={isValidPassword}
@@ -144,13 +146,14 @@ export const RegisterForm = ({ isVisible }: RegisterFormProps) => {
               onClick={(event) => handleSubmit(event)}
               variant="contained"
               color="primary"
+              name="submit"
             >
               REGISTER
             </Button>
           </div>
 
           {isPristine && error && (
-            <Alert style={{ marginTop: '10px' }} variant="filled" severity="error">
+            <Alert className="register-error" style={{ marginTop: '10px' }} variant="filled" severity="error">
               {error}
             </Alert>
           )}

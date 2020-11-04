@@ -206,6 +206,10 @@ export class User {
     return this._isAvailable;
   }
 
+  isConnected() {
+    return this.connection.state === UserConnectionState.Open;
+  }
+
   set tags(tags: Set<string>) {
     this.send(new TagMessage(tags));
   }

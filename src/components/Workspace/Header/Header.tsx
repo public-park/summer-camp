@@ -2,9 +2,8 @@ import React, { useContext } from 'react';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import { IconButton, Avatar } from '@material-ui/core';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectProfileImageUrl, selectName, selectConnectionState, selectRole, selectCall } from '../../../store/Store';
+import { selectProfileImageUrl, selectName, selectRole, selectCall } from '../../../store/Store';
 import { ApplicationContext } from '../../../context/ApplicationContext';
-import { UserConnectionState } from '../../../models/UserConnectionState';
 import { setWorkspaceView } from '../../../actions/WorkspaceViewAction';
 import { ActivityPanel } from './ActivityPanel';
 import { AudioDeviceButton } from './Navigation/AudioDeviceButton';
@@ -15,7 +14,7 @@ import { SetupButtonDisabled } from './Navigation/SetupButtonDisabled';
 import { UsersButton } from './Navigation/UsersButton';
 
 export const Header = () => {
-  const { logout } = useContext(ApplicationContext);
+  const { logout, user } = useContext(ApplicationContext);
 
   const dispatch = useDispatch();
 
@@ -23,7 +22,6 @@ export const Header = () => {
   const role = useSelector(selectRole);
   const call = useSelector(selectCall);
   const profileImageUrl = useSelector(selectProfileImageUrl);
-  const connectionState = useSelector(selectConnectionState);
 
   return (
     <div className="header">
@@ -33,7 +31,7 @@ export const Header = () => {
         </Avatar>
         <div className="name">{name}</div>
 
-        <div className="user-status-toggle">{connectionState === UserConnectionState.Open && <ActivityPanel />}</div>
+        <div className="user-status-toggle">{user.isConnected() && <ActivityPanel />}</div>
         <div>
           <PhoneButton name="phone" onClick={() => dispatch(setWorkspaceView('PHONE_VIEW'))} color="secondary" />
         </div>

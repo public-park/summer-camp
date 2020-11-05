@@ -2,8 +2,11 @@ import React from 'react';
 import { PhoneNumberInput } from './PhoneNumberInput';
 import { Keypad } from './Keypad';
 import { CallButton } from '../Controls/CallButton';
+import { OutgoingDisabled } from './OutgoingDisabled';
+import { useSelector } from 'react-redux';
+import { selectConfiguration } from '../../../../store/Store';
 
-export const Idle = () => {
+const getPhoneCanvas = () => {
   return (
     <div className="idle">
       <PhoneNumberInput />
@@ -11,4 +14,22 @@ export const Idle = () => {
       <CallButton />
     </div>
   );
+};
+
+const getOutgoingDisabledCanvas = () => {
+  return (
+    <div className="idle">
+      <OutgoingDisabled />
+    </div>
+  );
+};
+
+export const Idle = () => {
+  const configuration = useSelector(selectConfiguration);
+
+  if (!configuration) {
+    return null;
+  }
+
+  return configuration.outbound.isEnabled ? getPhoneCanvas() : getOutgoingDisabledCanvas();
 };

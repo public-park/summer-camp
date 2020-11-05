@@ -6,23 +6,24 @@ import { updatePhoneDisplay } from '../../../../actions/PhoneAction';
 import { ApplicationContext } from '../../../../context/ApplicationContext';
 
 interface KeypadButtonProp {
+  identifier: string;
   number: string;
   letters: string | null;
 }
 
 const keys: Array<KeypadButtonProp> = [
-  { number: '1', letters: null },
-  { number: '2', letters: 'ABC' },
-  { number: '3', letters: 'DEF' },
-  { number: '4', letters: 'GHI' },
-  { number: '5', letters: 'JKL' },
-  { number: '6', letters: 'MNO' },
-  { number: '7', letters: 'PQRS' },
-  { number: '8', letters: 'TUV' },
-  { number: '9', letters: 'WXYZ' },
-  { number: '*', letters: null },
-  { number: '0', letters: null },
-  { number: '#', letters: null },
+  { identifier: '1', number: '1', letters: null },
+  { identifier: '2', number: '2', letters: 'ABC' },
+  { identifier: '3', number: '3', letters: 'DEF' },
+  { identifier: '4', number: '4', letters: 'GHI' },
+  { identifier: '5', number: '5', letters: 'JKL' },
+  { identifier: '6', number: '6', letters: 'MNO' },
+  { identifier: '7', number: '7', letters: 'PQRS' },
+  { identifier: '8', number: '8', letters: 'TUV' },
+  { identifier: '9', number: '9', letters: 'WXYZ' },
+  { identifier: 'star', number: '*', letters: null },
+  { identifier: '0', number: '0', letters: null },
+  { identifier: 'hash', number: '#', letters: null },
 ];
 
 export const Keypad = () => {
@@ -49,6 +50,7 @@ export const Keypad = () => {
         {keys.map((item: KeypadButtonProp) => {
           return (
             <KeypadButton
+              identifier={item.identifier}
               key={`digit-button-${item.number}`}
               addDigit={addDigit}
               letter={item.letters || ''}

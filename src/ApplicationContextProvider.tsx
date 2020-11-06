@@ -52,6 +52,7 @@ import { CallDirection } from './models/CallDirection';
 import { CallStatus } from './models/CallStatus';
 import { ConnectMessage } from './models/socket/messages/ConnectMessage';
 import { ConfigurationMessage } from './models/socket/messages/ConfigurationMessage';
+import { ErrorMessage } from './models/socket/messages/ErrorMessage';
 
 export const ApplicationContextProvider = (props: any) => {
   const phoneState = useSelector(selectPhoneState);
@@ -78,9 +79,9 @@ export const ApplicationContextProvider = (props: any) => {
   const audioInputDevices = useSelector(selectAudioInputDevices);
   const audioOutputDevices = useSelector(selectAudioOutputDevices);
 
-  const view = useSelector(selectWorkspaceView);
-
   const { token: phoneTokenFetched, exception: phoneTokenException } = useFetchPhoneToken(user);
+
+  const view = useSelector(selectWorkspaceView);
 
   /* Salesforce OpenCTI 
    const doScreenPop = useSalesforceOpenCti(phone);  
@@ -119,12 +120,14 @@ export const ApplicationContextProvider = (props: any) => {
 
     user.onReady(() => {
       dispatch(setPhoneConfiguration(user.configuration));
-      dispatch(setWorkspaceView('PHONE_VIEW'));
+
+      if (view === 'CONNECT_VIEW') {
+        dispatch(setWorkspaceView('PHONE_VIEW'));
+      }
     });
 
-    user.onError((text: string) => {
-      dispatch(showNotification(`An error occured, please check the JS error log (${text})`));
-      console.error(text);
+    user.on<ErrorMessage>(MessageType.Error, (message: ErrorMessage) => {
+      dispatch(showNotification(`An error occured, please check the JS error log (${message.payload})`));
     });
 
     user.on<UserMessage>(MessageType.User, (message: UserMessage) => {
@@ -139,7 +142,7 @@ export const ApplicationContextProvider = (props: any) => {
       dispatch(setPhoneConfiguration(message.payload));
     });
 
-    const phone = new TwilioPhone();
+    const phone = new TwilioPhone(user);
 
     phone.onStateChanged((state: PhoneState) => {
       console.debug(`Phone onStateChange: ${state}`);
@@ -159,8 +162,6 @@ export const ApplicationContextProvider = (props: any) => {
     phone.onError((error: Error) => {
       dispatch(setPhoneException(error));
     });
-
-    phone.registerUser(user);
 
     user.login(getWebSocketUrl(), token);
 

@@ -21,7 +21,10 @@ export interface Call {
   mute: (state: boolean) => Promise<void>;
   hold: (state: boolean) => Promise<void>;
   record: (state: boolean) => Promise<void>;
+  transfer: (user: User) => Promise<void>;
   sendDigits: (digits: string) => void;
   onAnswer: (listener: () => void) => void;
+  onEnd: (listener: () => void) => void;
   registerConnection: (connection: any) => void;
+  removeAllListeners: () => void;
 }

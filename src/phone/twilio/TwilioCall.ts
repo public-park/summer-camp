@@ -17,6 +17,11 @@ export interface TwilioConnection {
   on: (event: string, listener: (name: string) => void) => void;
 }
 
+enum CallEventType {
+  Answer = 'answer',
+  End = 'end',
+}
+
 export class TwilioCall implements Call {
   private connection: TwilioConnection | undefined;
 
@@ -54,15 +59,25 @@ export class TwilioCall implements Call {
 
   registerConnection(connection: TwilioConnection) {
     connection.on('warning', (name: string) => {
-      console.log(`warning: ${name}`);
+      console.info(`warning: ${name}`);
     });
 
     connection.on('warning-cleared', (name: string) => {
-      console.log(`warning-cleared: ${name}`);
+      console.info(`warning-cleared: ${name}`);
     });
 
     connection.on('accept', () => {
+      console.debug(`receive 'accept' event by Twilio Connection`);
+
       this.isConnected = true;
+    });
+
+    connection.on('disconnect', () => {
+      console.debug(`receive 'disconnect' event by Twilio Connection`);
+
+      this.isConnected = false;
+
+      this.eventEmitter.emit(CallEventType.End);
     });
 
     this.connection = connection;
@@ -84,6 +99,10 @@ export class TwilioCall implements Call {
     await this.user.send<HoldMessage, HoldMessage>(new HoldMessage(this.id, state));
 
     this.isOnHold = state;
+  }
+
+  async transfer(user: User): Promise<void> {
+    return Promise.reject('not implemented');
   }
 
   async record(state: boolean): Promise<void> {
@@ -115,7 +134,7 @@ export class TwilioCall implements Call {
   }
 
   async answer() {
-    this.eventEmitter.emit('answer');
+    this.eventEmitter.emit(CallEventType.Answer);
 
     this.answeredAt = new Date();
 
@@ -124,7 +143,9 @@ export class TwilioCall implements Call {
     return;
   }
 
-  end() {
+  async end() {
+    console.debug(`local disconnect initiated by call.end()`);
+
     if (!this.connection) {
       throw new CallNotConnectedException();
     }
@@ -135,6 +156,15 @@ export class TwilioCall implements Call {
   }
 
   onAnswer(listener: () => void) {
-    this.eventEmitter.on('answer', listener);
+    this.eventEmitter.on(CallEventType.Answer, listener);
+  }
+
+  onEnd(listener: () => void) {
+    this.eventEmitter.on(CallEventType.End, listener);
+  }
+
+  removeAllListeners() {
+    this.eventEmitter.removeAllListeners(CallEventType.Answer);
+    this.eventEmitter.removeAllListeners(CallEventType.End);
   }
 }

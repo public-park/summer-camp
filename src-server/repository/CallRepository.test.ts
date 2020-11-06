@@ -72,6 +72,7 @@ describe('Call Repository create, update', () => {
     expect(call.direction).toBe(CallDirection.Inbound);
     expect(call.createdAt).toBeInstanceOf(Date);
     expect(call.updatedAt).toBeUndefined();
+    expect(call.answeredAt).toBeUndefined();
 
     done();
   });
@@ -94,6 +95,7 @@ describe('Call Repository create, update', () => {
     call.userId = 'UX';
     call.status = CallStatus.Completed;
     call.direction = CallDirection.Outbound;
+    call.answeredAt = new Date();
 
     call = await callRepository.update(call);
 
@@ -107,6 +109,7 @@ describe('Call Repository create, update', () => {
     expect(call.direction).toBe(CallDirection.Outbound);
     expect(call.createdAt).toBe(call.createdAt);
     expect(call.updatedAt).toBeInstanceOf(Date);
+    expect(call.answeredAt).toBeInstanceOf(Date);
 
     done();
   });

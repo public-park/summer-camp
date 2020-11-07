@@ -2,14 +2,16 @@ import { useSelector } from 'react-redux';
 import { selectActivity } from '../../../store/Store';
 import { UserActivity } from '../../../models/UserActivity';
 import { FormControlLabel, withStyles } from '@material-ui/core';
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import Switch from '@material-ui/core/Switch';
 
 export const ActivityPanel = () => {
+  const { user } = useContext(ApplicationContext);
+
   const activity = useSelector(selectActivity);
 
-  const { user } = useContext(ApplicationContext);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const ActivitySwitch = withStyles({
     switchBase: {
@@ -25,22 +27,32 @@ export const ActivityPanel = () => {
     track: {},
   })(Switch);
 
-  const handleToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      user.activity = UserActivity.WaitingForWork;
-    } else {
-      user.activity = UserActivity.Away;
+  const handleToggle = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isProcessing) {
+      return;
     }
 
-    console.log(`set state to: ${user.activity}`);
+    setIsProcessing(true);
+
+    const activity = event.target.checked ? UserActivity.WaitingForWork : UserActivity.Away;
+
+    await user.setActivity(activity);
+
+    setIsProcessing(false);
   };
 
   return (
     <FormControlLabel
       control={
-        <ActivitySwitch checked={UserActivity.WaitingForWork === activity} onChange={handleToggle} name="checkedA" />
+        <ActivitySwitch
+          checked={UserActivity.WaitingForWork === activity}
+          onChange={handleToggle}
+          name="user-activity"
+        />
       }
       label="Available"
+      data-activity={activity}
+      className="panel"
     />
   );
 };

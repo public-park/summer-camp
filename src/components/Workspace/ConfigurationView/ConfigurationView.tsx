@@ -60,7 +60,7 @@ export const ConfigurationView = () => {
     if (view === SetupView.FETCH_COMPLETE) {
       validate();
     }
-  }, [view]);
+  }, [view, dispatch, user, configuration.twilio]);
 
   useEffect(() => {
     async function init() {
@@ -71,12 +71,12 @@ export const ConfigurationView = () => {
 
         dispatch(fetchConfigurationComplete(configuration as SetupStore['configuration']['twilio']));
       } catch (error) {
-        console.log(ErrorOutlineRounded);
+        console.error(error);
       }
     }
 
     init();
-  }, []);
+  }, [dispatch, user]);
 
   return (
     <div className="configuration">

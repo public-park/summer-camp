@@ -11,15 +11,20 @@ import { AcknowledgeMessage } from './socket/messages/AcknowledgeMessage';
 import { ConnectMessage } from './socket/messages/ConnectMessage';
 import { UserConfiguration } from './UserConfiguration';
 
+enum UserEventType {
+  Activity = 'usera_ctivity',
+  ConnectionState = 'user_connection_state',
+  ConnectionError = 'user_connection_error',
+}
+
 export class User {
   id: string | undefined;
   token: string | undefined;
   name: string | undefined;
   profileImageUrl: string | undefined;
   accountId: string | undefined;
-  private _tags: Set<string>;
-  private _isAvailable: boolean;
-  private _activity: UserActivity;
+  tags: Set<string>;
+  activity: UserActivity;
   role: UserRole | undefined;
   configuration: UserConfiguration | undefined;
 
@@ -31,19 +36,18 @@ export class User {
     sockets: number | undefined;
   };
 
-  private eventEmitter: EventEmitter;
+  private events: EventEmitter;
 
   constructor() {
-    this.eventEmitter = new EventEmitter();
+    this.events = new EventEmitter();
 
     this.id = undefined;
     this.name = undefined;
     this.profileImageUrl = undefined;
     this.token = undefined;
     this.accountId = undefined;
-    this._tags = new Set();
-    this._isAvailable = false;
-    this._activity = UserActivity.Unknown;
+    this.tags = new Set();
+    this.activity = UserActivity.Unknown;
     this.role = undefined;
     this.connection = {
       socket: undefined,
@@ -53,15 +57,7 @@ export class User {
     };
   }
 
-  private _setActivity(activity: UserActivity) {
-    this._activity = activity;
-
-    this._isAvailable = activity === UserActivity.WaitingForWork ? true : false;
-
-    this.eventEmitter.emit('activity', activity);
-  }
-
-  private _setConnectionState(state: UserConnectionState, ...args: any) {
+  private setConnectionState(state: UserConnectionState, ...args: any) {
     if (this.connection.state === state) {
       console.log(`ignore connection state ${state}`);
       return;
@@ -70,11 +66,11 @@ export class User {
     console.log(`set connection state to: ${state}`);
     this.connection.state = state;
 
-    this.eventEmitter.emit('connection_state', state, ...args);
+    this.events.emit(UserEventType.ConnectionState, state, ...args);
   }
 
   login(url: string, token: string) {
-    this._setConnectionState(UserConnectionState.Connecting);
+    this.setConnectionState(UserConnectionState.Connecting);
 
     this.token = token;
     this.connection.url = url;
@@ -82,7 +78,7 @@ export class User {
     this.connection.socket = new WebSocket(`${url}?t=${token}`);
 
     this.connection.socket.onerror = (event: Event) => {
-      this.eventEmitter.emit('connection_error', event);
+      this.events.emit(UserEventType.ConnectionError, event);
     };
 
     this.connection.socket.onopen = (event: Event) => {
@@ -90,57 +86,43 @@ export class User {
     };
 
     this.connection.socket.onmessage = (event: MessageEvent) => {
-      console.log('message received: ' + event.data);
+      console.info(`message received: ${event.data}`);
 
       try {
         const message: Message = JSON.parse(event.data);
 
-        switch (message.header.type) {
-          case MessageType.Connect:
-            const { payload } = message as ConnectMessage;
+        if (message.header.type === MessageType.Connect) {
+          const { payload } = message as ConnectMessage;
 
-            this.id = payload.user.id;
-            this.name = payload.user.name;
-            this.profileImageUrl = payload.user.profileImageUrl;
-            this.accountId = payload.user.accountId;
-            this._tags = new Set(payload.user.tags);
-            this.role = payload.user.role;
+          this.id = payload.user.id;
+          this.name = payload.user.name;
+          this.profileImageUrl = payload.user.profileImageUrl;
+          this.accountId = payload.user.accountId;
+          this.tags = new Set(payload.user.tags);
+          this.role = payload.user.role;
+          this.activity = payload.user.activity;
+          this.configuration = payload.configuration;
 
-            this._setActivity(payload.user.activity);
-            this._setConnectionState(UserConnectionState.Open);
+          this.events.emit(UserEventType.Activity, this.activity);
 
-            this.configuration = payload.configuration;
+          this.setConnectionState(UserConnectionState.Open);
+        }
 
-            this.eventEmitter.emit(MessageType.Connect, message);
-            break;
+        if (message.header.type === MessageType.Activity) {
+          this.activity = message.payload.activity;
+        }
 
-          case MessageType.Activity:
-            this._setActivity(message.payload.activity);
-            break;
-
-          case MessageType.Configuration:
-            this.eventEmitter.emit(MessageType.Configuration, message);
-            break;
-
-          case MessageType.Call:
-            this.eventEmitter.emit(MessageType.Call, message);
-            break;
-
-          case MessageType.Error:
-            this.eventEmitter.emit(MessageType.Error, message);
-            break;
-
-          case MessageType.User:
-            this.eventEmitter.emit(MessageType.User, message);
-            break;
+        if (message.header.type === MessageType.Tags) {
+          this.tags = new Set(message.payload.tags);
         }
 
         this.send(new AcknowledgeMessage(message.header.id));
 
-        this.eventEmitter.emit(message.header.id, message);
+        this.events.emit(message.header.id, message);
+        this.events.emit(message.header.type, message);
       } catch (error) {
-        console.log(error);
-        this.eventEmitter.emit(MessageType.Error, new InvalidMessageException());
+        console.error(error);
+        this.events.emit(MessageType.Error, new InvalidMessageException());
       }
     };
 
@@ -148,22 +130,22 @@ export class User {
       console.log(`socket closed with code ${event.code} reason ${event.reason}`);
 
       if (event.code === 4001) {
-        this._setConnectionState(UserConnectionState.Expired, event.code);
+        this.setConnectionState(UserConnectionState.Expired, event.code);
       } else {
-        this._setConnectionState(UserConnectionState.Closed, event.code);
+        this.setConnectionState(UserConnectionState.Closed, event.code);
       }
     };
   }
 
   logout(): Promise<void> {
-    this.eventEmitter.removeAllListeners('connection_state');
+    this.events.removeAllListeners(UserEventType.ConnectionState);
 
     return new Promise((resolve, reject) => {
       const onConnectionStateClosed = (state: UserConnectionState) => {
         if (state === UserConnectionState.Closed) {
           resolve();
 
-          this.eventEmitter.off('connection_state', onConnectionStateClosed);
+          this.events.off(UserEventType.ConnectionState, onConnectionStateClosed);
         }
       };
 
@@ -186,63 +168,61 @@ export class User {
         throw new WebSocketNotInStateOpenException();
       }
 
-      this.eventEmitter.once(message.header.id, (payload: U) => {
+      this.events.once(message.header.id, (payload: U) => {
         resolve(payload);
       });
 
       this.connection.socket.send(message.toString());
+
+      console.info(`message sent: ${message.toString()}`);
     });
   }
 
-  set activity(activity: UserActivity) {
-    this.send(new ActivityMessage(activity));
-  }
-
-  get activity(): UserActivity {
-    return this._activity;
-  }
-
-  get isAvailable(): boolean {
-    return this._isAvailable;
+  isAvailable() {
+    return this.activity === UserActivity.WaitingForWork;
   }
 
   isConnected() {
     return this.connection.state === UserConnectionState.Open;
   }
 
-  set tags(tags: Set<string>) {
-    this.send(new TagMessage(tags));
+  async setTags(tags: Set<string>) {
+    await this.send(new TagMessage(tags));
+
+    this.tags = tags;
   }
 
-  get tags(): Set<string> {
-    return this._tags;
+  async setActivity(activity: UserActivity) {
+    console.info(`set state to: ${activity}`);
+
+    await this.send(new ActivityMessage(activity));
+
+    this.activity = activity;
+
+    this.events.emit(UserEventType.Activity, activity);
   }
 
   onActivityChanged(listener: (activity: UserActivity) => void) {
-    this.eventEmitter.on('activity', listener);
+    this.events.on(UserEventType.Activity, listener);
   }
 
   onConnectionStateChanged(listener: (state: UserConnectionState, code: number | undefined) => void) {
-    this.eventEmitter.on('connection_state', listener);
+    this.events.on(UserEventType.ConnectionState, listener);
   }
 
   onReady(listener: () => void) {
-    this.eventEmitter.on(MessageType.Connect, listener);
+    this.events.on(MessageType.Connect, listener);
   }
 
   onConnectionError(listener: (event: Event) => void) {
-    this.eventEmitter.on('connection_error', listener);
-  }
-
-  onError(listener: (text: string) => void) {
-    this.eventEmitter.on('error', listener);
+    this.events.on(UserEventType.ConnectionError, listener);
   }
 
   on<T extends Message>(event: MessageType, listener: (message: T) => void) {
-    this.eventEmitter.on(event, listener);
+    this.events.on(event, listener);
   }
 
   off<T extends Message>(event: MessageType, listener: (message: T) => void) {
-    this.eventEmitter.off(event, listener);
+    this.events.off(event, listener);
   }
 }

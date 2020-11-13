@@ -1,14 +1,7 @@
 import { ConfigurationNotFoundException } from '../../exceptions/ConfigurationNotFoundException';
 import { InvalidConfigurationException } from '../../exceptions/InvalidConfigurationException';
+import { stripLeadingSlash, stripTrailingSlash } from '../../helpers/UrlHelper';
 import { Account } from '../../models/Account';
-
-const stripLeadingSlash = (value: string): string => {
-  return value.startsWith('/') ? value.substr(1, value.length) : value;
-};
-
-const stripTrailingSlash = (value: string): string => {
-  return value.endsWith('/') ? value.substr(0, value.length - 1) : value;
-};
 
 export const getCallbackUrl = (path: string) => {
   if (!process.env.PUBLIC_BASE_URL) {

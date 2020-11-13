@@ -4,8 +4,7 @@ import { User } from '../../../../models/User';
 import { getUrl } from '../../../../helpers/UrlHelper';
 
 export const saveAccountConfiguration = async (user: User, configuration: AccountConfiguration): Promise<void> => {
-  const response = await request(getUrl(`/accounts/${user.accountId}/configuration`))
+  await request(getUrl(`/accounts/${user.accountId}/configuration`))
     .withAuthentication(user)
     .post(configuration);
-  // TODO catch error
 };

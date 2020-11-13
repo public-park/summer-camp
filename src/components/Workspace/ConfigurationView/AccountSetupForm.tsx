@@ -50,9 +50,10 @@ export const AccountSetupForm = () => {
         secret: secret,
         accountSid: accountSid,
       });
-      dispatch(validateConfigurationComplete(result));
 
-      if (result.isValid) {
+      if (!result.isValid) {
+        dispatch(validateConfigurationComplete(result));
+      } else {
         await saveAccountConfiguration(user, {
           ...twilio,
           key: key,

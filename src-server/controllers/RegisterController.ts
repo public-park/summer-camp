@@ -32,10 +32,8 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 
     const payload = {
       token: TokenHelper.createJwt(user, 14400),
-      user: {
-        id: user.id,
-        name: user.name,
-      },
+      userId: user.id,
+      accountId: user.account.id,
     };
 
     res.json(payload);

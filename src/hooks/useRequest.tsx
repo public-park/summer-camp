@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Response } from 'superagent';
 import { RequestException } from '../exceptions/RequestException';
 import { RequestTimeoutException } from '../exceptions/RequestTimeoutException';
 

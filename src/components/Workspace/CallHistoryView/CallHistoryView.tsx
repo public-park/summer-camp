@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { CallItem } from './CallItem';
-import { request } from '../../../helpers/api/RequestHelper';
-import { getUrl } from '../../../helpers/UrlHelper';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { LoadIndicator } from '../ConfigurationView/LoadIndicator';
+import { fetchCalls } from '../../../services/RequestService';
 
 export const CallHistoryView = () => {
   // TODO, add hook useFetchCallHistory(start, limit) => isFetching, calls
@@ -14,21 +13,21 @@ export const CallHistoryView = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchCalls = async () => {
+    const run = async () => {
       try {
         setIsFetching(true);
 
-        const response = await request(getUrl(`/calls`)).withAuthentication(user).fetch();
+        const calls = await fetchCalls(user, 0, 50);
 
         setIsFetching(false);
 
-        setCalls(response.body);
+        setCalls(calls);
       } catch (error) {
         setError(error.message);
       }
     };
 
-    fetchCalls();
+    run();
   }, [user]);
 
   return (

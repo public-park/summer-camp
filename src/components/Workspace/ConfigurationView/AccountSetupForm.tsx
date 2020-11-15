@@ -12,8 +12,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectSetupConfiguration, selectSetupIsSaving, selectSetupValidation } from '../../../store/Store';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { updateTwilioAccount, validateConfigurationComplete } from '../../../actions/SetupAction';
-import { validateAccountConfiguration } from './services/validateAccountConfiguration';
-import { saveAccountConfiguration } from './services/saveAccountConfiguration';
+import { updateAccountConfiguration, validateAccountConfiguration } from '../../../services/RequestService';
 
 export const AccountSetupForm = () => {
   const dispatch = useDispatch();
@@ -54,7 +53,7 @@ export const AccountSetupForm = () => {
       if (!result.isValid) {
         dispatch(validateConfigurationComplete(result));
       } else {
-        await saveAccountConfiguration(user, {
+        await updateAccountConfiguration(user, {
           ...twilio,
           key: key,
           secret: secret,

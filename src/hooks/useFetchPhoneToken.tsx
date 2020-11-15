@@ -1,28 +1,31 @@
-import { useRequest } from './useRequest';
-import { useEffect } from 'react';
-import { getUrl } from '../helpers/UrlHelper';
+import { useEffect, useState } from 'react';
 import { User } from '../models/User';
-import { create } from '../helpers/api/RequestHelper';
 import { useSelector } from 'react-redux';
 import { selectPhoneToken, selectConfiguration } from '../store/Store';
+import { createPhoneToken } from '../services/RequestService';
 
 export const useFetchPhoneToken = (user: User) => {
   const token = useSelector(selectPhoneToken);
   const configuration = useSelector(selectConfiguration);
 
-  const { response, exception, setRequest } = useRequest();
+  const [error, setError] = useState<Error | undefined>();
+  const [localToken, setLocalToken] = useState<string>();
 
   useEffect(() => {
-    const fetchToken = async () => {
-      const url = getUrl(`users/${user.id}/phone/token`);
+    const run = async () => {
+      try {
+        const token = await createPhoneToken(user);
 
-      setRequest(create(url).withAuthentication(user).post());
+        setLocalToken(token);
+      } catch (error) {
+        setError(error);
+      }
     };
 
     if (!token && configuration) {
-      fetchToken();
+      run();
     }
-  }, [token, configuration]);
+  }, [token, configuration, user]);
 
-  return { token: response?.body.token, exception };
+  return { token: localToken, error };
 };

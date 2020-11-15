@@ -14,9 +14,7 @@ import {
 import { ApplicationContext } from '../../../context/ApplicationContext';
 
 import { validateConfiguration } from '../../../actions/SetupAction';
-import { validateAccountConfiguration } from './services/validateAccountConfiguration';
-import { fetchAccountConfiguration } from './services/fetchAccountConfiguration';
-import { ErrorOutlineRounded } from '@material-ui/icons';
+import { fetchAccountConfiguration, validateAccountConfiguration } from '../../../services/RequestService';
 
 const getPhoneView = (view: SetupView) => {
   switch (view) {

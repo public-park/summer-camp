@@ -36,7 +36,7 @@ import { useQueryStringToken } from './hooks/useQueryStringToken';
 /* Salesforce OpenCTI 
 import { useSalesforceOpenCti } from './hooks/useSalesforceOpenCti';
 */
-import { request } from './helpers/api/RequestHelper';
+
 import { Call } from './models/Call';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { PhoneControl } from './phone/PhoneControl';
@@ -79,7 +79,7 @@ export const ApplicationContextProvider = (props: any) => {
   const audioInputDevices = useSelector(selectAudioInputDevices);
   const audioOutputDevices = useSelector(selectAudioOutputDevices);
 
-  const { token: phoneTokenFetched, exception: phoneTokenException } = useFetchPhoneToken(user);
+  const { token: phoneTokenFetched, error: phoneTokenError } = useFetchPhoneToken(user);
 
   const view = useSelector(selectWorkspaceView);
 
@@ -195,10 +195,10 @@ export const ApplicationContextProvider = (props: any) => {
   }, [phoneToken, phone]);
 
   useEffect(() => {
-    if (phoneTokenException) {
+    if (phoneTokenError) {
       dispatch(setPhoneException(new Error('Could not fetch token, check your internet connection')));
     }
-  }, [phoneTokenException, dispatch]);
+  }, [phoneTokenError, dispatch]);
 
   useEffect(() => {
     if (phoneTokenFetched) {
@@ -248,19 +248,8 @@ export const ApplicationContextProvider = (props: any) => {
 
   /* local storage listeners */
   useEffect(() => {
-    const validateToken = async (token: string) => {
-      const response = await request(getUrl(`/validate-token`)).post({ token: token });
-
-      if (response.body.isValid) {
-        login(token);
-      } else {
-        console.log(`local token is not valid, deleting from local storage`);
-        setPersistetToken(undefined);
-      }
-    };
-
     if (persistetToken) {
-      validateToken(persistetToken);
+      login(persistetToken);
     }
   }, [persistetToken]);
 

@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react';
-import { getUrl } from '../helpers/UrlHelper';
-import { request } from '../helpers/api/RequestHelper';
+import { validateUserToken } from '../services/RequestService';
 
 export const useQueryStringToken = () => {
   const [queryStringToken, setQueryStringToken] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    const validateToken = async (token: string) => {
-      const response = await request(getUrl(`/validate-token`)).post({ token: token });
-      console.log(response.body);
-      if (response.body.isValid) {
+    const run = async (token: string) => {
+      if ((await validateUserToken(token)) === true) {
         setQueryStringToken(token);
       }
     };
@@ -22,7 +19,7 @@ export const useQueryStringToken = () => {
       /* always remove tokens from url, it should never be bookmarked or shared */
       window.history.pushState('', 'Summe Camp', '/');
 
-      validateToken(params.get('token') as string);
+      run(params.get('token') as string);
     }
   }, []);
 

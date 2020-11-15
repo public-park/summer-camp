@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectSetupConfiguration, selectSetupIsSaving, selectSetupValidation } from '../../../store/Store';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { saveConfiguration, saveConfigurationComplete } from '../../../actions/SetupAction';
-import { saveAccountConfiguration } from './services/saveAccountConfiguration';
+import { updateAccountConfiguration } from '../../../services/RequestService';
 
 export const PhoneSetupForm = () => {
   const dispatch = useDispatch();
@@ -22,7 +22,7 @@ export const PhoneSetupForm = () => {
     dispatch(saveConfiguration());
 
     try {
-      await saveAccountConfiguration(user, twilio);
+      await updateAccountConfiguration(user, twilio);
 
       dispatch(saveConfigurationComplete());
     } catch (error) {

@@ -2,9 +2,6 @@ import React, { useContext, useState, MouseEvent, useEffect } from 'react';
 import CardContent from '@material-ui/core/CardContent';
 import { Button } from '@material-ui/core';
 import { ApplicationContext } from '../../context/ApplicationContext';
-import { create } from '../../helpers/api/RequestHelper';
-import { getUrl } from '../../helpers/UrlHelper';
-import { useRequest, RequestState } from '../../hooks/useRequest';
 import {
   MAXIMUM_LENGTH_OF_USER_NAME,
   MAXIMUM_LENGTH_OF_USER_PASSWORD,
@@ -13,7 +10,7 @@ import {
 } from '../../Constants';
 import { RegisterFormInput } from './RegisterFormInput';
 import Alert from '@material-ui/lab/Alert/Alert';
-import { RequestException } from '../../exceptions/RequestException';
+import { registerUser } from '../../services/RequestService';
 
 interface RegisterFormProps {
   isVisible: boolean;
@@ -26,9 +23,8 @@ export const RegisterForm = ({ isVisible }: RegisterFormProps) => {
   const [password, setPassword] = useState('');
   const [isValid, setIsValid] = useState(false);
   const [isPristine, setIsPristine] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState('');
-
-  const { response, exception, state, setRequest } = useRequest();
 
   useEffect(() => {
     if (isValidName(name).isValid && isValidPassword(password).isValid) {
@@ -37,37 +33,6 @@ export const RegisterForm = ({ isVisible }: RegisterFormProps) => {
       setIsValid(false);
     }
   }, [name, password]);
-
-  useEffect(() => {
-    if (!exception) {
-      return;
-    }
-
-    setIsPristine(true);
-
-    const response = (exception as RequestException).response;
-
-    switch (response.status) {
-      case 409:
-        setError('user is already registered');
-        break;
-      case 400:
-        setError(response.body.description);
-        break;
-      case 200:
-        setError('');
-        break;
-      default:
-        setError('unknown error');
-        break;
-    }
-  }, [exception]);
-
-  useEffect(() => {
-    if (state === RequestState.Success && response) {
-      login(response?.body.token);
-    }
-  }, [state, response, login]);
 
   const onFocus = () => {
     setIsPristine(false);
@@ -100,15 +65,29 @@ export const RegisterForm = ({ isVisible }: RegisterFormProps) => {
   const handleSubmit = async (e: MouseEvent) => {
     e.preventDefault();
 
-    const url = getUrl('register');
-    const payload = {
-      name: name,
-      password: password,
-    };
+    try {
+      setIsFetching(true);
 
-    console.log(`register: ${name} via endpoint ${url}`);
-    // TODO rename to initiateRequest
-    setRequest(create(url).post(payload));
+      const body = await registerUser(name, password);
+
+      login(body.token);
+    } catch (error: any) {
+      setIsPristine(true);
+      console.log(error);
+      switch (error.response.status) {
+        case 409:
+          setError('user is already registered');
+          break;
+        case 400:
+          setError(error.response.body.description);
+          break;
+        default:
+          setError(error.message);
+          break;
+      }
+    } finally {
+      setIsFetching(false);
+    }
   };
 
   return (
@@ -142,7 +121,7 @@ export const RegisterForm = ({ isVisible }: RegisterFormProps) => {
           <div>
             <Button
               fullWidth
-              disabled={!isValid || state === 'InProgress'}
+              disabled={!isValid || isFetching}
               onClick={(event) => handleSubmit(event)}
               variant="contained"
               color="primary"

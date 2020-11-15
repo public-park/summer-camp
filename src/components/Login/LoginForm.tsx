@@ -12,12 +12,10 @@ import {
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
 import { ApplicationContext } from '../../context/ApplicationContext';
-import { create } from '../../helpers/api/RequestHelper';
-import { getUrl } from '../../helpers/UrlHelper';
-import { useRequest } from '../../hooks/useRequest';
 import { LoadIndicator } from '../Workspace/ConfigurationView/LoadIndicator';
 import { RequestTimeoutException } from '../../exceptions/RequestTimeoutException';
 import { RequestException } from '../../exceptions/RequestException';
+import { loginUser } from '../../services/RequestService';
 
 interface LoginFormProps {
   isVisible: boolean;
@@ -25,12 +23,13 @@ interface LoginFormProps {
 
 export const LoginForm = ({ isVisible }: LoginFormProps) => {
   const { login } = useContext(ApplicationContext);
-  const { response, exception, state, setRequest } = useRequest();
 
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isEmpty, setIsEmpty] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState<Error | undefined>();
 
   const handleShowPassword = () => {
     setShowPassword(!showPassword);
@@ -39,22 +38,19 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
   const handleSubmit = async (e: MouseEvent) => {
     e.preventDefault();
 
-    const url = getUrl('login');
-    const payload = {
-      name: name,
-      password: password,
-    };
+    console.log(`login: ${name}`);
 
-    console.log(`login: ${name} via endpoint ${url}`);
+    try {
+      setIsFetching(true);
 
-    setRequest(create(url).post(payload));
-  };
+      const body = await loginUser(name, password);
 
-  useEffect(() => {
-    if (response && response.body.token) {
-      login(response.body.token);
+      login(body.token);
+    } catch (error) {
+      setIsFetching(false);
+      setError(error);
     }
-  }, [response, login]);
+  };
 
   useEffect(() => {
     setIsEmpty(password.length === 0 || name.length === 0);
@@ -68,7 +64,7 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
             <FormControl fullWidth variant="outlined">
               <InputLabel htmlFor="outlined-adornment-password">Name</InputLabel>
               <OutlinedInput
-                disabled={state === 'InProgress'}
+                disabled={isFetching}
                 fullWidth
                 type="text"
                 style={{ marginBottom: '20px' }}
@@ -85,7 +81,7 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
             <FormControl fullWidth variant="outlined">
               <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
               <OutlinedInput
-                disabled={state === 'InProgress'}
+                disabled={isFetching}
                 style={{ marginBottom: '20px' }}
                 name="password"
                 type={showPassword ? 'text' : 'password'}
@@ -105,7 +101,7 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
           </div>
           <div>
             <Button
-              disabled={state === 'InProgress' || isEmpty}
+              disabled={isFetching || isEmpty}
               fullWidth
               onClick={handleSubmit}
               variant="contained"
@@ -116,15 +112,15 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
             </Button>
           </div>
         </form>
-        {exception instanceof RequestException && (
+        {error instanceof RequestException && (
           <Typography className="login-error" style={{ marginTop: '5px' }}>
             Login failed
           </Typography>
         )}
-        {exception instanceof RequestTimeoutException && (
+        {error instanceof RequestTimeoutException && (
           <Typography style={{ marginTop: '5px' }}>Server did not respond, check your internet connection</Typography>
         )}
-        {state === 'InProgress' && <LoadIndicator />}
+        {isFetching && <LoadIndicator />}
       </CardContent>
     </div>
   );

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { selectToken } from '../store/Store';
 import { useSelector } from 'react-redux';
-import { request } from '../helpers/api/RequestHelper';
-import { getUrl } from '../helpers/UrlHelper';
+import { validateUserToken } from '../services/RequestService';
 
 export const usePersistentToken = () => {
   const [persistentToken, setPersistentToken] = useState<string | undefined>(undefined);
@@ -13,10 +12,8 @@ export const usePersistentToken = () => {
   useEffect(() => {
     console.log(`get token from local browser storage`);
 
-    const validateToken = async (token: string) => {
-      const response = await request(getUrl(`/validate-token`)).post({ token: token });
-
-      if (response.body.isValid) {
+    const run = async (token: string) => {
+      if ((await validateUserToken(token)) === true) {
         setPersistentToken(token);
       }
     };
@@ -30,7 +27,7 @@ export const usePersistentToken = () => {
 
     if (token) {
       console.log(`browser had a stored token ${token} validating against server`);
-      validateToken(token);
+      run(token);
     } else {
       console.log(`token not found`);
     }

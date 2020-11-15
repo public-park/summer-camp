@@ -15,7 +15,7 @@ import {
   validateConfigurationLocal,
 } from '../../../actions/SetupAction';
 import { selectSetupConfiguration, selectSetupIsSaving, selectSetupPhoneNumbers } from '../../../store/Store';
-import { fetchPhoneNumbers } from './services/fetchPhoneNumbers';
+import { fetchAccountPhoneNumbers } from '../../../services/RequestService';
 
 export const PhoneNumberConfigurationPanel = () => {
   const dispatch = useDispatch();
@@ -44,11 +44,11 @@ export const PhoneNumberConfigurationPanel = () => {
       try {
         setIsFetching(true);
 
-        const response = await fetchPhoneNumbers(user);
+        const body = await fetchAccountPhoneNumbers(user);
 
         setIsFetching(false);
 
-        dispatch(updatePhoneNumbers(response.callerIds, response.phoneNumbers));
+        dispatch(updatePhoneNumbers(body.outgoingCallerIds, body.incomingPhoneNumbers));
       } catch (error) {
         console.log(error);
       } finally {

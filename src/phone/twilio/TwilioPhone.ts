@@ -43,6 +43,8 @@ export class TwilioPhone implements PhoneControl {
     user.on<CallMessage>(MessageType.Call, async (message: CallMessage) => {
       if (this.hasEnded(message)) {
         this.pauseRingtone();
+
+        await this.onCallEnd();
       }
 
       if (this.isNewIncoming(message)) {

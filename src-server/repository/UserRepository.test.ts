@@ -7,9 +7,9 @@ import { UserRole } from '../models/UserRole';
 import {
   init,
   personas,
-  accountRepository,
+  accountRepository as accounts,
   authenticationProvider,
-  userRepository,
+  userRepository as users,
   secret,
   corporations,
 } from '../test/test-environment';
@@ -22,14 +22,14 @@ describe('User Repository create', () => {
   let authentication: any;
 
   beforeAll(async (done) => {
-    account = await accountRepository.create(`${personas.alice}'s Account`);
+    account = await accounts.create(`${personas.alice}'s Account`);
     authentication = await authenticationProvider.create(secret);
 
     done();
   });
 
   test('should create a new user ', async (done) => {
-    const user = await userRepository.create(
+    const user = await users.create(
       personas.alice,
       undefined,
       new Set(['es', 'jp']),
@@ -46,8 +46,7 @@ describe('User Repository create', () => {
     expect(user.tags.size).toBe(2);
     expect(user.tags.has('es')).toBeTruthy();
     expect(user.tags.has('jp')).toBeTruthy();
-    expect(user.account).toBeInstanceOf(Account);
-    expect(user.account.id).toHaveLength(36);
+    expect(user.accountId).toHaveLength(36);
     expect(user.authentication).toBeDefined();
     expect(user.role).toBe(UserRole.Owner);
     expect(user.createdAt).toBeInstanceOf(Date);
@@ -56,17 +55,17 @@ describe('User Repository create', () => {
   });
 
   test('should fail to create a user with the same name', async (done) => {
-    await expect(
-      userRepository.create(personas.alice, undefined, new Set(['es', 'jp']), account, authentication, UserRole.Owner)
+    expect(
+      users.create(personas.alice, undefined, new Set(['es', 'jp']), account, authentication, UserRole.Owner)
     ).rejects.toThrow();
 
     done();
   });
 
   test('should fail to create a user without name', async (done) => {
-    await expect(
-      userRepository.create('', undefined, new Set(['es', 'jp']), account.id, authentication, UserRole.Owner)
-    ).rejects.toThrow(InvalidUserNameException);
+    expect(users.create('', undefined, new Set(['es', 'jp']), account, authentication, UserRole.Owner)).rejects.toThrow(
+      InvalidUserNameException
+    );
 
     done();
   });
@@ -78,10 +77,10 @@ describe('User Repository read, update and delete a user', () => {
   let account: any;
 
   beforeAll(async (done) => {
-    account = await accountRepository.create(`${personas.joe}'s Account`);
+    account = await accounts.create(`${personas.joe}'s Account`);
     const authentication = await authenticationProvider.create(secret);
 
-    const user = await userRepository.create(
+    const user = await users.create(
       personas.joe,
       undefined,
       new Set(['es', 'jp']),
@@ -97,7 +96,7 @@ describe('User Repository read, update and delete a user', () => {
   });
 
   test('should read a user by id', async (done) => {
-    const user = <User>await userRepository.getById(account, id);
+    const user = <User>await users.getById(id);
 
     expect(user).toBeInstanceOf(User);
     expect(user.id).toHaveLength(36);
@@ -107,7 +106,7 @@ describe('User Repository read, update and delete a user', () => {
     expect(user.tags.size).toBe(2);
     expect(user.tags.has('es')).toBeTruthy();
     expect(user.tags.has('jp')).toBeTruthy();
-    expect(user.account).toBeInstanceOf(Account);
+    expect(user.accountId).toHaveLength(36);
     expect(user.authentication).toBeDefined();
     expect(user.role).toBe(UserRole.Owner);
     expect(user.createdAt).toBeInstanceOf(Date);
@@ -115,23 +114,23 @@ describe('User Repository read, update and delete a user', () => {
     done();
   });
 
-  test('should read the a user by name', async (done) => {
-    const account = await userRepository.getByName(name);
+  test('should read the user by name', async (done) => {
+    const user = await users.getByName(name);
 
-    expect(account).toBeInstanceOf(User);
+    expect(user).toBeInstanceOf(User);
 
     done();
   });
 
   test('should update the user and return the updated object', async (done) => {
-    let user = <User>await userRepository.getById(account, id);
+    let user = <User>await users.getById(id);
 
     user.name = personas.max;
     user.profileImageUrl = 'joe.png';
     user.tags.add('engineer');
     user.tags.add('de');
 
-    user = <User>await userRepository.update(account, user);
+    user = <User>await users.save(user);
 
     expect(user).toBeInstanceOf(User);
     expect(user.name).toBe(personas.max);
@@ -144,11 +143,11 @@ describe('User Repository read, update and delete a user', () => {
   });
 
   test("should remove the user's tags", async (done) => {
-    let user = <User>await userRepository.getById(account, id);
+    let user = <User>await users.getById(id);
 
     user.tags.clear();
 
-    user = <User>await userRepository.update(account, user);
+    user = await users.save(user);
 
     expect(user.name).toBe(personas.max);
     expect(user.tags.size).toBe(0);
@@ -157,33 +156,33 @@ describe('User Repository read, update and delete a user', () => {
   });
 
   test('should fail to set the user name if a user with the same name already exists', async (done) => {
-    let max = <User>await userRepository.getById(account, id);
+    let max = <User>await users.getById(id);
 
     max.name = personas.alice;
 
-    await expect(userRepository.update(account, max)).rejects.toThrow();
+    await expect(users.save(max)).rejects.toThrow();
 
     done();
   });
 
   test('should fail to change the account of a user', async (done) => {
-    let alice = <User>await userRepository.getById(account, id);
+    let alice = <User>await users.getById(id);
 
-    const wonka = await accountRepository.create(corporations.acme);
+    const wonka = await accounts.create(`${corporations.acme}'s Account`);
 
-    alice.account = wonka;
+    alice.accountId = wonka.id;
 
-    await expect(userRepository.update(account, <User>alice)).rejects.toThrow();
+    await expect(users.save(<User>alice)).rejects.toThrow();
 
     done();
   });
 
   test('should fail to set the user name to an empty value', async (done) => {
-    let alice = <User>await userRepository.getById(account, id);
+    let alice = <User>await users.getById(id);
 
     alice.name = '';
 
-    await expect(userRepository.update(account, <User>alice)).rejects.toThrow();
+    await expect(users.save(<User>alice)).rejects.toThrow();
 
     done();
   });
@@ -194,7 +193,7 @@ describe('User Repository read users', () => {
   let authentication: any;
 
   beforeAll(async (done) => {
-    account = await accountRepository.create(`${personas.jane}'s Account`);
+    account = await accounts.create(`${personas.jane}'s Account`);
 
     authentication = await authenticationProvider.create(secret);
 
@@ -202,28 +201,13 @@ describe('User Repository read users', () => {
   });
 
   test('should return all users from the repository', async (done) => {
-    await userRepository.create(
-      personas.julia,
-      undefined,
-      new Set(['es', 'jp']),
-      account,
-      authentication,
-      UserRole.Owner
-    );
+    await users.create(personas.julia, undefined, new Set(['es', 'jp']), account, authentication, UserRole.Owner);
+    await users.create(personas.tim, undefined, new Set(['es', 'jp']), account, authentication, UserRole.Owner);
 
-    await userRepository.create(
-      personas.tim,
-      undefined,
-      new Set(['es', 'jp']),
-      account,
-      authentication,
-      UserRole.Owner
-    );
+    let list = await users.getAll(account);
 
-    let users = await userRepository.getAll(account);
-
-    expect(users).toHaveLength(2);
-    expect(users[0]).toBeInstanceOf(User);
+    expect(list).toHaveLength(2);
+    expect(list[0]).toBeInstanceOf(User);
 
     done();
   });
@@ -234,10 +218,11 @@ describe('User Repository delete', () => {
   let account: any;
 
   beforeAll(async (done) => {
-    account = await accountRepository.create(`${personas.bob}'s Account`);
+    account = await accounts.create(`${personas.bob}'s Account`);
+
     const authentication = await authenticationProvider.create(secret);
 
-    const user = await userRepository.create(
+    const user = await users.create(
       personas.bob,
       undefined,
       new Set(['es', 'jp']),
@@ -252,15 +237,15 @@ describe('User Repository delete', () => {
   });
 
   test('should delete a user', async (done) => {
-    const bob = <User>await userRepository.getById(account, id);
+    const bob = <User>await users.getById(id);
 
-    await expect(userRepository.delete(account, bob)).resolves.toBeUndefined();
+    await expect(users.remove(bob)).resolves.toBeUndefined();
 
     done();
   });
 
   test('should faild to read a user that does not exist an return undefined', async (done) => {
-    await expect(userRepository.getById(account, id)).resolves.toBeUndefined();
+    await expect(users.getById(id)).resolves.toBeUndefined();
 
     done();
   });
@@ -270,13 +255,25 @@ describe('user activities', () => {
   let user: any;
 
   beforeAll(async (done) => {
-    user = await userRepository.getByName(personas.max);
+    const account = await accounts.create(`${personas.eva}'s Account`);
+
+    const authentication = await authenticationProvider.create(secret);
+
+    user = await users.create(
+      personas.eva,
+      undefined,
+      new Set(['es', 'jp']),
+      account,
+      authentication,
+      UserRole.Owner,
+      UserActivity.Away
+    );
 
     done();
   });
 
   test('should find the default activity', async (done) => {
-    expect(user.activity).toBe(UserActivity.Unknown);
+    expect(user.activity).toBe(UserActivity.Away);
 
     done();
   });
@@ -284,7 +281,7 @@ describe('user activities', () => {
   test('should set activity', async (done) => {
     user.activity = UserActivity.WaitingForWork;
 
-    await userRepository.update(user.account, user);
+    await users.save(user);
 
     expect(user.activity).toBe(UserActivity.WaitingForWork);
 

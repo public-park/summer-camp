@@ -3,8 +3,8 @@ require('dotenv').config();
 import {
   init,
   personas,
-  accountRepository,
-  callRepository,
+  accountRepository as accounts,
+  callRepository as calls,
   authenticationProvider,
   userRepository,
   secret,
@@ -31,7 +31,10 @@ describe('Call Repository create, update', () => {
   let user: any;
 
   beforeAll(async (done) => {
-    account = await accountRepository.create(`${personas.alice}'s Account`);
+    account = await accounts.create(`${personas.alice}'s Account`);
+
+    accounts.save(account);
+
     authentication = await authenticationProvider.create(secret);
 
     user = await userRepository.create(
@@ -43,27 +46,18 @@ describe('Call Repository create, update', () => {
       UserRole.Owner
     );
 
+    userRepository.save(user);
+
     done();
   });
 
   test('should create a call and set all values', async (done) => {
-    const callSid = generateCallSid();
     const to = generatePhoneNumber();
     const from = generatePhoneNumber();
 
-    const call = await callRepository.create(
-      from,
-      to,
-      account,
-      CallStatus.Ringing,
-      CallDirection.Inbound,
-
-      user,
-      callSid
-    );
+    let call = await calls.create(account, from, to, CallDirection.Inbound, CallStatus.Ringing, user);
 
     expect(call).toBeInstanceOf(Call);
-    expect(call.callSid).toBe(callSid);
     expect(call.from).toBe(from);
     expect(call.to).toBe(to);
     expect(call.accountId).toBe(account.id);
@@ -71,24 +65,23 @@ describe('Call Repository create, update', () => {
     expect(call.status).toBe(CallStatus.Ringing);
     expect(call.direction).toBe(CallDirection.Inbound);
     expect(call.createdAt).toBeInstanceOf(Date);
-    expect(call.updatedAt).toBeUndefined();
+    expect(call.updatedAt).toBeInstanceOf(Date);
     expect(call.answeredAt).toBeUndefined();
 
     done();
   });
 
   test('should update a call and return an object with the update values', async (done) => {
-    const callSid = generateCallSid();
     const to = generatePhoneNumber();
     const from = generatePhoneNumber();
+    const callSid = generateCallSid();
 
-    let call = await callRepository.create(from, to, account, CallStatus.Ringing, CallDirection.Inbound, user, callSid);
+    let call = await calls.create(account, from, to, CallDirection.Inbound, CallStatus.Ringing, user);
 
-    const callSidUpdate = generateCallSid();
     const toUpdated = generatePhoneNumber();
     const fromUpdated = generatePhoneNumber();
 
-    call.callSid = callSidUpdate;
+    call.callSid = callSid;
     call.from = fromUpdated;
     call.to = toUpdated;
     call.accountId = 'AX';
@@ -97,16 +90,17 @@ describe('Call Repository create, update', () => {
     call.direction = CallDirection.Outbound;
     call.answeredAt = new Date();
 
-    call = await callRepository.update(call);
+    call = await calls.save(call);
 
     expect(call).toBeInstanceOf(Call);
-    expect(call.callSid).toBe(callSidUpdate);
+    expect(call.callSid).toBe(callSid);
     expect(call.from).toBe(fromUpdated);
     expect(call.to).toBe(toUpdated);
     expect(call.accountId).toBe('AX');
     expect(call.userId).toBe('UX');
     expect(call.status).toBe(CallStatus.Completed);
     expect(call.direction).toBe(CallDirection.Outbound);
+    expect(call.callSid).toBe(callSid);
     expect(call.createdAt).toBe(call.createdAt);
     expect(call.updatedAt).toBeInstanceOf(Date);
     expect(call.answeredAt).toBeInstanceOf(Date);
@@ -115,22 +109,12 @@ describe('Call Repository create, update', () => {
   });
 
   test('should read an updated call and all values are set', async (done) => {
-    const callSid = generateCallSid();
     const to = generatePhoneNumber();
     const from = generatePhoneNumber();
 
-    const callA = await callRepository.create(
-      from,
-      to,
-      account,
-      CallStatus.Ringing,
-      CallDirection.Inbound,
+    const callA = await calls.create(account, from, to, CallDirection.Inbound, CallStatus.Ringing, user);
 
-      user,
-      callSid
-    );
-
-    const callB = await callRepository.getById(callA.id);
+    const callB = await calls.getById(callA.id);
 
     expect(callB).toBeInstanceOf(Call);
     expect(callB?.id).toBe(callA.id);
@@ -147,24 +131,14 @@ describe('Call Repository create, update', () => {
   });
 
   test('should update a call status and duration', async (done) => {
-    const callSid = generateCallSid();
     const to = generatePhoneNumber();
     const from = generatePhoneNumber();
 
-    const call = await callRepository.create(
-      from,
-      to,
-      account,
-      CallStatus.Ringing,
-      CallDirection.Inbound,
-
-      user,
-      callSid
-    );
+    const call = await calls.create(account, from, to, CallDirection.Inbound, CallStatus.Ringing, user);
 
     call.status = CallStatus.InProgress;
 
-    const callB = await callRepository.update(call);
+    const callB = await calls.save(call);
 
     expect(callB).toBeInstanceOf(Call);
     expect(callB?.status).toBe(CallStatus.InProgress);
@@ -173,7 +147,7 @@ describe('Call Repository create, update', () => {
     call.duration = 100;
     call.status = CallStatus.Completed;
 
-    const callC = await callRepository.update(call);
+    const callC = await calls.save(call);
 
     expect(callC).toBeInstanceOf(Call);
     expect(callC?.status).toBe(CallStatus.Completed);
@@ -183,25 +157,17 @@ describe('Call Repository create, update', () => {
   });
 
   test('should delete a call and the following read returns undefined', async (done) => {
-    const callSid = generateCallSid();
     const to = generatePhoneNumber();
     const from = generatePhoneNumber();
 
-    const call = await callRepository.create(
-      from,
-      to,
-      account,
-      CallStatus.Ringing,
-      CallDirection.Inbound,
-      user,
-      callSid
-    );
+    const call = await calls.create(account, from, to, CallDirection.Inbound, CallStatus.Ringing, user);
+    await calls.save(call);
 
     expect(call).toBeInstanceOf(Call);
 
-    await callRepository.delete(call);
+    await calls.remove(call);
 
-    let callDeleted = await callRepository.getById(call.id);
+    let callDeleted = await calls.getById(call.id);
 
     expect(callDeleted).toBeUndefined();
 
@@ -217,8 +183,8 @@ describe('Call Repository call list', () => {
   let max: any;
 
   beforeAll(async (done) => {
-    good = await accountRepository.create(corporations.good);
-    wonka = await accountRepository.create(corporations.wonka);
+    good = await accounts.create(corporations.good);
+    wonka = await accounts.create(corporations.wonka);
 
     const authentication = await authenticationProvider.create(secret);
 
@@ -249,19 +215,28 @@ describe('Call Repository call list', () => {
     const to = generatePhoneNumber();
     const from = generatePhoneNumber();
 
-    await callRepository.create(from, to, good, CallStatus.Ringing, CallDirection.Inbound, joe, callSidA);
-    await callRepository.create(from, to, good, CallStatus.Ringing, CallDirection.Inbound, max, callSidB);
+    const call = await calls.create(good, from, to, CallDirection.Inbound, CallStatus.Ringing, joe);
 
-    const callsMadeByJoe = await callRepository.getByUser(joe);
+    call.callSid = callSidA;
+
+    await calls.save(call);
+
+    const callB = await calls.create(good, from, to, CallDirection.Inbound, CallStatus.Ringing, max);
+
+    callB.callSid = callSidB;
+
+    await calls.save(callB);
+
+    const callsMadeByJoe = await calls.getByUser(joe);
 
     expect(callsMadeByJoe).toHaveLength(1);
 
-    const callsMadeByMax = await callRepository.getByUser(max);
+    const callsMadeByMax = await calls.getByUser(max);
 
     expect(callsMadeByMax).toHaveLength(1);
     expect(callsMadeByMax[0]).toBeInstanceOf(Call);
 
-    const callsMadeByAccount = await callRepository.getByAccount(good);
+    const callsMadeByAccount = await calls.getByAccount(good);
 
     expect(callsMadeByAccount).toHaveLength(2);
     expect(callsMadeByAccount[0]).toBeInstanceOf(Call);
@@ -271,7 +246,7 @@ describe('Call Repository call list', () => {
   });
 
   test('should return an empty list for a user that has no calls', async (done) => {
-    const callsMadeByAccount = await callRepository.getByUser(wonka);
+    const callsMadeByAccount = await calls.getByUser(wonka);
 
     expect(callsMadeByAccount).toHaveLength(0);
 
@@ -279,13 +254,12 @@ describe('Call Repository call list', () => {
   });
 
   test('should return a list with one call', async (done) => {
-    const callSid = generateCallSid();
     const to = generatePhoneNumber();
     const from = generatePhoneNumber();
 
-    await callRepository.create(from, to, wonka, CallStatus.Ringing, CallDirection.Inbound, max, callSid);
+    const call = await calls.create(wonka, from, to, CallDirection.Inbound, CallStatus.Ringing, max);
 
-    const callsMadeByAccount = await callRepository.getByAccount(wonka);
+    const callsMadeByAccount = await calls.getByAccount(wonka);
 
     expect(callsMadeByAccount).toHaveLength(1);
 

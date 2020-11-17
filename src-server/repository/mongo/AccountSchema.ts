@@ -16,7 +16,7 @@ export interface AccountDocument extends Document {
 const AccountSchema = new Schema(
   {
     _id: { type: String, default: uuidv4 },
-    name: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
     configuration: Schema.Types.Mixed,
     createdAt: { type: Date, default: Date.now, required: true },
   },

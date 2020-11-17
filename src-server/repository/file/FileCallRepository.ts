@@ -4,12 +4,12 @@ import { CallRepository } from '../CallRepository';
 import { User } from '../../models/User';
 import { Account } from '../../models/Account';
 import { FileBaseRepository } from './FileBaseRepository';
-import { Call } from '../../models/Call';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { CallStatus } from '../../models/CallStatus';
 import { CallDirection } from '../../models/CallDirection';
 import { EventEmitter } from 'events';
 import { InvalidDocumentException } from '../../exceptions/InvalidDocumentException';
+import { Call } from '../../models/Call';
 
 interface CallDocument {
   id: string;
@@ -59,17 +59,21 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
   }
 
   async create(
+    account: Account,
     from: string,
     to: string,
-    account: Account,
-    status: CallStatus,
     direction: CallDirection,
+    status: CallStatus,
     user?: User,
     callSid?: string
   ) {
-    const call = new Call(uuidv4(), callSid, from, to, account.id, user?.id, status, direction, new Date());
+    const call = new Call(uuidv4(), from, to, account.id, direction, status, user, callSid);
 
-    call.createdAt = new Date();
+    return this.save(call);
+  }
+
+  async save(call: Call) {
+    call.updatedAt = new Date();
 
     this.calls.set(call.id, call);
 
@@ -77,7 +81,7 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
 
     this.eventEmitter.emit('call', call);
 
-    return Promise.resolve(call);
+    return call;
   }
 
   protected fromPlainObjects(list: Array<unknown>): Map<string, Call> {
@@ -99,20 +103,34 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
 
     const item = data as CallDocument;
 
-    return new Call(
-      item.id,
-      item.callSid,
-      item.from,
-      item.to,
-      item.accountId,
-      item.userId,
-      item.status,
-      item.direction,
-      new Date(item.createdAt),
-      item.duration,
-      item.answeredAt ? new Date(item.answeredAt) : undefined,
-      item.updatedAt ? new Date(item.updatedAt) : undefined
-    );
+    const call = new Call(item.id, item.from, item.to, item.accountId, item.direction, item.status);
+
+    call.createdAt = new Date(item.createdAt);
+
+    if (item.userId) {
+      call.userId = item.userId;
+    }
+
+    if (item.callSid) {
+      call.callSid = item.callSid;
+    }
+
+    if (item.status) {
+      call.status = item.status;
+    }
+    if (item.duration) {
+      call.duration = item.duration;
+    }
+
+    if (item.answeredAt) {
+      call.answeredAt = new Date(item.answeredAt);
+    }
+
+    if (item.updatedAt) {
+      call.updatedAt = new Date(item.updatedAt);
+    }
+
+    return call;
   }
 
   async getById(id: string) {
@@ -160,19 +178,7 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     return Promise.resolve(list.map((call) => call).reverse());
   }
 
-  async update(call: Call) {
-    call.updatedAt = new Date();
-
-    this.calls.set(call.id, call);
-
-    await this.persist(this.toPlainObjects());
-
-    this.eventEmitter.emit('call', call);
-
-    return Promise.resolve(<Call>call);
-  }
-
-  async delete(call: Call) {
+  async remove(call: Call) {
     if (!(await this.getById(call.id))) {
       throw new CallNotFoundException();
     }
@@ -182,7 +188,7 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     return this.persist(this.toPlainObjects());
   }
 
-  onUpdate(listener: (call: Call) => void) {
+  onLifecycleEvent(listener: (call: Call) => void) {
     this.eventEmitter.on('call', listener);
   }
 }

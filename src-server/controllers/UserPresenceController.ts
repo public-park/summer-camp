@@ -1,11 +1,11 @@
 import { NextFunction, Response } from 'express';
-import { RequestWithUser } from '../requests/RequestWithUser';
 import { pool } from '../worker';
 import { UserNotFoundException } from '../exceptions/UserNotFoundException';
+import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 
-const get = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+const get = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const user = await pool.getByIdWithFallback(req.user.account, req.params.userId);
+    const user = await pool.getByIdWithFallback(req.params.userId);
 
     if (!user) {
       throw new UserNotFoundException();

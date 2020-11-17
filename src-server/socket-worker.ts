@@ -64,7 +64,7 @@ export class SocketWorker {
       throw new AccountNotFoundException();
     }
 
-    const user = await this.pool.getByIdWithFallback(account, <string>headers.userId);
+    const user = await this.pool.getByIdWithFallback(<string>headers.userId);
 
     if (!user) {
       throw new UserNotFoundException();

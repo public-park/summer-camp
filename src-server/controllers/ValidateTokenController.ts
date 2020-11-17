@@ -17,7 +17,7 @@ const validate = async (req: Request, res: Response) => {
       throw new AccountNotFoundException();
     }
 
-    const user = await userRepository.getById(account, payload.userId);
+    const user = await userRepository.getById(payload.userId);
 
     if (!user) {
       throw new UserNotFoundException();

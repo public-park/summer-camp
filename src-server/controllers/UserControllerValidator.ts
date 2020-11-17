@@ -1,4 +1,4 @@
-import { accountRepository, userRepository } from '../worker';
+import { userRepository } from '../worker';
 import { UserActivity } from '../models/UserActivity';
 import { InvalidUserPropertyException } from '../exceptions/InvalidUserPropertyException';
 import { UserAlreadyExistsException } from '../exceptions/UserAlreadyExistsException';

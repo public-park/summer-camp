@@ -16,7 +16,7 @@ export class User {
   profileImageUrl: string | undefined;
   tags: Set<string>;
   activity: UserActivity;
-  account: Account;
+  accountId: string;
   authentication: UserAuthentication;
   createdAt: Date;
   role: UserRole;
@@ -27,7 +27,7 @@ export class User {
     profileImageUrl: string | undefined,
     tags: Set<string>,
     activity: UserActivity,
-    account: Account,
+    accountId: string,
     authentication: UserAuthentication,
     role: UserRole,
     createdAt: Date = new Date()
@@ -37,7 +37,7 @@ export class User {
     this.profileImageUrl = profileImageUrl;
     this.tags = tags;
     this.activity = activity;
-    this.account = account;
+    this.accountId = accountId;
     this.authentication = authentication;
     this.role = role;
     this.createdAt = createdAt;
@@ -66,7 +66,7 @@ export class User {
       profileImageUrl: this.profileImageUrl,
       tags: Array.from(this.tags),
       activity: this.activity,
-      accountId: this.account.id,
+      accountId: this.accountId,
       authentication: {
         provider: this.authentication.provider,
       },
@@ -74,11 +74,11 @@ export class User {
     };
   }
 
-  getConfiguration(): UserConfiguration | undefined {
-    if (this.account.configuration) {
+  getConfiguration(account: Account): UserConfiguration | undefined {
+    if (account.configuration) {
       return {
-        inbound: this.account.configuration.inbound,
-        outbound: this.account.configuration.outbound,
+        inbound: account.configuration.inbound,
+        outbound: account.configuration.outbound,
       };
     }
   }

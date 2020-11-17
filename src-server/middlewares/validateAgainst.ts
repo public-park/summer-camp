@@ -1,14 +1,15 @@
 import * as Ajv from 'ajv';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { InvalidRequestBodyException } from '../exceptions/InvalidRequestBodyException';
 import { log } from '../logger';
+import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 
 export const validateAgainst = (schema: {}) => {
   const ajv = new Ajv();
 
   const validate = ajv.compile(schema);
 
-  return (request: Request, response: Response, next: Function) => {
+  return (request: AuthenticatedRequest, response: Response, next: Function) => {
     const isValid = validate(request.body);
 
     if (isValid) {

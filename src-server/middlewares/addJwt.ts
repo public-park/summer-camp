@@ -1,11 +1,11 @@
 import { Response, NextFunction } from 'express';
 import { userRepository, accountRepository } from '../worker';
-import { RequestWithUser } from '../requests/RequestWithUser';
 import { UserNotFoundException } from '../exceptions/UserNotFoundException';
 import { ServerException } from '../exceptions/ServerException';
 import { AccountNotFoundException } from '../exceptions/AccountNotFoundException';
+import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 
-export const addUserToRequest = async (request: RequestWithUser, response: Response, next: NextFunction) => {
+export const addJwt = async (request: AuthenticatedRequest, response: Response, next: NextFunction) => {
   try {
     const { accountId, userId } = request.headers;
 
@@ -15,13 +15,16 @@ export const addUserToRequest = async (request: RequestWithUser, response: Respo
       return next(new AccountNotFoundException());
     }
 
-    const user = await userRepository.getById(account, <string>userId);
+    const user = await userRepository.getById(<string>userId);
 
     if (!user) {
       return next(new UserNotFoundException());
     }
 
-    request.user = user;
+    request.jwt = {
+      user,
+      account,
+    };
 
     return next();
   } catch (error) {

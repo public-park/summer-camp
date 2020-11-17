@@ -1,7 +1,7 @@
-import { Response, NextFunction } from 'express';
+import { Response, NextFunction, request } from 'express';
 import isUUID from 'validator/lib/isUUID';
 import { InvalidUrlException } from '../../exceptions/InvalidUrlException';
-import { accountRepository } from '../../worker';
+import { accountRepository as accounts } from '../../worker';
 import { AccountNotFoundException } from '../../exceptions/AccountNotFoundException';
 import { ServerException } from '../../exceptions/ServerException';
 import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
@@ -17,15 +17,20 @@ export const addAccountToRequest = async (
       return next(new InvalidUrlException('accountId is not a valid UUID'));
     }
 
-    const account = await accountRepository.getById(accountId);
+    const account = await accounts.getById(accountId);
 
     if (!account) {
       return next(new AccountNotFoundException());
     }
 
-    request.account = account;
+    request.resource = {
+      ...request.resource,
+      account,
+    };
+
     return next();
   } catch (error) {
+    console.log(error); // TODO otherwise not written to consoe ..
     return next(new ServerException());
   }
 };

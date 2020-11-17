@@ -4,15 +4,15 @@ import { TwilioHelper } from '../helpers/twilio/TwilioHelper';
 import { fetchAllIncomingPhoneNumbers, fetchAllOutgoingCallerIds } from './ConfigurationPhoneNumberController';
 import { accountRepository } from '../worker';
 import { AccountConfiguration } from '../models/AccountConfiguration';
-import { RequestWithUser } from '../requests/RequestWithUser';
 import { ConfigurationValidationFailedException } from '../exceptions/ConfigurationValidationFailedException';
 import { getCallbackUrl } from './callback/PhoneHelper';
 import { pool } from '../worker';
 import { ConfigurationMessage } from '../models/socket/messages/ConfigurationMessage';
+import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 
-const update = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+const update = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const account = req.user.account;
+    const { account } = req.jwt;
 
     account.configuration = { ...account.configuration, ...req.body } as AccountConfiguration;
 
@@ -28,18 +28,18 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
     /* update phone number configuration on Twilio */
     if (account.configuration.inbound.isEnabled === true) {
-      const voiceUrl = getCallbackUrl(`callback/accounts/${req.user.account.id}/phone/inbound`);
-      const statusCallbackUrl = getCallbackUrl(`/callback/accounts/${req.user.account.id}/phone/inbound/completed`);
+      const voiceUrl = getCallbackUrl(`callback/accounts/${req.jwt.user.accountId}/phone/inbound`);
+      const statusCallbackUrl = getCallbackUrl(`/callback/accounts/${req.jwt.user.accountId}/phone/inbound/completed`);
 
       await helper.configureInbound(account.configuration.inbound.phoneNumber as string, voiceUrl, statusCallbackUrl);
     }
 
-    await accountRepository.update(account);
+    await accountRepository.save(account);
 
     if (account.configuration.inbound.isEnabled || account.configuration.outbound.isEnabled) {
       const users = pool.getAll(account);
 
-      users.forEach((user) => user.broadcast(new ConfigurationMessage(user.getConfiguration())));
+      users.forEach((user) => user.broadcast(new ConfigurationMessage(user.getConfiguration(account))));
     }
 
     res.status(200).end();
@@ -48,11 +48,11 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
   }
 };
 
-const validate = async (req: RequestWithUser, res: Response, next: Function) => {
+const validate = async (req: AuthenticatedRequest, res: Response, next: Function) => {
   let { key, secret, accountSid } = req.body;
   /* configuration secret is write-only; assign secret from existing configuration */
   if (!req.body.secret) {
-    const account = req.user.account;
+    const { account } = req.jwt;
 
     if (account.configuration && account.configuration.secret) {
       secret = account.configuration.secret;
@@ -106,9 +106,9 @@ const validate = async (req: RequestWithUser, res: Response, next: Function) => 
   }
 };
 
-const fetch = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+const fetch = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    res.json(req.user.account.getConfigurationWithoutSecret());
+    res.json(req.jwt.account.getConfigurationWithoutSecret());
   } catch (error) {
     return next(error);
   }

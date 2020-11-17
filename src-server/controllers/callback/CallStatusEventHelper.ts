@@ -1,6 +1,6 @@
-import { RequestWithAccount } from '../../requests/RequestWithAccount';
 import { CallStatus } from '../../models/CallStatus';
 import { InvalidRequestBodyException } from '../../exceptions/InvalidRequestBodyException';
+import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
 
 export interface CallStatusEvent {
   callSid: string;
@@ -10,7 +10,7 @@ export interface CallStatusEvent {
   duration: number | undefined;
 }
 
-export const getDuration = (request: RequestWithAccount) => {
+export const getDuration = (request: StatusCallbackRequest) => {
   if (request.body.CallStatus !== CallStatus.Completed.toLocaleLowerCase()) {
     return;
   }
@@ -20,7 +20,7 @@ export const getDuration = (request: RequestWithAccount) => {
   }
 };
 
-export const getStatus = (request: RequestWithAccount) => {
+export const getStatus = (request: StatusCallbackRequest) => {
   switch (request.body.CallStatus) {
     case 'initiated':
       return CallStatus.Initiated;

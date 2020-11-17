@@ -3,15 +3,15 @@ import { toPassportConfig, MetadataReader } from 'passport-saml-metadata';
 
 import * as PassportSaml from 'passport-saml';
 import { Profile, VerifiedCallback } from 'passport-saml';
-import { RequestWithAccount } from '../requests/RequestWithAccount';
 import { UserRole } from '../models/UserRole';
+import { StatusCallbackRequest } from '../requests/StatusCallbackRequest';
 
 export interface UserProfile extends Profile {
   role?: UserRole;
   name?: string;
 }
 
-export interface RequestWithProfile extends RequestWithAccount {
+export interface RequestWithProfile extends StatusCallbackRequest {
   profile: UserProfile;
 }
 

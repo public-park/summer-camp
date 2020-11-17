@@ -1,12 +1,12 @@
 import { Response, NextFunction } from 'express';
 import isUUID from 'validator/lib/isUUID';
 import { userRepository } from '../worker';
-import { RequestWithUser } from '../requests/RequestWithUser';
+import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 import { InvalidUrlException } from '../exceptions/InvalidUrlException';
 import { UserNotFoundException } from '../exceptions/UserNotFoundException';
 
 export const verifyUserResourcePolicy = async (
-  req: RequestWithUser,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction,
   userId: string
@@ -16,11 +16,16 @@ export const verifyUserResourcePolicy = async (
   }
 
   try {
-    const user = await userRepository.getById(req.user.account, userId);
+    const user = await userRepository.getById(userId);
 
     if (!user) {
       return next(new UserNotFoundException());
     }
+
+    req.resource = {
+      ...req.resource,
+      user,
+    };
 
     return next();
   } catch (error) {

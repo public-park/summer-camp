@@ -10,23 +10,28 @@ import { CallDirection } from '../models/CallDirection';
 import { UserMessage } from '../models/socket/messages/UserMessage';
 import { Call } from '../models/Call';
 import { UserWithSocket } from '../models/UserWithSocket';
+import { AccountRepository } from '../repository/AccountRepository';
 
 export class UserPoolManager {
   pool: Map<string, UserWithSocket>;
   calls: CallRepository;
   users: UserRepository;
+  accounts: AccountRepository;
 
-  constructor(users: UserRepository, calls: CallRepository) {
+  constructor(accounts: AccountRepository, users: UserRepository, calls: CallRepository) {
     this.pool = new Map();
+    this.accounts = accounts;
     this.users = users;
     this.calls = calls;
 
-    this.calls.onUpdate((call) => {
+    this.calls.onLifecycleEvent((call) => {
       const user = this.getUser(call);
 
       if (user) {
-        this.broadcastCallStatusToUser(user);
-        this.broadcast(user);
+        user.call = call.isActive() ? call : undefined;
+
+        this.sendToAccount(user);
+        this.sendCallStateToUser(user, user.call);
       }
     });
   }
@@ -42,28 +47,21 @@ export class UserPoolManager {
       return;
     }
 
-    user.call = call.isActive() ? call : undefined;
-
     return user;
   }
 
-  broadcastCallStatusToUser(user: UserWithSocket): void {
-    /* state was already published by message handler */
-    if (user.call && user.call.status === CallStatus.Initiated && user.call.direction === CallDirection.Outbound) {
-      return;
-    }
-
-    user.broadcast(new CallMessage(user.call));
+  sendCallStateToUser(user: UserWithSocket, call: Call | undefined): void {
+    user.broadcast(new CallMessage(call));
   }
 
-  async broadcast(user: UserWithSocket) {
+  async sendToAccount(user: UserWithSocket) {
     this.getAll(user.account).forEach((it) => it.broadcast(new UserMessage(user)));
   }
 
   async add(user: UserWithSocket): Promise<UserWithSocket> {
     this.pool.set(user.id, user);
 
-    this.broadcast(user);
+    this.sendToAccount(user);
 
     return user;
   }
@@ -72,9 +70,9 @@ export class UserPoolManager {
     let it = this.getById(user.id);
 
     if (it) {
-      this.pool.set(user.id, this.getUserWithSocket(user, it.sockets.get()));
+      this.pool.set(user.id, user);
 
-      this.broadcast(user);
+      this.sendToAccount(user);
     } else {
       throw new UserNotFoundException();
     }
@@ -85,7 +83,7 @@ export class UserPoolManager {
 
     this.pool.delete(user.id);
 
-    this.broadcast(user);
+    this.sendToAccount(user);
   }
 
   getById(id: string): UserWithSocket | undefined {
@@ -102,15 +100,17 @@ export class UserPoolManager {
     return user;
   }
 
-  async getByIdWithFallback(account: Account, id: string): Promise<UserWithSocket | undefined> {
+  async getByIdWithFallback(id: string): Promise<UserWithSocket | undefined> {
     let UserWithSocket = this.getById(id);
 
     if (UserWithSocket) {
       return UserWithSocket;
     } else {
-      const user = await this.users.getById(account, id);
+      const user = await this.users.getById(id);
 
       if (user) {
+        const account = (await this.accounts.getById(user.accountId)) as Account;
+
         return this.getUserWithSocket(user);
       }
     }
@@ -141,11 +141,13 @@ export class UserPoolManager {
   }
 
   getAll(account: Account): Array<UserWithSocket> {
-    return Array.from(this.pool.values()).filter((user) => user.account.id === account.id);
+    return Array.from(this.pool.values()).filter((user) => user.accountId === account.id);
   }
 
-  getUserWithSocket = (user: User, sockets: Array<WebSocketWithKeepAlive> = []): UserWithSocket => {
-    return new UserWithSocket(user, sockets, this.users);
+  getUserWithSocket = async (user: User, sockets: Array<WebSocketWithKeepAlive> = []): Promise<UserWithSocket> => {
+    const account = (await this.accounts.getById(user.accountId)) as Account;
+
+    return new UserWithSocket(account, user, sockets, this.users);
   };
 
   getSize = () => {

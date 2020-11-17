@@ -8,6 +8,7 @@ import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { CallStatus } from '../../models/CallStatus';
 import { CallDirection } from '../../models/CallDirection';
 import { EventEmitter } from 'events';
+import { v4 as uuidv4 } from 'uuid';
 
 export class MongoCallRepository implements CallRepository, BaseRepository<Call> {
   private eventEmitter: EventEmitter;
@@ -17,31 +18,17 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
   }
 
   async create(
+    account: Account,
     from: string,
     to: string,
-    account: Account,
-    status: CallStatus,
     direction: CallDirection,
+    status: CallStatus,
     user?: User,
     callSid?: string
   ) {
-    const model = new CallModel({
-      from: from,
-      to: to,
-      accountId: account.id,
-      status: status,
-      direction: direction,
-      userId: user?.id,
-      callSid: callSid,
-    });
+    const call = new Call(uuidv4(), from, to, account.id, direction, status, user, callSid);
 
-    const document = await model.save();
-
-    const call = document.toCall();
-
-    this.eventEmitter.emit('call', call);
-
-    return call;
+    return this.save(call);
   }
 
   async getById(id: string) {
@@ -78,11 +65,11 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
     return documents.map((document) => document.toCall());
   }
 
-  async update(entity: Call) {
+  async save(call: Call) {
     const document = await CallModel.findOneAndUpdate(
-      { _id: entity.id },
+      { _id: call.id },
       {
-        ...entity,
+        ...call,
         updatedAt: new Date(),
       },
       {
@@ -93,17 +80,17 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
     );
 
     if (document) {
-      const call = document.toCall();
+      const it = document.toCall();
 
       this.eventEmitter.emit('call', call);
 
-      return call;
+      return it;
     } else {
       throw new CallNotFoundException();
     }
   }
 
-  async delete(call: Call) {
+  async remove(call: Call) {
     const document = await CallModel.deleteOne({ _id: call.id });
 
     if (document) {
@@ -113,7 +100,7 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
     }
   }
 
-  onUpdate(listener: (call: Call) => void) {
+  onLifecycleEvent(listener: (call: Call) => void) {
     this.eventEmitter.on('call', listener);
   }
 }

@@ -38,6 +38,12 @@ export class FileAccountRepository
     this.accounts = this.fromPlainObjects(this.load());
   }
 
+  async create(name: string) {
+    const account = new Account(uuidv4(), name);
+
+    return await this.save(account);
+  }
+
   getById = async (id: string) => {
     const account = this.accounts.get(id);
 
@@ -45,20 +51,12 @@ export class FileAccountRepository
   };
 
   getAll = async () => {
-    return Promise.resolve(this.accounts);
+    return Promise.resolve(Array.from(this.accounts.values()));
   };
 
-  update = async (account: Account) => {
-    if (!(await this.getById(account.id))) {
-      throw new AccountNotFoundException();
-    }
-
-    const existingAccount = await this.getById(account.id);
-
-    if (existingAccount && existingAccount.name !== account.name) {
-      if (await this.getByName(account.name)) {
-        throw new InvalidAccountNameException();
-      }
+  save = async (account: Account) => {
+    if (!account.name) {
+      throw new InvalidAccountNameException();
     }
 
     this.accounts.set(account.id, account);
@@ -68,7 +66,7 @@ export class FileAccountRepository
     return account;
   };
 
-  delete = async (account: Account) => {
+  remove = async (account: Account) => {
     if (!(await this.getById(account.id))) {
       throw new AccountNotFoundException();
     }
@@ -76,24 +74,6 @@ export class FileAccountRepository
     this.accounts.delete(account.id);
 
     return this.persist(this.toPlainObjects());
-  };
-
-  create = async (name: string) => {
-    if (!name) {
-      throw new InvalidAccountNameException();
-    }
-
-    if (await this.getByName(name)) {
-      throw new AccountNotFoundException();
-    }
-
-    const account = new Account(uuidv4(), name);
-
-    this.accounts.set(account.id, account);
-
-    await this.persist(this.toPlainObjects());
-
-    return Promise.resolve(account);
   };
 
   protected toPlainObject(account: Account): AccountDocument {
@@ -144,10 +124,6 @@ export class FileAccountRepository
   }
 
   getByName = async (name: string) => {
-    for (const account of this.accounts.values()) {
-      if (account.name === name) {
-        return Promise.resolve(account);
-      }
-    }
+    return Array.from(this.accounts.values()).filter((account) => account.name === name);
   };
 }

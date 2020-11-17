@@ -4,7 +4,7 @@ import { UserWithSocket } from '../../models/UserWithSocket';
 const handle = async (user: UserWithSocket, message: TagMessage): Promise<TagMessage> => {
   user.tags = new Set(message.payload.tags);
 
-  await user.persist();
+  await user.save();
 
   return new TagMessage(user.tags, message.header.id);
 };

@@ -9,9 +9,9 @@ const handle = async (
 ): Promise<ActivityMessage> => {
   user.activity = message.payload.activity;
 
-  await user.persist();
+  await user.save();
 
-  pool.broadcast(user);
+  pool.sendToAccount(user);
 
   return new ActivityMessage(user.activity, message.header.id);
 };

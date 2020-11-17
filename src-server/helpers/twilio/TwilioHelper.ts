@@ -14,6 +14,7 @@ import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { CallListInstanceCreateOptions } from 'twilio/lib/rest/api/v2010/account/call';
 import { CallStatus } from '../../models/CallStatus';
 import { CallNotInProgressException } from '../../exceptions/CallNotInProgressException';
+import { createConferenceTwiml } from './TwilioTwimlHelper';
 
 interface VoiceAccessToken extends AccessToken {
   identity: string;
@@ -123,23 +124,35 @@ export class TwilioHelper {
   }
 
   async addUserToConference(call: Call) {
-    await this.addParticipantToConference(
+    return await this.addParticipantToConference(
       call.id,
       call.to,
       `client:${getIdentityByUserId(<string>call.userId)}`,
       'agent',
-      getCallbackUrl(`status-callback/accounts/${call.accountId}/calls/${call.id}/${call.direction}`),
+      getCallbackUrl(`status-callback/accounts/${call.accountId}/calls/${call.id}/status`),
       ['answered']
     );
   }
 
+  async initiateOutgoingCall(call: Call, user: User, account: Account): Promise<string> {
+    const options: CallListInstanceCreateOptions = {
+      twiml: createConferenceTwiml(call, 'agent'),
+      to: `client:${getIdentityByUserId(<string>user.id)}`,
+      from: getCallerId(account),
+    };
+
+    const { sid } = await this.client.calls.create(options);
+
+    return sid;
+  }
+
   async addCustomerToConference(call: Call) {
-    await this.addParticipantToConference(
+    return await this.addParticipantToConference(
       call.id,
       call.from,
       call.to,
       'customer',
-      getCallbackUrl(`status-callback/accounts/${call.accountId}/calls/${call.id}/${call.direction}`),
+      getCallbackUrl(`status-callback/accounts/${call.accountId}/calls/${call.id}/status`),
       ['ringing', 'answered', 'completed']
     );
   }
@@ -169,18 +182,6 @@ export class TwilioHelper {
     return call.callSid;
   }
 
-  async connectUser(call: Call, user: User): Promise<string> {
-    const options: CallListInstanceCreateOptions = {
-      url: getCallbackUrl(`callback/accounts/${user.account.id}/phone/outbound/${call.id}`),
-      to: `client:${getIdentityByUserId(<string>user.id)}`,
-      from: getCallerId(user.account),
-    };
-
-    const response = await this.client.calls.create(options);
-
-    return response.sid;
-  }
-
   async holdParticipant(call: Call, label: string, hold: boolean): Promise<void> {
     log.info(`hold ${call.id} - callSid ${call.callSid} set label ${label} to ${hold}`);
 
@@ -198,12 +199,12 @@ export class TwilioHelper {
   }
 }
 
-export const createVoiceToken = (user: User, lifetime: number = 600): string => {
-  if (!user.account.hasConfiguration()) {
+export const createVoiceToken = (account: Account, user: User, lifetime: number = 600): string => {
+  if (!account.hasConfiguration()) {
     throw new ConfigurationNotFoundException();
   }
 
-  const { key, secret, accountSid } = user.account.configuration as AccountConfiguration;
+  const { key, secret, accountSid } = account.configuration as AccountConfiguration;
 
   if (!key || !secret || !accountSid) {
     throw new InvalidConfigurationException();
@@ -215,15 +216,11 @@ export const createVoiceToken = (user: User, lifetime: number = 600): string => 
 
   log.info(`create phone token for ${user.id} (${user.name})`);
 
-  const options: AccessToken.VoiceGrantOptions = { incomingAllow: true };
-
-  const grant = new AccessToken.VoiceGrant(options);
-
   const token = accessToken as VoiceAccessToken;
 
-  token.identity = getIdentity(user);
+  token.identity = getIdentityByUserId(user.id);
 
-  token.addGrant(grant);
+  token.addGrant(new AccessToken.VoiceGrant({ incomingAllow: true }));
 
   return token.toJwt();
 };

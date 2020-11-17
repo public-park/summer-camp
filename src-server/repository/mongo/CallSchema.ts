@@ -41,20 +41,31 @@ const CallSchema = new Schema(
 );
 
 CallSchema.methods.toCall = function (): Call {
-  return new Call(
-    this._id,
-    this.callSid,
-    this.from,
-    this.to,
-    this.accountId,
-    this.userId,
-    this.status,
-    this.direction,
-    this.createdAt,
-    this.duration === null ? undefined : this.duration,
-    this.answeredAt === null ? undefined : this.answeredAt,
-    this.updatedAt === null ? undefined : this.updatedAt
-  );
+  const call = new Call(this.id, this.from, this.to, this.accountId, this.direction, this.status);
+
+  call.createdAt = new Date(this.createdAt);
+
+  if (this.userId) {
+    call.userId = this.userId;
+  }
+
+  if (this.callSid) {
+    call.callSid = this.callSid;
+  }
+
+  if (this.duration) {
+    call.duration = this.duration;
+  }
+
+  if (this.answeredAt) {
+    call.answeredAt = new Date(this.answeredAt);
+  }
+
+  if (this.updatedAt) {
+    call.updatedAt = new Date(this.updatedAt);
+  }
+
+  return call;
 };
 
 CallSchema.index({ callSid: 1 }, { unique: true, partialFilterExpression: { callSid: { $ne: null } } });

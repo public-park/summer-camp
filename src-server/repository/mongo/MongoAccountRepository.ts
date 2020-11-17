@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 import { BaseRepository } from '../BaseRepository';
 import AccountModel from './AccountSchema';
 import { Account } from '../../models/Account';
@@ -12,21 +14,21 @@ export class MongoAccountRepository implements AccountRepository, BaseRepository
       throw new InvalidAccountNameException();
     }
 
-    const model = new AccountModel({
-      name: name,
-    });
+    const account = new Account(uuidv4(), name);
 
-    const document = await model.save();
-
-    return document.toAccount();
+    return await this.save(account);
   }
 
   async getByName(name: string) {
-    const document = await AccountModel.findOne({ name: name });
+    const documents = await AccountModel.find({ name: name });
 
-    if (document) {
-      return document.toAccount();
-    }
+    return documents.map((document) => document.toAccount());
+  }
+
+  async getAll() {
+    const documents = await AccountModel.find({});
+
+    return documents.map((document) => document.toAccount());
   }
 
   async getByUserName(name: string) {
@@ -47,7 +49,7 @@ export class MongoAccountRepository implements AccountRepository, BaseRepository
     }
   }
 
-  async update(account: Account) {
+  async save(account: Account) {
     const document = await AccountModel.findOneAndUpdate(
       { _id: account.id },
       {
@@ -55,6 +57,8 @@ export class MongoAccountRepository implements AccountRepository, BaseRepository
       },
       {
         new: true,
+        upsert: true,
+        runValidators: true,
       }
     );
 
@@ -65,7 +69,7 @@ export class MongoAccountRepository implements AccountRepository, BaseRepository
     }
   }
 
-  async delete(account: Account) {
+  async remove(account: Account) {
     const document = await AccountModel.deleteOne({ _id: account.id });
 
     if (document) {

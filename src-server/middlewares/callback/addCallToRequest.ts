@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import isUUID from 'validator/lib/isUUID';
 import { InvalidUrlException } from '../../exceptions/InvalidUrlException';
-import { callRepository } from '../../worker';
+import { callRepository as calls } from '../../worker';
 import { ServerException } from '../../exceptions/ServerException';
 import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
@@ -17,13 +17,17 @@ export const addCallToRequest = async (
       return next(new InvalidUrlException('callId is not a valid UUID'));
     }
 
-    const call = await callRepository.getById(callId);
+    const call = await calls.getById(callId);
 
     if (!call) {
       return next(new CallNotFoundException());
     }
 
-    request.call = call;
+    request.resource = {
+      ...request.resource,
+      call,
+    };
+
     return next();
   } catch (error) {
     return next(new ServerException());

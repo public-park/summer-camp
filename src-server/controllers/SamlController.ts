@@ -1,17 +1,18 @@
 import { log } from '../logger';
 import { Response, NextFunction } from 'express';
-import { userRepository } from '../worker';
+import { userRepository as users } from '../worker';
 import { SamlAuthenticationProvider } from '../security/authentication/SamlAuthenticationProvider';
 import { UserRole } from '../models/UserRole';
 import { TokenHelper } from '../helpers/TokenHelper';
 import { InvalidSamlAttributeException } from '../exceptions/InvalidSamlAttributeException';
 import { RequestWithProfile } from '../helpers/SamlPassportHelper';
+import { Account } from '../models/Account';
 
 const authenticate = async (req: RequestWithProfile, res: Response, next: NextFunction) => {
   try {
     log.debug(req.profile);
 
-    let user = await userRepository.getByNameId(req.account, <string>req.profile.nameID);
+    let user = await users.getByNameId(req.resource.account as Account, req.profile.nameID as string);
 
     if (!user) {
       const provider = new SamlAuthenticationProvider();
@@ -26,11 +27,11 @@ const authenticate = async (req: RequestWithProfile, res: Response, next: NextFu
         throw new InvalidSamlAttributeException(`name is missing`);
       }
 
-      user = await userRepository.create(
+      user = await users.create(
         req.profile.name,
         undefined,
         new Set(['none']),
-        req.account,
+        req.resource.account as Account,
         authentication,
         req.profile.role
       );

@@ -3,10 +3,10 @@ import isUUID from 'validator/lib/isUUID';
 import { callRepository } from '../worker';
 import { InvalidUrlException } from '../exceptions/InvalidUrlException';
 import { CallNotFoundException } from '../exceptions/CallNotFoundException';
-import { RequestWithCall } from '../requests/RequestWithCall';
+import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 
 export const verifyCallResourcePolicy = async (
-  request: RequestWithCall,
+  request: AuthenticatedRequest,
   response: Response,
   next: NextFunction,
   callId: string
@@ -17,12 +17,15 @@ export const verifyCallResourcePolicy = async (
     }
 
     const call = await callRepository.getById(callId);
-    // TODO add session to request, request.session, request.jwt.user
-    if (!call || call.accountId !== request.user.account.id) {
+
+    if (!call || call.accountId !== request.jwt.user.accountId) {
       throw new CallNotFoundException();
     }
 
-    request.call = call;
+    request.resource = {
+      ...request.resource,
+      call,
+    };
 
     return next();
   } catch (error) {

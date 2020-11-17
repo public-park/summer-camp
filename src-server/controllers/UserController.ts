@@ -1,13 +1,13 @@
 import { Response, NextFunction } from 'express';
-import { userRepository as users, authenticationProvider, pool } from '../worker';
+import { userRepository as users, accountRepository as accounts, authenticationProvider, pool } from '../worker';
 import { UserActivity } from '../models/UserActivity';
-import { RequestWithUser } from '../requests/RequestWithUser';
-import { UserNotFoundException } from '../exceptions/UserNotFoundException';
 import { isValidName, isValidTagList, isValidActivity, isValidRole } from './UserControllerValidator';
 import { ConfigurationNotFoundException } from '../exceptions/ConfigurationNotFoundException';
 import { UserRole } from '../models/UserRole';
+import { User } from '../models/User';
+import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 
-const create = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+const create = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     await isValidName(req.body.name);
 
@@ -35,7 +35,7 @@ const create = async (req: RequestWithUser, res: Response, next: NextFunction) =
 
     const authentication = await authenticationProvider.create(req.body.password);
 
-    const user = await users.create(req.body.name, undefined, tags, req.user.account, authentication, role, activity);
+    const user = await users.create(req.body.name, undefined, tags, req.jwt.account, authentication, role, activity);
 
     res.json(user.toDocument());
   } catch (error) {
@@ -43,27 +43,17 @@ const create = async (req: RequestWithUser, res: Response, next: NextFunction) =
   }
 };
 
-const fetch = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+const fetch = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const user = await users.getById(req.user.account, req.params.userId);
-
-    if (!user) {
-      throw new UserNotFoundException();
-    }
-
-    res.json(user.toDocument());
+    res.json((req.resource.user as User).toDocument());
   } catch (error) {
     return next(error);
   }
 };
 
-const update = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+const update = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    let user = await users.getById(req.user.account, req.params.userId);
-
-    if (!user) {
-      throw new UserNotFoundException();
-    }
+    let user = req.resource.user as User;
 
     if (req.body.tags) {
       isValidTagList(req.body.tags);
@@ -83,9 +73,9 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
       user.role = req.body.role;
     }
 
-    user = await users.update(req.user.account, user);
+    user = await users.save(user);
 
-    pool.updateIfExists(pool.getUserWithSocket(user));
+    pool.updateIfExists(await pool.getUserWithSocket(user));
 
     res.json(user.toDocument());
   } catch (error) {
@@ -93,17 +83,11 @@ const update = async (req: RequestWithUser, res: Response, next: NextFunction) =
   }
 };
 
-const remove = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+const remove = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const user = await users.getById(req.user.account, req.params.userId);
+    await users.remove(req.resource.user as User);
 
-    if (!user) {
-      throw new UserNotFoundException();
-    }
-
-    await users.delete(req.user.account, user);
-
-    pool.delete(pool.getUserWithSocket(user));
+    pool.delete(await pool.getUserWithSocket(req.resource.user as User));
 
     res.status(204).end();
   } catch (error) {
@@ -111,18 +95,13 @@ const remove = async (req: RequestWithUser, res: Response, next: NextFunction) =
   }
 };
 
-export const getConfiguration = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+export const getConfiguration = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const account = req.user.account;
-
-    if (!account.configuration) {
+    if (!req.jwt.account || !req.jwt.account.configuration) {
       throw new ConfigurationNotFoundException();
     }
 
-    res.json({
-      inbound: account.configuration.inbound,
-      outbound: account.configuration.outbound,
-    });
+    res.json((req.resource.user as User).getConfiguration(req.jwt.account));
   } catch (error) {
     return next(error);
   }

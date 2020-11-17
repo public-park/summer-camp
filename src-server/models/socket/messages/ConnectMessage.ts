@@ -16,7 +16,7 @@ export class ConnectMessage extends Message {
 
     this.payload = {
       user: user.toUserWithPresenceDocument(),
-      configuration: user.getConfiguration(),
+      configuration: user.getConfiguration(user.account),
       list: pool.getAll(user.account).map((user) => user.toUserWithPresenceDocument()),
     };
   }

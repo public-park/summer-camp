@@ -14,11 +14,11 @@ export interface UserRepository {
     role: UserRole,
     activity: UserActivity
   ) => Promise<User>;
-  getById: (account: Account, id: string) => Promise<User | undefined>;
-  getByName: (name: string, account?: Account) => Promise<User | undefined>;
+  save: (user: User) => Promise<User>;
+  getById: (id: string) => Promise<User | undefined>;
+  getByName: (name: string) => Promise<User | undefined>;
   getByNameId: (account: Account, nameId: string) => Promise<User | undefined>;
   getOneByAccount: (account: Account) => Promise<User | undefined>;
   getAll: (account: Account, skip: number, limit: number) => Promise<Array<User>>;
-  update: (account: Account, user: User) => Promise<User>;
-  delete: (account: Account, user: User) => Promise<void>;
+  remove: (user: User) => Promise<void>;
 }

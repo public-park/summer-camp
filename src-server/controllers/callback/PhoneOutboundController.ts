@@ -1,12 +1,12 @@
 import { Response, NextFunction } from 'express';
 import VoiceResponse = require('twilio/lib/twiml/VoiceResponse');
 import { callRepository as calls } from '../../worker';
-import { RequestWithAccount } from '../../requests/RequestWithAccount';
 import { getCallbackUrl } from './PhoneHelper';
 import { Call } from '../../models/Call';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
+import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
 
-const generateConnectTwiml = (req: RequestWithAccount, call: Call) => {
+const generateConnectTwiml = (req: StatusCallbackRequest, call: Call) => {
   let twiml = new VoiceResponse();
 
   const dial = twiml.dial({ callerId: call.from });
@@ -25,7 +25,7 @@ const generateConnectTwiml = (req: RequestWithAccount, call: Call) => {
   return twiml.toString();
 };
 
-const handle = async (req: RequestWithAccount, res: Response, next: NextFunction) => {
+const handle = async (req: StatusCallbackRequest, res: Response, next: NextFunction) => {
   try {
     const call = await calls.getById(req.params.callId);
 

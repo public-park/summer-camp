@@ -3,5 +3,6 @@ import { Account } from '../models/Account';
 
 export interface AccountRepository extends BaseRepository<Account> {
   create: (name: string) => Promise<Account>;
-  getByName: (name: string) => Promise<Account | undefined>;
+  getAll: () => Promise<Array<Account>>;
+  getByName: (name: string) => Promise<Array<Account>>;
 }

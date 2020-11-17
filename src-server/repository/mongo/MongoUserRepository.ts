@@ -1,16 +1,15 @@
+import { v4 as uuidv4 } from 'uuid';
 import { UserRepository } from '../UserRepository';
 import { User } from '../../models/User';
 import { Account } from '../../models/Account';
 import UserModel from './UserSchema';
 import { UserActivity } from '../../models/UserActivity';
-import AccountModel from './AccountSchema';
 import { UserRole } from '../../models/UserRole';
 import { UserAuthentication } from '../../models/UserAuthenticationProvider';
-import { UserNotAuthorizedException } from '../../exceptions/UserNotAuthorizedException';
 import { AccountRepository } from '../AccountRepository';
 import { InvalidUserNameException } from '../../exceptions/InvalidUserNameException';
-import { InvalidAccountException } from '../../exceptions/InvalidAccountException';
 import { UserNotFoundException } from '../../exceptions/UserNotFoundException';
+import { InvalidAccountException } from '../../exceptions/InvalidAccountException';
 
 export class MongoUserRepository implements UserRepository {
   accounts: AccountRepository;
@@ -32,37 +31,12 @@ export class MongoUserRepository implements UserRepository {
       throw new InvalidUserNameException();
     }
 
-    await AccountModel.findOne({ _id: account.id }).orFail();
+    const user = new User(uuidv4(), name, profileImageUrl, tags, activity, account.id, authentication, role);
 
-    const model = new UserModel({
-      name: name,
-      profileImageUrl: profileImageUrl,
-      tags: Array.from(tags.values()),
-      accountId: account.id,
-      activity: activity,
-      authentication: authentication,
-      role: role,
-    });
-
-    const document = await model.save();
-
-    return document.toUser(account);
+    return this.save(user);
   }
 
-  private async getByNameWithAccount(name: string, account: Account) {
-    const query = {
-      name: name,
-      accountId: account.id,
-    };
-
-    const document = await UserModel.findOne(query);
-
-    if (document) {
-      return document.toUser(<Account>account);
-    }
-  }
-
-  private async getByNameWithoutAccount(name: string) {
+  async getByName(name: string) {
     const query = {
       name: name,
     };
@@ -70,17 +44,7 @@ export class MongoUserRepository implements UserRepository {
     const document = await UserModel.findOne(query);
 
     if (document) {
-      const account = await this.accounts.getById(document.accountId);
-
-      return document.toUser(<Account>account);
-    }
-  }
-
-  async getByName(name: string, account?: Account) {
-    if (account) {
-      return this.getByNameWithAccount(name, account);
-    } else {
-      return this.getByNameWithoutAccount(name);
+      return document.toUser();
     }
   }
 
@@ -88,19 +52,15 @@ export class MongoUserRepository implements UserRepository {
     const document = await UserModel.findOne({ accountId: account.id });
 
     if (document) {
-      return document.toUser(account);
+      return document.toUser();
     }
   }
 
-  async getById(account: Account, id: string) {
+  async getById(id: string) {
     const document = await UserModel.findById(id);
 
     if (document) {
-      if (account.id !== document.accountId) {
-        throw new UserNotAuthorizedException();
-      }
-
-      return document.toUser(account);
+      return document.toUser();
     }
   }
 
@@ -111,21 +71,23 @@ export class MongoUserRepository implements UserRepository {
     });
 
     if (document) {
-      return document.toUser(account);
+      return document.toUser();
     }
   }
   async getAll(account: Account, skip: number = 0, limit: number = 50) {
     const documents = await UserModel.find({ accountId: account.id }).skip(skip).limit(limit);
 
-    return documents.map((document) => document.toUser(account));
+    return documents.map((document) => document.toUser());
   }
 
-  async update(account: Account, user: User) {
+  async save(user: User) {
     if (!user.name) {
       throw new InvalidUserNameException();
     }
 
-    if (user.account.id !== account.id) {
+    const existing = await this.getById(user.id);
+
+    if (existing && existing.accountId !== user.accountId) {
       throw new InvalidAccountException();
     }
 
@@ -137,18 +99,20 @@ export class MongoUserRepository implements UserRepository {
       },
       {
         new: true,
+        upsert: true,
+        runValidators: true,
       }
     );
 
     if (document) {
-      return document.toUser(account);
+      return document.toUser();
     } else {
       throw new UserNotFoundException();
     }
   }
 
-  async delete(account: Account, user: User) {
-    const document = await UserModel.deleteOne({ _id: user.id, accountId: account.id });
+  async remove(user: User) {
+    const document = await UserModel.deleteOne({ _id: user.id });
 
     if (document) {
       return;

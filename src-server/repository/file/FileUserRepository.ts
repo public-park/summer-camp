@@ -11,10 +11,10 @@ import { AccountNotFoundException } from '../../exceptions/AccountNotFoundExcept
 import { UserAuthentication } from '../../models/UserAuthenticationProvider';
 import { log } from '../../logger';
 import { InvalidUserNameException } from '../../exceptions/InvalidUserNameException';
-import { InvalidAccountException } from '../../exceptions/InvalidAccountException';
 import { UserNotFoundException } from '../../exceptions/UserNotFoundException';
 import { SamlUserAuthentication } from '../../security/authentication/SamlAuthenticationProvider';
 import { InvalidDocumentException } from '../../exceptions/InvalidDocumentException';
+import { InvalidAccountException } from '../../exceptions/InvalidAccountException';
 
 interface UserDocument {
   id: string;
@@ -71,56 +71,46 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     this.accounts = repository;
   }
 
-  getById = async (account: Account, id: string) => {
-    const user = this.users.get(id);
-
-    if (user && user.account.id === account.id) {
-      return Promise.resolve(await this.getCopy(user));
-    }
+  getById = async (id: string) => {
+    return this.users.get(id);
   };
 
   async getAll(account: Account, skip: number = 0, limit: number = 50) {
     const list: User[] = [];
 
     for (const user of this.users.values()) {
-      if (user.account.id === account.id) {
-        list.push(await this.getCopy(user));
+      if (user.accountId === account.id) {
+        list.push(user);
       }
     }
 
     return Promise.resolve(list);
   }
 
-  update = async (account: Account, user: User) => {
-    if (!(await this.getById(account, user.id))) {
-      throw new UserNotFoundException();
-    }
-
+  save = async (user: User) => {
     if (!user.name) {
       throw new InvalidUserNameException();
     }
 
-    if (user.account.id !== account.id) {
-      throw new InvalidAccountException();
+    const existing = await this.getByName(user.name);
+
+    if (existing && existing.id !== user.id) {
+      throw new UserAlreadyExistsException();
     }
 
-    const existingUser = await this.getByName(user.name);
-
-    if (existingUser && existingUser.id !== user.id) {
-      if (await this.getByName(user.name, account)) {
-        throw new UserAlreadyExistsException();
-      }
+    if (existing && existing.accountId !== user.accountId) {
+      throw new InvalidAccountException();
     }
 
     this.users.set(user.id, user);
 
     await this.persist(this.toPlainObjects());
 
-    return await this.getCopy(user);
+    return user;
   };
 
-  delete = async (account: Account, user: User) => {
-    if (!(await this.getById(account, user.id))) {
+  remove = async (user: User) => {
+    if (!(await this.getById(user.id))) {
       throw new UserNotFoundException();
     }
 
@@ -129,26 +119,18 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     return this.persist(this.toPlainObjects());
   };
 
-  getByName = async (name: string, account?: Account) => {
+  getByName = async (name: string) => {
     for (const user of this.users.values()) {
       if (user.name === name) {
-        return Promise.resolve(this.getCopy(user));
-      }
-    }
-  };
-
-  getAccountIdByName = async (name: string) => {
-    for (const user of this.users.values()) {
-      if (user.name === name) {
-        return Promise.resolve(user.account.id);
+        return Promise.resolve(user);
       }
     }
   };
 
   getOneByAccount = async (account: Account) => {
     for (const user of this.users.values()) {
-      if (user.account.id === account.id) {
-        return Promise.resolve(this.getCopy(user));
+      if (user.accountId === account.id) {
+        return Promise.resolve(user);
       }
     }
   };
@@ -157,18 +139,14 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     for (const user of this.users.values()) {
       const authentication = user.authentication as SamlUserAuthentication;
 
-      if (user.account.id === account.id) {
+      if (user.accountId === account.id) {
         return;
       }
 
       if (user.authentication && authentication.nameId === nameId) {
-        return Promise.resolve(this.getCopy(user));
+        return Promise.resolve(user);
       }
     }
-  }
-
-  protected async getCopy(user: User) {
-    return await this.fromPlainObject(await this.toPlainObject(user));
   }
 
   protected toPlainObjects(): Array<UserDocument> {
@@ -184,7 +162,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
       profileImageUrl: user.profileImageUrl || '',
       tags: Array.from(user.tags.values()),
       activity: user.activity,
-      accountId: user.account.id,
+      accountId: user.accountId,
       authentication: user.authentication,
       role: user.role,
       createdAt: user.createdAt.toString(),
@@ -224,7 +202,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
       item.profileImageUrl || undefined,
       new Set(item.tags),
       item.activity,
-      account,
+      account.id,
       item.authentication,
       item.role,
       new Date(item.createdAt)
@@ -247,17 +225,8 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     if (!account) {
       throw new AccountNotFoundException();
     }
+    const user = new User(uuidv4(), name, profileImageUrl, tags, activity, account.id, authentication, role);
 
-    if (await this.getAccountIdByName(name)) {
-      throw new UserAlreadyExistsException();
-    }
-
-    const user = new User(uuidv4(), name, profileImageUrl, tags, activity, account, authentication, role);
-
-    this.users.set(user.id, user);
-
-    await this.persist(this.toPlainObjects());
-
-    return Promise.resolve(user);
+    return this.save(user);
   };
 }

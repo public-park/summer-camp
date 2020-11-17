@@ -20,7 +20,6 @@ import { setHeaders } from './middlewares/setHeaders';
 import { rejectIfContentTypeIsNot } from './middlewares/rejectIfContentTypeIsNot';
 import { validateAgainst } from './middlewares/validateAgainst';
 import allowAccessWith from './middlewares/allowAccessWith';
-import { addUserToRequest } from './middlewares/addUserToRequest';
 import { verifyJwt } from './middlewares/verifyJwt';
 import { handleError } from './middlewares/handleError';
 import { setHeaders as setHeadersCallback } from './middlewares/callback/setHeaders';
@@ -70,6 +69,7 @@ import { CallController } from './controllers/CallController';
 import { addCallToRequest } from './middlewares/callback/addCallToRequest';
 import { FileCallRepository } from './repository/file/FileCallRepository';
 import { UserPresenceController } from './controllers/UserPresenceController';
+import { addJwt } from './middlewares/addJwt';
 
 /* SAML 2.0 Metadata */
 if (process.env.REACT_APP_AUTHENTICATION_MODE === 'saml') {
@@ -110,14 +110,14 @@ export const accountRepository = new MongoAccountRepository();
 export const userRepository = new MongoUserRepository(accountRepository);
 export const callRepository = new MongoCallRepository();
 
-/* Local File Repository
+/* Local File Repository 
 export const accountRepository = new FileAccountRepository('./accounts.json');
 export const userRepository = new FileUserRepository(accountRepository, './users.json');
 export const callRepository = new FileCallRepository('calls.json');
- */
+*/
 export const authenticationProvider = new PasswordAuthenticationProvider();
 
-export const pool = new UserPoolManager(userRepository, callRepository);
+export const pool = new UserPoolManager(accountRepository, userRepository, callRepository);
 
 /* spinning up express */
 export const app = express();
@@ -159,8 +159,7 @@ statusCallback.use(setHeadersCallback);
 statusCallback.param('accountId', addAccountToRequest);
 statusCallback.param('callId', addCallToRequest);
 
-statusCallback.route('/accounts/:accountId/calls/:callId/inbound').post(CallStatusEventController.handleInbound);
-statusCallback.route('/accounts/:accountId/calls/:callId/outbound').post(CallStatusEventController.handleOutbound);
+statusCallback.route('/accounts/:accountId/calls/:callId/status').post(CallStatusEventController.handle);
 
 statusCallback
   .route('/accounts/:accountId/calls/:callId/conference/inbound')
@@ -175,7 +174,7 @@ const user = express.Router();
 
 user.use(express.json());
 user.use(verifyJwt);
-user.use(addUserToRequest);
+user.use(addJwt);
 user.use(setHeaders);
 
 user.param('userId', verifyUserResourcePolicy);
@@ -210,7 +209,7 @@ const account = express.Router();
 
 account.use(express.json());
 account.use(verifyJwt);
-account.use(addUserToRequest);
+account.use(addJwt);
 account.use(setHeaders);
 
 account.param('accountId', verifyAccountResourcePolicy);
@@ -246,7 +245,7 @@ const call = express.Router();
 
 call.use(express.json());
 call.use(verifyJwt);
-call.use(addUserToRequest);
+call.use(addJwt);
 call.use(setHeaders);
 
 call.param('callId', verifyCallResourcePolicy);

@@ -3,18 +3,27 @@ import VoiceResponse = require('twilio/lib/twiml/VoiceResponse');
 import { callRepository as calls, pool } from '../../worker';
 import { log } from '../../logger';
 import { UserNotFoundException } from '../../exceptions/UserNotFoundException';
-import { RequestWithAccount } from '../../requests/RequestWithAccount';
 import { getStatus, getDuration, getFinalInboundCallState } from './CallStatusEventHelper';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { getCallbackUrl } from './PhoneHelper';
 import { CallStatus } from '../../models/CallStatus';
 import { CallDirection } from '../../models/CallDirection';
 import { UserWithSocket } from '../../models/UserWithSocket';
+import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
+import { Account } from '../../models/Account';
 
-const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithSocket) => {
+const generateConnectTwiml = async (req: StatusCallbackRequest, user: UserWithSocket) => {
   const { CallSid, From, To } = req.body;
 
-  const call = await calls.create(From, To, req.account, CallStatus.Initiated, CallDirection.Inbound, user, CallSid);
+  const call = await calls.create(
+    req.resource.account as Account,
+    From,
+    To,
+    CallDirection.Inbound,
+    CallStatus.Initiated,
+    user,
+    CallSid
+  );
 
   let twiml = new VoiceResponse();
 
@@ -34,10 +43,18 @@ const generateConnectTwiml = async (req: RequestWithAccount, user: UserWithSocke
   return twiml.toString();
 };
 
-const generateEnqueueTwiml = async (req: RequestWithAccount) => {
+const generateEnqueueTwiml = async (req: StatusCallbackRequest) => {
   const { CallSid, From, To } = req.body;
 
-  const call = await calls.create(From, To, req.account, CallStatus.Queued, CallDirection.Inbound, undefined, CallSid);
+  const call = await calls.create(
+    req.resource.account as Account,
+    From,
+    To,
+    CallDirection.Inbound,
+    CallStatus.Queued,
+    undefined,
+    CallSid
+  );
 
   let twiml = new VoiceResponse();
 
@@ -53,10 +70,18 @@ const generateEnqueueTwiml = async (req: RequestWithAccount) => {
   return twiml.toString();
 };
 
-export const generateRejectTwiml = async (req: RequestWithAccount, user?: UserWithSocket) => {
+export const generateRejectTwiml = async (req: StatusCallbackRequest, user?: UserWithSocket) => {
   const { CallSid, From, To } = req.body;
 
-  await calls.create(From, To, req.account, CallStatus.NoAnswer, CallDirection.Inbound, user, CallSid);
+  await calls.create(
+    req.resource.account as Account,
+    From,
+    To,
+    CallDirection.Inbound,
+    CallStatus.NoAnswer,
+    user,
+    CallSid
+  );
 
   let twiml = new VoiceResponse();
 
@@ -71,11 +96,11 @@ export const generateRejectTwiml = async (req: RequestWithAccount, user?: UserWi
   return twiml.toString();
 };
 
-const handleConnectWithFilter = async (req: RequestWithAccount, res: Response, next: NextFunction) => {
+const handleConnectWithFilter = async (req: StatusCallbackRequest, res: Response, next: NextFunction) => {
   try {
     log.info(`${req.body.To} called`);
 
-    let users: Array<UserWithSocket> = pool.getAll(req.account);
+    let users: Array<UserWithSocket> = pool.getAll(req.resource.account as Account);
 
     const tag = req.query.tag?.toString();
 
@@ -97,11 +122,11 @@ const handleConnectWithFilter = async (req: RequestWithAccount, res: Response, n
   }
 };
 
-const handleConnectToUser = async (req: RequestWithAccount, res: Response, next: NextFunction) => {
+const handleConnectToUser = async (req: StatusCallbackRequest, res: Response, next: NextFunction) => {
   try {
     log.info(`${req.body.To} called`);
 
-    const user = await pool.getOneByAccountWithFallback(req.account);
+    const user = await pool.getOneByAccountWithFallback(req.resource.account as Account);
 
     if (!user) {
       throw new UserNotFoundException();
@@ -117,7 +142,7 @@ const handleConnectToUser = async (req: RequestWithAccount, res: Response, next:
   }
 };
 
-const handleCompleted = async (req: RequestWithAccount, res: Response, next: NextFunction) => {
+const handleCompleted = async (req: StatusCallbackRequest, res: Response, next: NextFunction) => {
   try {
     let call = await calls.getByCallSid(req.body.CallSid);
 
@@ -134,7 +159,7 @@ const handleCompleted = async (req: RequestWithAccount, res: Response, next: Nex
       call.duration = getDuration(req);
     }
 
-    await calls.update(call);
+    await calls.save(call);
 
     res.status(200).end();
   } catch (error) {
@@ -142,7 +167,7 @@ const handleCompleted = async (req: RequestWithAccount, res: Response, next: Nex
   }
 };
 
-const handleEnqueue = async (req: RequestWithAccount, res: Response, next: NextFunction) => {
+const handleEnqueue = async (req: StatusCallbackRequest, res: Response, next: NextFunction) => {
   try {
     log.info(`${req.body.To} called`);
 

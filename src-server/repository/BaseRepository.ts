@@ -1,6 +1,5 @@
 export interface BaseRepository<T> {
   getById: (id: string) => Promise<T | undefined>;
-  create: (...args: any) => Promise<T>;
-  update: (entity: T) => Promise<T>;
-  delete: (entity: T) => Promise<void>;
+  save: (entity: T) => Promise<T>;
+  remove: (entity: T) => Promise<void>;
 }

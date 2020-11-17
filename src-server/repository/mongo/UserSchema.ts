@@ -18,7 +18,7 @@ export interface UserDocument extends Document {
   authentication: UserAuthentication;
   role: UserRole;
   createdAt: Date;
-  toUser: (account: Account) => User;
+  toUser: () => User;
 }
 
 const UserSchema = new Schema(
@@ -36,14 +36,14 @@ const UserSchema = new Schema(
   { versionKey: false, collection: 'users' }
 );
 
-UserSchema.methods.toUser = function (account: Account): User {
+UserSchema.methods.toUser = function (): User {
   return new User(
     this._id,
     this.name,
-    this.profileImageUrl,
+    this.profileImageUrl ? this.profileImageUrl : undefined,
     new Set(this.tags),
     this.activity,
-    account,
+    this.accountId,
     this.authentication,
     this.role,
     this.createdAt

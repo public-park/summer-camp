@@ -3,34 +3,24 @@ import { callRepository as calls } from '../../worker';
 import { getStatus, getDuration } from './CallStatusEventHelper';
 import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
 import { CallStatus } from '../../models/CallStatus';
+import { CallDirection } from '../../models/CallDirection';
+import { Call } from '../../models/Call';
 
-const handleInbound = async (request: StatusCallbackRequest, response: Response, next: NextFunction) => {
+const handle = async (request: StatusCallbackRequest, response: Response, next: NextFunction) => {
   try {
-    request.call.status = getStatus(request);
+    const call = request.resource.call as Call;
 
-    if (request.call.status === CallStatus.InProgress) {
-      request.call.answeredAt = new Date();
+    call.status = getStatus(request);
+    call.duration = getDuration(request);
+
+    if (call.direction === CallDirection.Outbound) {
+      call.callSid = request.body.CallSid;
+    }
+    if (call.status === CallStatus.InProgress) {
+      call.answeredAt = new Date();
     }
 
-    await calls.update(request.call);
-
-    response.status(200).end();
-  } catch (error) {
-    return next(error);
-  }
-};
-
-const handleOutbound = async (request: StatusCallbackRequest, response: Response, next: NextFunction) => {
-  try {
-    request.call.callSid = request.body.CallSid;
-    request.call.status = getStatus(request);
-    request.call.duration = getDuration(request);
-
-    if (request.call.status === CallStatus.InProgress) {
-      request.call.answeredAt = new Date();
-    }
-
-    request.call = await calls.update(request.call);
+    await calls.save(call);
 
     response.status(200).end();
   } catch (error) {
@@ -39,6 +29,5 @@ const handleOutbound = async (request: StatusCallbackRequest, response: Response
 };
 
 export const CallStatusEventController = {
-  handleInbound,
-  handleOutbound,
+  handle,
 };

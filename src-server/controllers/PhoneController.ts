@@ -1,11 +1,11 @@
 import { Response, NextFunction } from 'express';
-import { RequestWithUser } from '../requests/RequestWithUser';
 import { createVoiceToken } from '../helpers/twilio/TwilioHelper';
+import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 
-export const createToken = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+export const createToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const payload = {
-      token: createVoiceToken(req.user, 3600),
+      token: createVoiceToken(req.jwt.account, req.jwt.user, 3600),
     };
 
     return res.json(payload);

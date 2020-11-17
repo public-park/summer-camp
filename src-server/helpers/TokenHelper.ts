@@ -14,7 +14,7 @@ const createJwt = (user: User, ttl: number): string => {
     iat: Date.now(),
     exp: Math.floor(Date.now() / 1000) + ttl,
     userId: user.id,
-    accountId: user.account.id,
+    accountId: user.accountId,
   };
 
   return jwt.sign(payload, <string>process.env.SESSION_SECRET);

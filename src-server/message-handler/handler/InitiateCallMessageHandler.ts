@@ -17,7 +17,7 @@ const handle = async (
   message: InitiateCallMessage,
   acknowledge: AcknowledgeMessageHandler
 ): Promise<CallMessage | ErrorMessage> => {
-  const configuration = user.getConfiguration();
+  const configuration = user.getConfiguration(user.account);
 
   if (!configuration) {
     throw new ConfigurationNotFoundException();
@@ -30,16 +30,16 @@ const handle = async (
   const callerId = getCallerId(user.account);
 
   const call = await calls.create(
+    user.account,
     callerId,
     message.payload.to,
-    user.account,
-    CallStatus.Initiated,
     CallDirection.Outbound,
+    CallStatus.Initiated,
     user
   );
 
   acknowledge.on(message.header.id, async (message: Message) => {
-    await new TwilioHelper(user.account).connectUser(call, user);
+    await new TwilioHelper(user.account).initiateOutgoingCall(call, user, user.account);
   });
 
   return new CallMessage(call, message.header.id);

@@ -18,7 +18,12 @@ import { WorkspaceView } from '../../actions/WorkspaceViewAction';
 import { ConnectView } from './ConnectView/ConnectView';
 import { CallHistoryView } from './CallHistoryView/CallHistoryView';
 import { ConfigurationView } from './ConfigurationView/ConfigurationView';
-import { lostPhoneInputDevice, lostPhoneOutputDevice } from '../../actions/PhoneAction';
+import {
+  lostPhoneInputDevice,
+  lostPhoneOutputDevice,
+  setPhoneInputDevice,
+  setPhoneOutputDevice,
+} from '../../actions/PhoneAction';
 import { AudioDeviceView } from './AudioDeviceView/AudioDeviceView';
 import { NotificationLayer } from './NotificationLayer/NotificationLayer';
 import { useReconnectWebSocket } from '../../hooks/useReconnectWebSocket';
@@ -73,6 +78,8 @@ export const Workspace = () => {
     if (hasLostDevice(phoneInputDevice, audioInputDevices)) {
       dispatch(lostPhoneInputDevice());
       dispatch(showNotification('Your active microphone device was removed.'));
+
+      dispatch(setPhoneInputDevice('default'));
     }
   }, [phoneInputDevice, audioInputDevices, dispatch]);
 
@@ -80,6 +87,8 @@ export const Workspace = () => {
     if (hasLostDevice(phoneOutputDevice, audioOutputDevices)) {
       dispatch(lostPhoneOutputDevice());
       dispatch(showNotification('Your active speaker device was removed.'));
+
+      dispatch(setPhoneOutputDevice('default'));
     }
   }, [phoneOutputDevice, audioOutputDevices, dispatch]);
 

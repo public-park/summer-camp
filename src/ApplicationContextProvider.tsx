@@ -160,6 +160,7 @@ export const ApplicationContextProvider = (props: any) => {
     });
 
     phone.onError((error: Error) => {
+      console.error(error);
       dispatch(setPhoneException(error));
     });
 
@@ -178,11 +179,6 @@ export const ApplicationContextProvider = (props: any) => {
     setPersistetToken(undefined);
 
     dispatch(setLogout(reason));
-
-    /* manually reject incoming calls */
-    if (phoneState === PhoneState.Ringing && call) {
-      call.reject();
-    }
 
     phone?.destroy();
   };
@@ -208,6 +204,8 @@ export const ApplicationContextProvider = (props: any) => {
 
   useEffect(() => {
     const updateDevice = async (deviceId: string) => {
+      console.debug('set phone inbound to: ', deviceId);
+
       try {
         phone && phone.setInputDevice(deviceId);
       } catch (error) {
@@ -222,17 +220,18 @@ export const ApplicationContextProvider = (props: any) => {
 
   useEffect(() => {
     const updateDevice = async (deviceId: string) => {
+      console.debug('set phone outbound to: ', deviceId);
+
       try {
         phone && phone.setOutputDevice(deviceId);
       } catch (error) {
         console.log(error);
       }
     };
-
     if (phoneOutputDevice && phoneState === PhoneState.Idle) {
       updateDevice(phoneOutputDevice);
     }
-  }, [phoneOutputDevice, phoneState, phone]);
+  }, [phoneOutputDevice, phoneState]);
 
   useEffect(() => {
     if (phoneInputDevice) {

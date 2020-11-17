@@ -57,9 +57,7 @@ export const init = () => {
     await callRepository.empty();
   });
 };
-
 */
-
 export const corporations = {
   mom: 'MomCorp',
   wonka: 'Wonka Industries',
@@ -75,6 +73,7 @@ export const personas = {
   jane: 'Jane the Engineer',
   tim: 'Tim the Explorer',
   julia: 'Julia the Entrepreneur',
+  eva: 'Eva the Engineer',
 };
 
 export const secret = 'my-secret-password';

@@ -3,7 +3,6 @@ import { CallStatus } from '../CallStatus';
 
 export interface CallDocument {
   id: string;
-  callSid: string | undefined;
   from: string;
   to: string;
   accountSid: string;
@@ -12,6 +11,7 @@ export interface CallDocument {
   direction: CallDirection;
   createdAt: Date;
   duration?: number;
+  callSid?: string | undefined;
   updatedAt?: Date;
   answeredAt?: Date;
 }

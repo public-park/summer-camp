@@ -12,6 +12,7 @@ export class Call {
   direction: CallDirection;
   userId: string | undefined;
   duration: number | undefined;
+  transfer: { from: string; to: string } | undefined;
   callSid: string | undefined;
   createdAt: Date;
   answeredAt: Date | undefined;
@@ -39,7 +40,13 @@ export class Call {
   }
 
   isActive(): boolean {
-    return [CallStatus.InProgress, CallStatus.Initiated, CallStatus.Queued, CallStatus.Ringing].includes(this.status);
+    return [
+      CallStatus.Transfer,
+      CallStatus.InProgress,
+      CallStatus.Initiated,
+      CallStatus.Queued,
+      CallStatus.Ringing,
+    ].includes(this.status);
   }
 
   toDocument(): CallDocument {
@@ -48,7 +55,6 @@ export class Call {
       from: this.from,
       to: this.to,
       accountSid: this.accountId,
-      callSid: this.callSid,
       userId: this.userId,
       status: this.status,
       direction: this.direction,

@@ -21,17 +21,18 @@ export class Message {
 }
 
 export enum MessageType {
+  Acknowledge = 'acknowledge',
   Tags = 'tags',
   User = 'user',
-  Hold = 'hold',
-  Accept = 'accept',
   Configuration = 'configuration',
   Connect = 'connect',
   Activity = 'activity',
   InitiateCall = 'initiate-connect',
-  Acknowledge = 'acknowledge',
   Call = 'call',
+  Accept = 'accept',
   Record = 'record',
+  Hold = 'hold',
+  Transfer = 'transfer',
   Error = 'error',
 }
 

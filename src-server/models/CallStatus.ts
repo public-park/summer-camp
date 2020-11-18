@@ -8,4 +8,5 @@ export enum CallStatus {
   Failed = 'failed',
   Canceled = 'canceled',
   Queued = 'queued',
+  Transfer = 'transfer',
 }

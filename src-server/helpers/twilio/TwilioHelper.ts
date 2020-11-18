@@ -10,10 +10,7 @@ import { AccountConfiguration } from '../../models/AccountConfiguration';
 import { ParticipantListInstanceCreateOptions } from 'twilio/lib/rest/api/v2010/account/conference/participant';
 import { Call } from '../../models/Call';
 import { getCallerId, getCallbackUrl } from '../../controllers/callback/PhoneHelper';
-import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { CallListInstanceCreateOptions } from 'twilio/lib/rest/api/v2010/account/call';
-import { CallStatus } from '../../models/CallStatus';
-import { CallNotInProgressException } from '../../exceptions/CallNotInProgressException';
 import { createConferenceTwiml } from './TwilioTwimlHelper';
 
 interface VoiceAccessToken extends AccessToken {
@@ -54,7 +51,11 @@ export class TwilioHelper {
     });
   }
 
-  async configureInbound(phoneNumber: string, voiceUrl: string, statusCallbackUrl: string): Promise<undefined> {
+  async updatePhoneNumberConfiguration(
+    phoneNumber: string,
+    voiceUrl: string,
+    statusCallbackUrl: string
+  ): Promise<undefined> {
     const phoneNumbers = await this.client.incomingPhoneNumbers.list({ phoneNumber: phoneNumber });
 
     if (phoneNumbers.length === 1) {
@@ -75,54 +76,6 @@ export class TwilioHelper {
     }
   }
 
-  async getCall(callSid: string) {
-    return await this.client.calls(callSid).fetch();
-  }
-
-  getActiveRecording = async (call: Call) => {
-    if (!call.callSid || call.status !== CallStatus.InProgress) {
-      throw new CallNotInProgressException();
-    }
-
-    const recordings = await this.client.calls(call.callSid).recordings.list();
-
-    if (recordings.length === 0) {
-      return undefined;
-    }
-
-    return recordings.filter((recording) => ['processing'].includes(recording.status))[0];
-  };
-
-  async setRecording(call: Call, record: boolean) {
-    log.info(`toggle recording on ${call.id} - callSid ${call.callSid} to ${record}`);
-
-    if (!call.callSid || call.status !== CallStatus.InProgress) {
-      throw new CallNotInProgressException();
-    }
-
-    const activeRecording = await this.getActiveRecording(call);
-
-    /* create a new recording */
-    if (!activeRecording) {
-      /* disable recording on a call without active recording ... */
-      if (!record) {
-        return;
-      }
-
-      log.info(`start recording on ${call.id} - callSid ${call.callSid}`);
-
-      return await this.client.calls(call.callSid).recordings.create({
-        recordingChannels: 'dual',
-      });
-    } else {
-      const status = record === false ? 'paused' : 'in-progress';
-
-      log.info(`update recording on ${call.id} - callSid ${call.callSid} to ${status}`);
-
-      return await this.client.calls(call.callSid).recordings(activeRecording.sid).update({ status: status });
-    }
-  }
-
   async addUserToConference(call: Call) {
     return await this.addParticipantToConference(
       call.id,
@@ -132,18 +85,6 @@ export class TwilioHelper {
       getCallbackUrl(`status-callback/accounts/${call.accountId}/calls/${call.id}/status`),
       ['answered']
     );
-  }
-
-  async initiateOutgoingCall(call: Call, user: User, account: Account): Promise<string> {
-    const options: CallListInstanceCreateOptions = {
-      twiml: createConferenceTwiml(call, 'agent'),
-      to: `client:${getIdentityByUserId(<string>user.id)}`,
-      from: getCallerId(account),
-    };
-
-    const { sid } = await this.client.calls.create(options);
-
-    return sid;
   }
 
   async addCustomerToConference(call: Call) {
@@ -157,7 +98,15 @@ export class TwilioHelper {
     );
   }
 
-  async addParticipantToConference(
+  async endCall(call: Call) {
+    if (!call.callSid) {
+      throw new ServerException('callSid not found');
+    }
+
+    return await this.client.calls(call.callSid).update({ status: 'completed' });
+  }
+
+  private async addParticipantToConference(
     conferenceName: string,
     from: string,
     to: string,
@@ -177,25 +126,21 @@ export class TwilioHelper {
       statusCallback: statusEventUrl,
     };
 
-    const call = await this.client.conferences(conferenceName).participants.create(options);
+    const { callSid } = await this.client.conferences(conferenceName).participants.create(options);
 
-    return call.callSid;
+    return callSid;
   }
 
-  async holdParticipant(call: Call, label: string, hold: boolean): Promise<void> {
-    log.info(`hold ${call.id} - callSid ${call.callSid} set label ${label} to ${hold}`);
+  async initiateOutgoingCall(call: Call, user: User, account: Account): Promise<string> {
+    const options: CallListInstanceCreateOptions = {
+      twiml: createConferenceTwiml(call, 'agent'),
+      to: `client:${getIdentityByUserId(<string>user.id)}`,
+      from: getCallerId(account),
+    };
 
-    const conferences = await this.client.conferences.list({
-      friendlyName: call.id,
-      status: 'in-progress',
-      limit: 1,
-    });
+    const { sid } = await this.client.calls.create(options);
 
-    if (!conferences[0]) {
-      throw new CallNotFoundException();
-    }
-
-    await this.client.conferences(conferences[0].sid).participants(label).update({ hold: hold });
+    return sid;
   }
 }
 
@@ -225,14 +170,6 @@ export const createVoiceToken = (account: Account, user: User, lifetime: number 
   return token.toJwt();
 };
 
-export const getIdentity = (user: User): string => {
-  return user.id.split('-').join('_');
-};
-
 export const getIdentityByUserId = (userId: string): string => {
   return userId.split('-').join('_');
-};
-
-export const convertIdentityToUserId = (identity: string): string => {
-  return identity.replace('client:', '').split('_').join('-');
 };

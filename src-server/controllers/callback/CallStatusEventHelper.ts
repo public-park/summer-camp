@@ -2,16 +2,8 @@ import { CallStatus } from '../../models/CallStatus';
 import { InvalidRequestBodyException } from '../../exceptions/InvalidRequestBodyException';
 import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
 
-export interface CallStatusEvent {
-  callSid: string;
-  from: string;
-  to: string;
-  status: CallStatus;
-  duration: number | undefined;
-}
-
 export const getDuration = (request: StatusCallbackRequest) => {
-  if (request.body.CallStatus !== CallStatus.Completed.toLocaleLowerCase()) {
+  if (getStatus(request) !== CallStatus.Completed) {
     return;
   }
 
@@ -21,34 +13,11 @@ export const getDuration = (request: StatusCallbackRequest) => {
 };
 
 export const getStatus = (request: StatusCallbackRequest) => {
-  switch (request.body.CallStatus) {
-    case 'initiated':
-      return CallStatus.Initiated;
-
-    case 'ringing':
-      return CallStatus.Ringing;
-
-    case 'no-answer':
-      return CallStatus.NoAnswer;
-
-    case 'in-progress':
-      return CallStatus.InProgress;
-
-    case 'busy':
-      return CallStatus.Busy;
-
-    case 'completed':
-      return CallStatus.Completed;
-
-    case 'failed':
-      return CallStatus.Failed;
-
-    case 'canceled':
-      return CallStatus.Canceled;
-
-    default:
-      throw new InvalidRequestBodyException(`${request.body.CallStatus} is an unknown status`);
+  if (!Object.values(CallStatus).includes(request.body.CallStatus)) {
+    throw new InvalidRequestBodyException(`${request.body.CallStatus} is an unknown status`);
   }
+
+  return request.body.CallStatus as CallStatus;
 };
 
 export const getFinalInboundCallState = (previous: CallStatus, current: CallStatus) => {

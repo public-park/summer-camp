@@ -31,7 +31,11 @@ const update = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
       const voiceUrl = getCallbackUrl(`callback/accounts/${req.jwt.user.accountId}/phone/inbound`);
       const statusCallbackUrl = getCallbackUrl(`/callback/accounts/${req.jwt.user.accountId}/phone/inbound/completed`);
 
-      await helper.configureInbound(account.configuration.inbound.phoneNumber as string, voiceUrl, statusCallbackUrl);
+      await helper.updatePhoneNumberConfiguration(
+        account.configuration.inbound.phoneNumber as string,
+        voiceUrl,
+        statusCallbackUrl
+      );
     }
 
     await accountRepository.save(account);

@@ -11,7 +11,7 @@ const handle = async (
 
   await user.save();
 
-  pool.sendToAccount(user);
+  pool.broadcastToAccount(user);
 
   return new ActivityMessage(user.activity, message.header.id);
 };

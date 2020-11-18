@@ -27,11 +27,9 @@ const handle = async (
     throw new InvalidConfigurationException();
   }
 
-  const callerId = getCallerId(user.account);
-
   const call = await calls.create(
     user.account,
-    callerId,
+    getCallerId(user.account),
     message.payload.to,
     CallDirection.Outbound,
     CallStatus.Initiated,

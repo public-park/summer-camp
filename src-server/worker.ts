@@ -56,7 +56,6 @@ import { MongoAccountRepository } from './repository/mongo/MongoAccountRepositor
 import { MongoCallRepository } from './repository/mongo/MongoCallRepository';
 import * as mongoose from 'mongoose';
 import { UserPoolManager } from './pool/UserPoolManager';
-import { PhoneOutboundController } from './controllers/callback/PhoneOutboundController';
 import { PhoneInboundController } from './controllers/callback/PhoneInboundController';
 import { CallStatusEventController } from './controllers/callback/CallStatusEventController';
 import { SamlController } from './controllers/SamlController';
@@ -148,7 +147,6 @@ callback.param('accountId', addAccountToRequest);
 
 callback.route('/accounts/:accountId/phone/inbound').post(PhoneInboundController.handleConnectToUser);
 callback.route('/accounts/:accountId/phone/inbound/completed').post(PhoneInboundController.handleCompleted);
-callback.route('/accounts/:accountId/phone/outbound/:callId').post(PhoneOutboundController.handle);
 
 app.use('/api/callback', callback);
 

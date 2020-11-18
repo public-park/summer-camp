@@ -85,9 +85,11 @@ const update = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
 
 const remove = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    await users.remove(req.resource.user as User);
+    const user = req.resource.user as User;
 
-    pool.delete(await pool.getUserWithSocket(req.resource.user as User));
+    await users.remove(user);
+
+    pool.deleteById(user.id);
 
     res.status(204).end();
   } catch (error) {

@@ -9,7 +9,7 @@ export const AccountConfigurationRequestSchema = {
       type: 'object',
       properties: {
         isEnabled: { type: 'boolean' },
-        phoneNumber: { type: 'string' },
+        phoneNumber: { type: ['string', 'null'] },
       },
       required: ['isEnabled'],
       additionalProperties: false,
@@ -19,7 +19,7 @@ export const AccountConfigurationRequestSchema = {
       properties: {
         isEnabled: { type: 'boolean' },
         mode: { enum: ['internal-caller-id', 'external-caller-id'] },
-        phoneNumber: { type: 'string' },
+        phoneNumber: { type: ['string', 'null'] },
       },
       required: ['isEnabled'],
       additionalProperties: false,

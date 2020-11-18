@@ -17,11 +17,11 @@ const update = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
     account.configuration = { ...account.configuration, ...req.body } as AccountConfiguration;
 
     if (!account.configuration.inbound.isEnabled) {
-      account.configuration.inbound.phoneNumber = undefined;
+      delete account.configuration.inbound.phoneNumber;
     }
 
     if (!account.configuration.outbound.isEnabled) {
-      account.configuration.outbound.phoneNumber = undefined;
+      delete account.configuration.outbound.phoneNumber;
     }
 
     const helper = new TwilioHelper(account);
@@ -37,7 +37,6 @@ const update = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
         statusCallbackUrl
       );
     }
-
     await accountRepository.save(account);
 
     if (account.configuration.inbound.isEnabled || account.configuration.outbound.isEnabled) {

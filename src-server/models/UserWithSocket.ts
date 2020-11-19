@@ -45,7 +45,7 @@ export class UserSockets {
 }
 
 export class UserWithSocket extends User {
-  readonly account: Account;
+  account: Account;
   call: Call | undefined;
   users: UserRepository;
   sockets: UserSockets;

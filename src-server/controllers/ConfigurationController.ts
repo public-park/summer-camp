@@ -2,7 +2,7 @@ import * as Twilio from 'twilio';
 import { Response, NextFunction } from 'express';
 import { TwilioHelper } from '../helpers/twilio/TwilioHelper';
 import { fetchAllIncomingPhoneNumbers, fetchAllOutgoingCallerIds } from './ConfigurationPhoneNumberController';
-import { accountRepository } from '../worker';
+import { accountRepository as accounts } from '../worker';
 import { AccountConfiguration } from '../models/AccountConfiguration';
 import { ConfigurationValidationFailedException } from '../exceptions/ConfigurationValidationFailedException';
 import { getCallbackUrl } from './callback/PhoneHelper';
@@ -12,7 +12,7 @@ import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 
 const update = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const { account } = req.jwt;
+    let { account } = req.jwt;
 
     account.configuration = { ...account.configuration, ...req.body } as AccountConfiguration;
 
@@ -37,12 +37,20 @@ const update = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
         statusCallbackUrl
       );
     }
-    await accountRepository.save(account);
 
-    if (account.configuration.inbound.isEnabled || account.configuration.outbound.isEnabled) {
+    account = await accounts.save(account);
+
+    if (
+      account.configuration &&
+      (account.configuration.inbound.isEnabled || account.configuration.outbound.isEnabled)
+    ) {
       const users = pool.getAll(account);
 
-      users.forEach((user) => user.broadcast(new ConfigurationMessage(user.getConfiguration(account))));
+      users.forEach((user) => {
+        user.account = account;
+
+        user.broadcast(new ConfigurationMessage(user.getConfiguration(account)));
+      });
     }
 
     res.status(200).end();
@@ -79,7 +87,7 @@ const validate = async (req: AuthenticatedRequest, res: Response, next: Function
       accountSid: accountSid,
     });
 
-    // we cannot acces /accounts or /keys with a regular key, try to fetch phone numbers instead
+    // we cannot access /accounts or /keys with a regular key, try to fetch phone numbers instead
     let incomingPhoneNumbers = await fetchAllIncomingPhoneNumbers(client);
     let outgoingCallerIds = await fetchAllOutgoingCallerIds(client);
 

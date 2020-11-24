@@ -10,20 +10,21 @@ import { CallDirection } from '../../models/CallDirection';
 import { EventEmitter } from 'events';
 import { InvalidDocumentException } from '../../exceptions/InvalidDocumentException';
 import { Call } from '../../models/Call';
+import { CallDocument } from '../../models/documents/CallDocument';
 
-interface CallDocument {
+interface CallJsonDocument {
   id: string;
   from: string;
   to: string;
   accountId: string;
   status: CallStatus;
   direction: CallDirection;
-  userId: string | undefined;
-  callSid: string | undefined;
-  duration: number | undefined;
+  userId?: string;
+  callSid?: string;
+  duration?: number;
   createdAt: string;
-  updatedAt: string | undefined;
-  answeredAt: string | undefined;
+  updatedAt?: string;
+  answeredAt?: string;
 }
 
 const isValidCallDocument = (data: unknown) => {
@@ -53,7 +54,7 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
   constructor(fileName: string) {
     super(fileName);
 
-    this.calls = this.fromPlainObjects(this.load());
+    this.calls = this.fromFile(this.load());
 
     this.eventEmitter = new EventEmitter();
   }
@@ -77,18 +78,18 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
 
     this.calls.set(call.id, call);
 
-    await this.persist(this.toPlainObjects());
+    await this.persist(this.toFile());
 
     this.eventEmitter.emit('call', call);
 
     return call;
   }
 
-  protected fromPlainObjects(list: Array<unknown>): Map<string, Call> {
+  protected fromFile(list: Array<unknown>): Map<string, Call> {
     const calls = new Map<string, Call>();
 
     list.map((data) => {
-      const call = this.fromPlainObject(data);
+      const call = this.convertDocumentToCall(data);
 
       calls.set(call.id, call);
     });
@@ -96,39 +97,22 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     return calls;
   }
 
-  protected fromPlainObject(data: unknown): Call {
+  protected convertDocumentToCall(data: unknown): Call {
     if (!isValidCallDocument(data)) {
       throw new InvalidDocumentException();
     }
 
-    const item = data as CallDocument;
+    const item = data as CallJsonDocument;
 
     const call = new Call(item.id, item.from, item.to, item.accountId, item.direction, item.status);
 
     call.createdAt = new Date(item.createdAt);
 
-    if (item.userId) {
-      call.userId = item.userId;
-    }
-
-    if (item.callSid) {
-      call.callSid = item.callSid;
-    }
-
-    if (item.status) {
-      call.status = item.status;
-    }
-    if (item.duration) {
-      call.duration = item.duration;
-    }
-
-    if (item.answeredAt) {
-      call.answeredAt = new Date(item.answeredAt);
-    }
-
-    if (item.updatedAt) {
-      call.updatedAt = new Date(item.updatedAt);
-    }
+    call.userId = item.userId;
+    call.callSid = item.callSid;
+    call.duration = item.duration;
+    call.answeredAt = item.answeredAt ? new Date(item.answeredAt) : undefined;
+    call.updatedAt = item.updatedAt ? new Date(item.updatedAt) : undefined;
 
     return call;
   }
@@ -141,19 +125,14 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     }
   }
 
-  protected toPlainObjects(): Array<CallDocument> {
+  protected toFile(): Array<CallDocument> {
     return Array.from(this.calls.values()).map((call) => {
-      return this.toPlainObject(call);
+      return this.convertCallToDocument(call);
     });
   }
 
-  protected toPlainObject(call: Call): CallDocument {
-    return {
-      ...call,
-      createdAt: call.createdAt.toString(),
-      updatedAt: call.updatedAt ? call.updatedAt.toString() : undefined,
-      answeredAt: call.answeredAt ? call.answeredAt.toString() : undefined,
-    };
+  protected convertCallToDocument(call: Call): CallDocument {
+    return call.toDocument();
   }
 
   async getByCallSid(callSid: string) {
@@ -185,7 +164,7 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
 
     this.calls.delete(call.id);
 
-    return this.persist(this.toPlainObjects());
+    return this.persist(this.toFile());
   }
 
   onLifecycleEvent(listener: (call: Call) => void) {

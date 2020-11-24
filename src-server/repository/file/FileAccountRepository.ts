@@ -7,11 +7,27 @@ import { AccountNotFoundException } from '../../exceptions/AccountNotFoundExcept
 import { InvalidAccountNameException } from '../../exceptions/InvalidAccountNameException';
 import { InvalidDocumentException } from '../../exceptions/InvalidDocumentException';
 import { AccountConfiguration } from '../../models/AccountConfiguration';
+import { AccountDocument } from '../../models/documents/AccountDocument';
 
-interface AccountDocument {
+interface AccountJsonDocument {
   id: string;
   name: string;
-  configuration: AccountConfiguration | undefined;
+  configuration:
+    | {
+        key?: string;
+        secret?: string;
+        accountSid?: string;
+        inbound: {
+          isEnabled: boolean;
+          phoneNumber?: string;
+        };
+        outbound: {
+          isEnabled: boolean;
+          mode?: string;
+          phoneNumber?: string;
+        };
+      }
+    | undefined;
   createdAt: string;
 }
 
@@ -35,7 +51,7 @@ export class FileAccountRepository
   constructor(fileName: string) {
     super(fileName);
 
-    this.accounts = this.fromPlainObjects(this.load());
+    this.accounts = this.fromFile(this.load());
   }
 
   async create(name: string) {
@@ -61,7 +77,7 @@ export class FileAccountRepository
 
     this.accounts.set(account.id, account);
 
-    await this.persist(this.toPlainObjects());
+    await this.persist(this.toFile());
 
     return account;
   };
@@ -73,49 +89,51 @@ export class FileAccountRepository
 
     this.accounts.delete(account.id);
 
-    return this.persist(this.toPlainObjects());
+    return this.persist(this.toFile());
   };
 
-  protected toPlainObject(account: Account): AccountDocument {
-    const item: AccountDocument = {
-      id: account.id,
-      name: account.name,
-      createdAt: account.createdAt.toString(),
-      configuration: undefined,
-    };
-
-    if (account.configuration) {
-      item.configuration = {
-        ...account.configuration,
-        inbound: { ...account.configuration.inbound },
-        outbound: { ...account.configuration.outbound },
-      };
-    }
-
-    return item;
+  protected toAccountDocument(account: Account): AccountDocument {
+    return account.toDocument();
   }
 
-  protected fromPlainObject(data: unknown): Account {
+  protected convertDocumentToAccount(data: unknown): Account {
     if (!isValidAccountDocument(data)) {
       throw new InvalidDocumentException();
     }
 
-    const item = data as AccountDocument;
+    const item = data as AccountJsonDocument;
 
-    return new Account(item.id, item.name, item.configuration, new Date(item.createdAt));
+    const configuration: AccountConfiguration = {
+      key: undefined,
+      secret: undefined,
+      accountSid: undefined,
+      inbound: {
+        isEnabled: false,
+        phoneNumber: undefined,
+      },
+      outbound: {
+        isEnabled: false,
+        mode: undefined,
+        phoneNumber: undefined,
+      },
+    };
+
+    Object.assign(configuration, item.configuration);
+
+    return new Account(item.id, item.name, configuration, new Date(item.createdAt));
   }
 
-  protected toPlainObjects(): Array<AccountDocument> {
+  protected toFile(): Array<AccountDocument> {
     return Array.from(this.accounts.values()).map((account) => {
-      return this.toPlainObject(account);
+      return this.toAccountDocument(account);
     });
   }
 
-  protected fromPlainObjects(list: Array<unknown>): Map<string, Account> {
+  protected fromFile(list: Array<unknown>): Map<string, Account> {
     const accounts = new Map<string, Account>();
 
     list.map((data) => {
-      const account = this.fromPlainObject(data);
+      const account = this.convertDocumentToAccount(data);
 
       accounts.set(account.id, account);
     });

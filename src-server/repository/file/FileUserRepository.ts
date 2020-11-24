@@ -4,22 +4,21 @@ import { Account } from '../../models/Account';
 import { UserRepository } from '../UserRepository';
 import { FileBaseRepository } from './FileBaseRepository';
 import { UserActivity } from '../../models/UserActivity';
-import { AccountRepository } from '../AccountRepository';
 import { UserRole } from '../../models/UserRole';
 import { UserAlreadyExistsException } from '../../exceptions/UserAlreadyExistsException';
 import { AccountNotFoundException } from '../../exceptions/AccountNotFoundException';
 import { UserAuthentication } from '../../models/UserAuthenticationProvider';
-import { log } from '../../logger';
 import { InvalidUserNameException } from '../../exceptions/InvalidUserNameException';
 import { UserNotFoundException } from '../../exceptions/UserNotFoundException';
 import { SamlUserAuthentication } from '../../security/authentication/SamlAuthenticationProvider';
 import { InvalidDocumentException } from '../../exceptions/InvalidDocumentException';
 import { InvalidAccountException } from '../../exceptions/InvalidAccountException';
+import { UserDocument } from '../../models/documents/UserDocument';
 
-interface UserDocument {
+interface UserJsonDocument {
   id: string;
   name: string;
-  profileImageUrl: string | null;
+  profileImageUrl?: string;
   tags: string[];
   activity: UserActivity;
   accountId: string;
@@ -52,23 +51,13 @@ const isValidUserDocument = (data: unknown) => {
 
 export class FileUserRepository extends FileBaseRepository<User> implements UserRepository {
   users: Map<string, User>;
-  accounts: AccountRepository;
 
-  constructor(accounts: AccountRepository, fileName: string) {
+  constructor(fileName: string) {
     super(fileName);
 
     this.users = new Map();
-    this.accounts = accounts;
 
-    this.fromPlainObjects(this.load())
-      .then((users) => {
-        this.users = users;
-      })
-      .catch((error) => log.error(error));
-  }
-
-  setAccountRepository(repository: AccountRepository) {
-    this.accounts = repository;
+    this.users = this.fromFile(this.load());
   }
 
   getById = async (id: string) => {
@@ -104,7 +93,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
 
     this.users.set(user.id, user);
 
-    await this.persist(this.toPlainObjects());
+    await this.persist(this.toFile());
 
     return user;
   };
@@ -116,7 +105,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
 
     this.users.delete(user.id);
 
-    return this.persist(this.toPlainObjects());
+    return this.persist(this.toFile());
   };
 
   getByName = async (name: string) => {
@@ -149,60 +138,42 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     }
   }
 
-  protected toPlainObjects(): Array<UserDocument> {
+  protected toFile(): Array<UserDocument> {
     return Array.from(this.users.values()).map((user) => {
-      return this.toPlainObject(user);
+      return this.convertUserToDocument(user);
     });
   }
 
-  protected toPlainObject(user: User): UserDocument {
-    return {
-      id: user.id,
-      name: user.name,
-      profileImageUrl: user.profileImageUrl || '',
-      tags: Array.from(user.tags.values()),
-      activity: user.activity,
-      accountId: user.accountId,
-      authentication: user.authentication,
-      role: user.role,
-      createdAt: user.createdAt.toString(),
-    };
+  protected convertUserToDocument(user: User): UserDocument {
+    return user.toDocument();
   }
 
-  protected async fromPlainObjects(list: Array<unknown>): Promise<Map<string, User>> {
+  protected fromFile(list: Array<unknown>): Map<string, User> {
     const users = new Map<string, User>();
 
-    await Promise.all(
-      list.map(async (item) => {
-        const user = await this.fromPlainObject(item);
+    list.map((item) => {
+      const user = this.convertDocumentToUser(item);
 
-        users.set(user.id, user);
-      })
-    );
+      users.set(user.id, user);
+    });
 
     return users;
   }
 
-  protected async fromPlainObject(data: unknown): Promise<User> {
+  protected convertDocumentToUser(data: unknown): User {
     if (!isValidUserDocument(data)) {
       throw new InvalidDocumentException();
     }
 
-    const item = data as UserDocument;
-
-    const account = await this.accounts.getById(item.accountId);
-
-    if (!account) {
-      throw new AccountNotFoundException();
-    }
+    const item = data as UserJsonDocument;
 
     return new User(
       item.id,
       item.name,
-      item.profileImageUrl || undefined,
+      item.profileImageUrl,
       new Set(item.tags),
       item.activity,
-      account.id,
+      item.accountId,
       item.authentication,
       item.role,
       new Date(item.createdAt)

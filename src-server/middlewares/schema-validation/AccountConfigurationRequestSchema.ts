@@ -4,7 +4,6 @@ export const AccountConfigurationRequestSchema = {
     key: { type: 'string' },
     secret: { type: 'string' },
     accountSid: { type: 'string' },
-    applicationSid: { type: 'string' },
     inbound: {
       type: 'object',
       properties: {

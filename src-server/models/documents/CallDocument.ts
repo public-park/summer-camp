@@ -5,13 +5,13 @@ export interface CallDocument {
   id: string;
   from: string;
   to: string;
-  accountSid: string;
-  userId: string | undefined;
-  status: CallStatus | undefined;
+  accountId: string;
+  userId?: string;
+  status: CallStatus;
   direction: CallDirection;
   createdAt: Date;
   duration?: number;
-  callSid?: string | undefined;
+  callSid?: string;
   updatedAt?: Date;
   answeredAt?: Date;
 }

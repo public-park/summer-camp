@@ -1,7 +1,7 @@
 import { BaseRepository } from '../BaseRepository';
 import { CallRepository } from '../CallRepository';
 import { Call } from '../../models/Call';
-import CallModel from './CallSchema';
+import { CallDocument, getModel } from './CallSchema';
 import { User } from '../../models/User';
 import { Account } from '../../models/Account';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
@@ -9,11 +9,15 @@ import { CallStatus } from '../../models/CallStatus';
 import { CallDirection } from '../../models/CallDirection';
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
+import { Model } from 'mongoose';
 
 export class MongoCallRepository implements CallRepository, BaseRepository<Call> {
+  private model: Model<CallDocument>;
   private eventEmitter: EventEmitter;
 
-  constructor() {
+  constructor(COLLECTION_NAME: string) {
+    this.model = getModel(COLLECTION_NAME);
+
     this.eventEmitter = new EventEmitter();
   }
 
@@ -27,12 +31,11 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
     callSid?: string
   ) {
     const call = new Call(uuidv4(), from, to, account.id, direction, status, user, callSid);
-
     return this.save(call);
   }
 
   async getById(id: string) {
-    const document = await CallModel.findById(id);
+    const document = await this.model.findById(id);
 
     if (document) {
       return document.toCall();
@@ -40,7 +43,7 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
   }
 
   async getByCallSid(callSid: string) {
-    const document = await CallModel.findOne({ callSid: callSid });
+    const document = await this.model.findOne({ callSid: callSid });
 
     if (document) {
       return document.toCall();
@@ -48,7 +51,8 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
   }
 
   async getByUser(user: User, skip: number = 0, limit: number = 50) {
-    const documents = await CallModel.find({ userId: user.id })
+    const documents = await this.model
+      .find({ userId: user.id })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: 'descending' });
@@ -57,7 +61,8 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
   }
 
   async getByAccount(account: Account, skip: number = 0, limit: number = 50) {
-    const documents = await CallModel.find({ accountId: account.id })
+    const documents = await this.model
+      .find({ accountId: account.id })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: 'descending' });
@@ -66,10 +71,10 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
   }
 
   async save(call: Call) {
-    const document = await CallModel.findOneAndUpdate(
+    const document = await this.model.findOneAndUpdate(
       { _id: call.id },
       {
-        ...call,
+        ...call.toDocument(),
         updatedAt: new Date(),
       },
       {
@@ -91,13 +96,17 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
   }
 
   async remove(call: Call) {
-    const document = await CallModel.deleteOne({ _id: call.id });
+    const document = await this.model.deleteOne({ _id: call.id });
 
     if (document) {
       return;
     } else {
       throw new CallNotFoundException();
     }
+  }
+
+  getModel() {
+    return this.model;
   }
 
   onLifecycleEvent(listener: (call: Call) => void) {

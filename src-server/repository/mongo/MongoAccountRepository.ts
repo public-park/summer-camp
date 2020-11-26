@@ -1,14 +1,20 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import { BaseRepository } from '../BaseRepository';
-import AccountModel from './AccountSchema';
+import { getModel, AccountDocument } from './AccountSchema';
 import { Account } from '../../models/Account';
 import { AccountRepository } from '../AccountRepository';
-import UserModel from './UserSchema';
 import { AccountNotFoundException } from '../../exceptions/AccountNotFoundException';
 import { InvalidAccountNameException } from '../../exceptions/InvalidAccountNameException';
+import { Model } from 'mongoose';
 
 export class MongoAccountRepository implements AccountRepository, BaseRepository<Account> {
+  private model: Model<AccountDocument>;
+
+  constructor(COLLECTION_NAME: string) {
+    this.model = getModel(COLLECTION_NAME);
+  }
+
   async create(name: string) {
     if (!name) {
       throw new InvalidAccountNameException();
@@ -20,29 +26,19 @@ export class MongoAccountRepository implements AccountRepository, BaseRepository
   }
 
   async getByName(name: string) {
-    const documents = await AccountModel.find({ name: name });
+    const documents = await this.model.find({ name: name });
 
     return documents.map((document) => document.toAccount());
   }
 
   async getAll() {
-    const documents = await AccountModel.find({});
+    const documents = await this.model.find({});
 
     return documents.map((document) => document.toAccount());
   }
 
-  async getByUserName(name: string) {
-    const document = await UserModel.findOne({ name: name });
-
-    if (!document) {
-      throw new AccountNotFoundException();
-    }
-
-    return this.getById(document.accountId);
-  }
-
   async getById(id: string) {
-    const document = await AccountModel.findById(id);
+    const document = await this.model.findById(id);
 
     if (document) {
       return document.toAccount();
@@ -50,7 +46,7 @@ export class MongoAccountRepository implements AccountRepository, BaseRepository
   }
 
   async save(account: Account) {
-    const document = await AccountModel.findOneAndUpdate(
+    const document = await this.model.findOneAndUpdate(
       { _id: account.id },
       {
         ...account,
@@ -70,12 +66,16 @@ export class MongoAccountRepository implements AccountRepository, BaseRepository
   }
 
   async remove(account: Account) {
-    const document = await AccountModel.deleteOne({ _id: account.id });
+    const document = await this.model.deleteOne({ _id: account.id });
 
     if (document) {
       return;
     } else {
       throw new AccountNotFoundException();
     }
+  }
+
+  getModel() {
+    return this.model;
   }
 }

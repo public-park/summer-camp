@@ -105,13 +105,13 @@ mongoose
   .then(() => log.info(`connected to ${process.env.MONGODB_URI} ...`))
   .catch((error) => log.error(error));
 
-export const accountRepository = new MongoAccountRepository();
-export const userRepository = new MongoUserRepository(accountRepository);
-export const callRepository = new MongoCallRepository();
+export const accountRepository = new MongoAccountRepository('accounts');
+export const userRepository = new MongoUserRepository('users');
+export const callRepository = new MongoCallRepository('call');
 
 /* Local File Repository 
 export const accountRepository = new FileAccountRepository('./accounts.json');
-export const userRepository = new FileUserRepository(accountRepository, './users.json');
+export const userRepository = new FileUserRepository('./users.json');
 export const callRepository = new FileCallRepository('calls.json');
 */
 export const authenticationProvider = new PasswordAuthenticationProvider();

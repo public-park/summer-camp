@@ -2,20 +2,20 @@ import { v4 as uuidv4 } from 'uuid';
 import { UserRepository } from '../UserRepository';
 import { User } from '../../models/User';
 import { Account } from '../../models/Account';
-import UserModel from './UserSchema';
+import { UserDocument, getModel } from './UserSchema';
 import { UserActivity } from '../../models/UserActivity';
 import { UserRole } from '../../models/UserRole';
 import { UserAuthentication } from '../../models/UserAuthenticationProvider';
-import { AccountRepository } from '../AccountRepository';
 import { InvalidUserNameException } from '../../exceptions/InvalidUserNameException';
 import { UserNotFoundException } from '../../exceptions/UserNotFoundException';
 import { InvalidAccountException } from '../../exceptions/InvalidAccountException';
+import { Model } from 'mongoose';
 
 export class MongoUserRepository implements UserRepository {
-  accounts: AccountRepository;
+  private model: Model<UserDocument>;
 
-  constructor(accounts: AccountRepository) {
-    this.accounts = accounts;
+  constructor(COLLECTION_NAME: string) {
+    this.model = getModel(COLLECTION_NAME);
   }
 
   async create(
@@ -41,7 +41,7 @@ export class MongoUserRepository implements UserRepository {
       name: name,
     };
 
-    const document = await UserModel.findOne(query);
+    const document = await this.model.findOne(query);
 
     if (document) {
       return document.toUser();
@@ -49,7 +49,7 @@ export class MongoUserRepository implements UserRepository {
   }
 
   async getOneByAccount(account: Account) {
-    const document = await UserModel.findOne({ accountId: account.id });
+    const document = await this.model.findOne({ accountId: account.id });
 
     if (document) {
       return document.toUser();
@@ -57,7 +57,7 @@ export class MongoUserRepository implements UserRepository {
   }
 
   async getById(id: string) {
-    const document = await UserModel.findById(id);
+    const document = await this.model.findById(id);
 
     if (document) {
       return document.toUser();
@@ -65,7 +65,7 @@ export class MongoUserRepository implements UserRepository {
   }
 
   async getByNameId(account: Account, nameId: string) {
-    const document = await UserModel.findOne({
+    const document = await this.model.findOne({
       accountId: account.id,
       'authentication.nameId': nameId,
     });
@@ -75,7 +75,7 @@ export class MongoUserRepository implements UserRepository {
     }
   }
   async getAll(account: Account, skip: number = 0, limit: number = 50) {
-    const documents = await UserModel.find({ accountId: account.id }).skip(skip).limit(limit);
+    const documents = await this.model.find({ accountId: account.id }).skip(skip).limit(limit);
 
     return documents.map((document) => document.toUser());
   }
@@ -91,11 +91,10 @@ export class MongoUserRepository implements UserRepository {
       throw new InvalidAccountException();
     }
 
-    const document = await UserModel.findOneAndUpdate(
+    const document = await this.model.findOneAndUpdate(
       { _id: user.id },
       {
-        ...user,
-        tags: Array.from(user.tags.values()),
+        ...user.toDocument(),
       },
       {
         new: true,
@@ -112,12 +111,16 @@ export class MongoUserRepository implements UserRepository {
   }
 
   async remove(user: User) {
-    const document = await UserModel.deleteOne({ _id: user.id });
+    const document = await this.model.deleteOne({ _id: user.id });
 
     if (document) {
       return;
     } else {
       throw new UserNotFoundException();
     }
+  }
+
+  getModel() {
+    return this.model;
   }
 }

@@ -1,6 +1,4 @@
 import * as mongoose from 'mongoose';
-import AccountModel from '../repository/mongo/AccountSchema';
-import UserModel from '../repository/mongo/UserSchema';
 import { MongoAccountRepository } from '../repository/mongo/MongoAccountRepository';
 import { MongoUserRepository } from '../repository/mongo/MongoUserRepository';
 import { PasswordAuthenticationProvider } from '../security/authentication/PasswordAuthenticationProvider';
@@ -8,7 +6,6 @@ import { FileUserRepository } from '../repository/file/FileUserRepository';
 import { FileAccountRepository } from '../repository/file/FileAccountRepository';
 import { FileCallRepository } from '../repository/file/FileCallRepository';
 import { MongoCallRepository } from '../repository/mongo/MongoCallRepository';
-import CallModel from '../repository/mongo/CallSchema';
 
 /* MongoDB */
 const uri = `mongodb://localhost:27017/summer-camp-test`;
@@ -20,9 +17,9 @@ const mongoOptions = {
   useUnifiedTopology: true,
 };
 
-export const accountRepository = new MongoAccountRepository();
-export const userRepository = new MongoUserRepository(accountRepository);
-export const callRepository = new MongoCallRepository();
+export const accountRepository = new MongoAccountRepository('accounts-test');
+export const userRepository = new MongoUserRepository('users-test');
+export const callRepository = new MongoCallRepository('calls-test');
 export const authenticationProvider = new PasswordAuthenticationProvider();
 
 export const init = () => {
@@ -33,9 +30,9 @@ export const init = () => {
   });
 
   afterAll(async () => {
-    await AccountModel.deleteMany({});
-    await UserModel.deleteMany({});
-    await CallModel.deleteMany({});
+    await accountRepository.getModel().deleteMany({});
+    await userRepository.getModel().deleteMany({});
+    await callRepository.getModel().deleteMany({});
 
     await connection.disconnect();
   });

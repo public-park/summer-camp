@@ -2,7 +2,6 @@ import * as mongoose from 'mongoose';
 
 import { Document, Schema } from 'mongoose';
 import { User } from '../../models/User';
-import { Account } from '../../models/Account';
 import { v4 as uuidv4 } from 'uuid';
 import { UserActivity } from '../../models/UserActivity';
 import { UserRole } from '../../models/UserRole';
@@ -28,12 +27,12 @@ const UserSchema = new Schema(
     profileImageUrl: { type: String, required: false },
     tags: [String],
     activity: { type: String, required: true, index: true },
-    accountId: { type: String, required: true },
+    accountId: { type: String, required: true, immutable: true },
     authentication: Schema.Types.Mixed,
     role: { type: String, required: true },
     createdAt: { type: Date, default: Date.now, required: true },
   },
-  { versionKey: false, collection: 'users' }
+  { versionKey: false }
 );
 
 UserSchema.methods.toUser = function (): User {
@@ -50,6 +49,6 @@ UserSchema.methods.toUser = function (): User {
   );
 };
 
-const UserModel = mongoose.model<UserDocument>('UserModel', UserSchema);
-
-export default UserModel;
+export const getModel = (COLLECTION_NAME: string) => {
+  return mongoose.model<UserDocument>('UserModel', UserSchema, COLLECTION_NAME);
+};

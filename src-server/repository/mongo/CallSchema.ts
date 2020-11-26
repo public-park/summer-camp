@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-
 import { Document, Schema } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import { Call } from '../../models/Call';
@@ -8,17 +7,17 @@ import { CallDirection } from '../../models/CallDirection';
 
 export interface CallDocument extends Document {
   _id: string;
-  callSid: string;
   from: string;
   to: string;
   accountId: string;
-  userId: string;
+  userId?: string;
   status: CallStatus;
   direction: CallDirection;
-  duration: number | undefined;
   createdAt: Date;
-  answeredAt: Date | undefined;
-  updatedAt: Date | undefined;
+  duration?: number;
+  callSid?: string;
+  answeredAt?: Date;
+  updatedAt?: Date | undefined;
   toCall: () => Call;
 }
 
@@ -28,16 +27,16 @@ const CallSchema = new Schema(
     callSid: { type: String, index: true },
     from: { type: String, required: true },
     to: { type: String, required: true },
-    accountId: { type: String, required: true, index: true },
+    accountId: { type: String, required: true, index: true, immutable: true },
     userId: { type: String, index: true },
-    status: { type: String },
+    status: { type: String, required: true },
     direction: { type: String, required: true },
     duration: { type: Number },
     createdAt: { type: Date, default: Date.now, required: true },
     answeredAt: { type: Date },
     updatedAt: { type: Date },
   },
-  { versionKey: false, collection: 'calls' }
+  { versionKey: false }
 );
 
 CallSchema.methods.toCall = function (): Call {
@@ -49,27 +48,16 @@ CallSchema.methods.toCall = function (): Call {
     call.userId = this.userId;
   }
 
-  if (this.callSid) {
-    call.callSid = this.callSid;
-  }
-
-  if (this.duration) {
-    call.duration = this.duration;
-  }
-
-  if (this.answeredAt) {
-    call.answeredAt = new Date(this.answeredAt);
-  }
-
-  if (this.updatedAt) {
-    call.updatedAt = new Date(this.updatedAt);
-  }
+  call.callSid = this.callSid ?? undefined;
+  call.duration = this.duration ?? undefined;
+  call.answeredAt = this.answeredAt ?? undefined;
+  call.updatedAt = this.updatedAt ?? undefined;
 
   return call;
 };
 
 CallSchema.index({ callSid: 1 }, { unique: true, partialFilterExpression: { callSid: { $ne: null } } });
 
-const CallModel = mongoose.model<CallDocument>('CallModel', CallSchema);
-
-export default CallModel;
+export const getModel = (COLLECTION_NAME: string) => {
+  return mongoose.model<CallDocument>('CallModel', CallSchema, COLLECTION_NAME);
+};

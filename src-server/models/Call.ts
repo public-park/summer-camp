@@ -54,19 +54,22 @@ export class Call {
       id: this.id,
       from: this.from,
       to: this.to,
-      accountSid: this.accountId,
-      userId: this.userId,
+      accountId: this.accountId,
       status: this.status,
       direction: this.direction,
       createdAt: this.createdAt,
     };
 
-    if (this.callSid) {
-      payload.callSid = this.callSid;
+    if (this.userId) {
+      payload.userId = this.userId;
     }
 
     if (this.duration) {
       payload.duration = this.duration;
+    }
+
+    if (this.callSid) {
+      payload.callSid = this.callSid;
     }
 
     if (this.updatedAt) {
@@ -76,6 +79,7 @@ export class Call {
     if (this.answeredAt) {
       payload.answeredAt = this.answeredAt;
     }
+
     return payload;
   }
 

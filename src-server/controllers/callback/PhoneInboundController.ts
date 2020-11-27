@@ -22,7 +22,7 @@ export const handleConnectWithFilter = async (req: StatusCallbackRequest, res: R
     const tag = req.query.tag?.toString();
 
     if (tag) {
-      users = users.filter((user) => user.tags.has(tag) && user.isAvailable && user.isConnected);
+      users = users.filter((user) => user.tags.has(tag) && user.isAvailable && user.isOnline);
     } else {
       users = users.filter((user) => user.isAvailable);
     }
@@ -56,7 +56,7 @@ const handleConnectToUser = async (req: StatusCallbackRequest, res: Response, ne
       throw new UserNotFoundException();
     }
 
-    const status = user.isConnected && user.isAvailable ? CallStatus.Initiated : CallStatus.NoAnswer;
+    const status = user.isOnline && user.isAvailable ? CallStatus.Initiated : CallStatus.NoAnswer;
 
     const call = await calls.create(account, From, To, CallDirection.Inbound, status, user, CallSid);
 

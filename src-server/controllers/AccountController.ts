@@ -11,7 +11,11 @@ const fetch = async (req: AuthenticatedRequest, res: Response, next: NextFunctio
       throw new AccountNotFoundException();
     }
 
-    res.json(account.toDocument());
+    const body = account.toDocument();
+
+    delete body.configuration;
+
+    res.json(body);
   } catch (error) {
     return next(error);
   }

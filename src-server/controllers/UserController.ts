@@ -37,7 +37,7 @@ const create = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
 
     const user = await users.create(req.body.name, undefined, tags, req.jwt.account, authentication, role, activity);
 
-    res.json(user.toDocument());
+    res.json(user.toDocumentWithoutAuthentication());
   } catch (error) {
     return next(error);
   }
@@ -45,7 +45,7 @@ const create = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
 
 const fetch = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    res.json((req.resource.user as User).toDocument());
+    res.json((req.resource.user as User).toDocumentWithoutAuthentication());
   } catch (error) {
     return next(error);
   }
@@ -77,7 +77,7 @@ const update = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
 
     pool.updateIfExists(await pool.getUserWithSocket(user));
 
-    res.json(user.toDocument());
+    res.json(user.toDocumentWithoutAuthentication());
   } catch (error) {
     return next(error);
   }

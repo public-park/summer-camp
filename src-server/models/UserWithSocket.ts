@@ -73,7 +73,7 @@ export class UserWithSocket extends User {
     return this.activity === UserActivity.WaitingForWork && !this.call;
   }
 
-  get isConnected(): boolean {
+  get isOnline(): boolean {
     return this.sockets.length() > 0;
   }
 
@@ -100,26 +100,15 @@ export class UserWithSocket extends User {
   toPresenceDocument(): PresenceDocument {
     const response: PresenceDocument = {
       activity: this.activity,
-      isOnline: this.isConnected,
+      isOnline: this.isOnline,
       isAvailable: this.isAvailable,
-      call: null,
     };
-
-    // TODO, fix naming isOnline: this.isConnected
 
     if (this.call) {
       response.call = {
-        id: this.call.id,
-        from: this.call.from,
-        to: this.call.to,
-        status: this.call.status,
-        direction: this.call.direction,
+        ...this.call.toStatusDocument(),
       };
-    } else {
-      response.call = null;
     }
-
-    response.isOnline = this.sockets.length() !== 0 ? true : false;
 
     return response;
   }

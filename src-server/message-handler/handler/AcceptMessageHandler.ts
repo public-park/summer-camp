@@ -1,7 +1,6 @@
 import { callRepository as calls } from '../../worker';
 import { TwilioHelper } from '../../helpers/twilio/TwilioHelper';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
-
 import { AcceptMessage } from '../../models/socket/messages/AcceptMessage';
 import { UserWithSocket } from '../../models/UserWithSocket';
 

@@ -20,11 +20,36 @@ export class Account {
   }
 
   toDocument(): AccountDocument {
-    return {
+    const payload: AccountDocument = {
       id: this.id,
       name: this.name,
       createdAt: this.createdAt,
     };
+
+    if (this.configuration) {
+      payload.configuration = {
+        key: this.configuration.key,
+        secret: this.configuration.secret,
+        accountSid: this.configuration.accountSid,
+        inbound: {
+          ...this.configuration.inbound,
+        },
+        outbound: {
+          ...this.configuration.outbound,
+        },
+      };
+
+      if (payload.configuration.outbound.isEnabled === false) {
+        delete payload.configuration.outbound.phoneNumber;
+        delete payload.configuration.outbound.mode;
+      }
+
+      if (payload.configuration.inbound.isEnabled === false) {
+        delete payload.configuration.inbound.phoneNumber;
+      }
+    }
+
+    return payload;
   }
 
   hasConfiguration() {

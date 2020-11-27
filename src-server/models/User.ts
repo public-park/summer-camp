@@ -8,7 +8,7 @@ import { AgentRole } from './roles/AgentRole';
 import { UserAuthentication } from './UserAuthenticationProvider';
 import { Account } from './Account';
 import { UserConfiguration } from './UserConfiguration';
-import { UserDocument } from './documents/UserDocument';
+import { UserDocument, UserDocumentWithoutAuthentication } from './documents/UserDocument';
 
 export class User {
   id: string;
@@ -60,18 +60,29 @@ export class User {
   }
 
   toDocument(): UserDocument {
-    return {
+    const payload: UserDocument = {
       id: this.id,
       name: this.name,
       profileImageUrl: this.profileImageUrl,
       tags: Array.from(this.tags),
       activity: this.activity,
       accountId: this.accountId,
-      authentication: {
-        provider: this.authentication.provider,
-      },
+      authentication: this.authentication,
       role: this.role,
+      createdAt: this.createdAt,
     };
+
+    if (!payload.profileImageUrl) {
+      delete payload.profileImageUrl;
+    }
+
+    return payload;
+  }
+
+  toDocumentWithoutAuthentication(): UserDocumentWithoutAuthentication {
+    const { authentication, ...document } = this.toDocument();
+
+    return document;
   }
 
   getConfiguration(account: Account): UserConfiguration | undefined {

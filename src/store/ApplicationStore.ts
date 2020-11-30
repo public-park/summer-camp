@@ -1,4 +1,3 @@
-import { UserConnectionState } from '../models/UserConnectionState';
 import { ApplicationPage } from '../actions/PageAction';
 import { WorkspaceView } from '../actions/WorkspaceViewAction';
 import { PhoneState } from '../phone/PhoneState';
@@ -6,24 +5,14 @@ import { MediaDeviceException } from '../exceptions/MediaDeviceException';
 import { UserWithPresenceDocument } from '../models/documents/UserDocument';
 import { UserConfiguration } from '../models/UserConfiguration';
 import { CallStatusDocument } from '../models/documents/CallDocument';
-import { UserActivity } from '../models/UserActivity';
-import { UserRole } from '../models/UserRole';
+import { ConnectionState } from '../models/Connection';
 
 export interface ApplicationStore {
-  call: CallStatusDocument | undefined;
-  user: {
-    id: string;
-    name: string;
-    profileImageUrl: string | undefined;
-    tags: Array<string>;
-    activity: UserActivity;
-    accountId: string;
-    role: UserRole;
-  };
   connection: {
-    state: UserConnectionState | undefined;
+    state: ConnectionState | undefined;
     sockets: number;
   };
+  call: CallStatusDocument | undefined;
   phone: Phone;
   devices: {
     audio: {

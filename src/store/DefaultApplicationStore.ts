@@ -1,18 +1,7 @@
 import { ApplicationStore } from './ApplicationStore';
-import { UserActivity } from '../models/UserActivity';
 import { PhoneState } from '../phone/PhoneState';
-import { UserRole } from '../models/UserRole';
 
 export const DefaultApplicationStore: ApplicationStore = {
-  user: {
-    id: '',
-    name: '',
-    profileImageUrl: '',
-    tags: [],
-    activity: UserActivity.Unknown,
-    role: UserRole.Agent,
-    accountId: '',
-  },
   connection: {
     state: undefined,
     sockets: 0,

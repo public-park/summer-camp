@@ -23,7 +23,7 @@ enum CallEventType {
 }
 
 export class TwilioCall implements Call {
-  private connection: TwilioConnection | undefined;
+  _connection: TwilioConnection | undefined;
 
   readonly user: User;
   readonly id: string;
@@ -34,7 +34,7 @@ export class TwilioCall implements Call {
   isOnHold: boolean;
   isRecording: boolean;
   readonly direction: CallDirection;
-  readonly status: CallStatus;
+  status: CallStatus;
   readonly createdAt: Date;
   answeredAt: Date | undefined;
 
@@ -57,7 +57,95 @@ export class TwilioCall implements Call {
     this.eventEmitter = new EventEmitter();
   }
 
-  registerConnection(connection: TwilioConnection) {
+  reject() {
+    if (!this._connection) {
+      throw new CallNotConnectedException();
+    }
+
+    this._connection.reject();
+
+    return Promise.resolve();
+  }
+
+  async hold(state: boolean): Promise<void> {
+    if (!this.connection) {
+      throw new CallNotConnectedException();
+    }
+
+    console.log(`call ${this.id}, set hold to ${state}`);
+
+    await this.user.connection.send<HoldMessage, HoldMessage>(new HoldMessage(this.id, state));
+
+    this.isOnHold = state;
+  }
+
+  async transfer(user: User): Promise<void> {
+    return Promise.reject('not implemented');
+  }
+
+  async record(state: boolean): Promise<void> {
+    if (!this.connection) {
+      throw new CallNotConnectedException();
+    }
+
+    console.log(`call ${this.id}, set record to ${state}`);
+
+    await this.user.connection.send<RecordMessage, RecordMessage>(new RecordMessage(this.id, state));
+
+    this.isRecording = state;
+  }
+
+  sendDigits(digits: string) {
+    if (!this._connection) {
+      throw new CallNotConnectedException();
+    }
+
+    this._connection.sendDigits(digits.toString());
+  }
+
+  mute(state: boolean) {
+    if (!this._connection) {
+      throw new CallNotConnectedException();
+    }
+
+    this.isMuted = state;
+
+    this._connection.mute(state);
+
+    return Promise.resolve();
+  }
+
+  async answer() {
+    this.eventEmitter.emit(CallEventType.Answer);
+
+    this.answeredAt = new Date();
+
+    await this.user.connection.send(new AcceptMessage(this.id));
+
+    return;
+  }
+
+  async end() {
+    console.debug(`local disconnect initiated by call.end()`);
+
+    if (!this._connection) {
+      throw new CallNotConnectedException();
+    }
+
+    this._connection.disconnect();
+
+    return Promise.resolve();
+  }
+
+  get connection() {
+    return this._connection;
+  }
+
+  set connection(connection: TwilioConnection | undefined) {
+    if (!connection) {
+      return;
+    }
+
     connection.on('warning', (name: string) => {
       console.info(`warning: ${name}`);
     });
@@ -80,79 +168,7 @@ export class TwilioCall implements Call {
       this.eventEmitter.emit(CallEventType.End);
     });
 
-    this.connection = connection;
-  }
-
-  reject() {
-    if (!this.connection) {
-      throw new CallNotConnectedException();
-    }
-
-    this.connection.reject();
-
-    return Promise.resolve();
-  }
-
-  async hold(state: boolean): Promise<void> {
-    console.log(`call ${this.id}, set hold to ${state}`);
-
-    await this.user.send<HoldMessage, HoldMessage>(new HoldMessage(this.id, state));
-
-    this.isOnHold = state;
-  }
-
-  async transfer(user: User): Promise<void> {
-    return Promise.reject('not implemented');
-  }
-
-  async record(state: boolean): Promise<void> {
-    console.log(`call ${this.id}, set record to ${state}`);
-
-    await this.user.send<RecordMessage, RecordMessage>(new RecordMessage(this.id, state));
-
-    this.isRecording = state;
-  }
-
-  sendDigits(digits: string) {
-    if (!this.connection) {
-      throw new CallNotConnectedException();
-    }
-
-    this.connection.sendDigits(digits.toString());
-  }
-
-  mute(state: boolean) {
-    if (!this.connection) {
-      throw new CallNotConnectedException();
-    }
-
-    this.isMuted = state;
-
-    this.connection.mute(state);
-
-    return Promise.resolve();
-  }
-
-  async answer() {
-    this.eventEmitter.emit(CallEventType.Answer);
-
-    this.answeredAt = new Date();
-
-    await this.user.send(new AcceptMessage(this.id));
-
-    return;
-  }
-
-  async end() {
-    console.debug(`local disconnect initiated by call.end()`);
-
-    if (!this.connection) {
-      throw new CallNotConnectedException();
-    }
-
-    this.connection.disconnect();
-
-    return Promise.resolve();
+    this._connection = connection;
   }
 
   onAnswer(listener: () => void) {

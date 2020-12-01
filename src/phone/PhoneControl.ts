@@ -4,7 +4,7 @@ import { PhoneState } from './PhoneState';
 export interface PhoneControl {
   call: Call | undefined;
   init: (token: string) => void;
-  connect: (to: string) => Promise<Call>;
+  connect: (to: string, from?: string) => Promise<Call>;
   getState: () => PhoneState;
   destroy: () => void;
   onStateChanged: (listener: (state: PhoneState) => void) => void;

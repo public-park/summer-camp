@@ -25,6 +25,5 @@ export interface Call {
   sendDigits: (digits: string) => void;
   onAnswer: (listener: () => void) => void;
   onEnd: (listener: () => void) => void;
-  registerConnection: (connection: any) => void;
   removeAllListeners: () => void;
 }

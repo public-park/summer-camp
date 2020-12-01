@@ -12,6 +12,7 @@ import { CallMessage } from '../../models/socket/messages/CallMessage';
 import { InitiateCallMessage } from '../../models/socket/messages/InitiateCallMessage';
 import { CallStatus } from '../../models/CallStatus';
 import { CallDirection } from '../../models/CallDirection';
+import { Connection } from '../../models/Connection';
 
 interface DelayedState {
   state: PhoneState;
@@ -25,8 +26,9 @@ enum PhoneEventType {
 }
 
 export class TwilioPhone implements PhoneControl {
-  user: User;
-  call: Call | undefined;
+  private readonly connection: Connection;
+  private readonly user: User;
+  call: TwilioCall | undefined;
   private readonly device: any;
   private state: PhoneState;
   private delayedState: DelayedState | undefined;
@@ -36,10 +38,8 @@ export class TwilioPhone implements PhoneControl {
 
   private readonly eventEmitter: EventEmitter;
 
-  constructor(user: User) {
-    this.user = user;
-
-    user.on<CallMessage>(MessageType.Call, async (message: CallMessage) => {
+  constructor(connection: Connection, user: User) {
+    connection.on<CallMessage>(MessageType.Call, async (message: CallMessage) => {
       if (this.hasEnded(message)) {
         this.pauseRingtone();
 
@@ -71,6 +71,7 @@ export class TwilioPhone implements PhoneControl {
       this.eventEmitter.emit(PhoneEventType.CallStateChanged, this.call);
     });
 
+    this.connection = connection;
     this.user = user;
 
     this.device = new Client.Device();
@@ -166,7 +167,7 @@ export class TwilioPhone implements PhoneControl {
 
         await this.registerInputDeviceId();
 
-        this.call.registerConnection(connection);
+        this.call.connection = connection;
 
         connection.accept();
       });
@@ -213,14 +214,14 @@ export class TwilioPhone implements PhoneControl {
     }
   }
 
-  async connect(to: string): Promise<Call> {
+  async connect(to: string, from?: string): Promise<Call> {
     console.info(`connect to ${to}`);
 
     if (this.state !== PhoneState.Idle) {
       throw new InvalidPhoneStateException();
     }
 
-    const message = await this.user.send<InitiateCallMessage, CallMessage>(new InitiateCallMessage(to));
+    const message = await this.connection.send<InitiateCallMessage, CallMessage>(new InitiateCallMessage(to, from));
 
     this.setState(PhoneState.Busy);
 

@@ -9,13 +9,20 @@ import { UserWithPresenceDocument } from '../models/documents/UserDocument';
 const application = (state: ApplicationStore = DefaultApplicationStore, action: Action): ApplicationStore => {
   return produce(state, (draft) => {
     switch (action.type) {
-      case 'USER_CONNECTION_STATE_CHANGE':
-        draft.connection.state = action.payload.state;
+      case 'PAGE_LOAD':
+        draft.phone.devices.input = action.payload.input;
+        draft.phone.devices.output = action.payload.output;
+        draft.token = action.payload.token;
+
+        if (!action.payload.token) {
+          draft.page = 'LOGIN_PAGE';
+        }
 
         break;
 
-      case 'USER_ACTIVITY_CHANGE':
-        draft.user = action.payload;
+      case 'CONNECTION_STATE_CHANGE':
+        draft.connection.state = action.payload.state;
+
         break;
 
       case 'PHONE_DISPLAY_UPDATE':

@@ -36,6 +36,6 @@ export const DefaultApplicationStore: ApplicationStore = {
     reason: '',
   },
   token: undefined,
-  page: 'LOGIN_PAGE',
+  page: 'INIT_PAGE',
   users: new Map(),
 };

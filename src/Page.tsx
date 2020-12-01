@@ -5,6 +5,7 @@ import { Login } from './components/Login/Login';
 import { Logout } from './components/Logout/Logout';
 import { Workspace } from './components/Workspace/Workspace';
 import { ApplicationPage } from './actions/PageAction';
+import { Init } from './components/Logout/Init';
 
 export const Page = () => {
   const page = useSelector(selectPage);
@@ -17,6 +18,8 @@ export const Page = () => {
         return <Login />;
       case 'LOGOUT_PAGE':
         return <Logout />;
+      case 'INIT_PAGE':
+        return <Init />;
       default:
         return <Logout />;
     }

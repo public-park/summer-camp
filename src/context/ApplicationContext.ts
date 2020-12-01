@@ -2,9 +2,11 @@ import { createContext } from 'react';
 import { User } from '../models/User';
 import { PhoneControl } from '../phone/PhoneControl';
 import { Call } from '../models/Call';
+import { Connection } from '../models/Connection';
 
 export interface ApplicationContextType {
-  user: User;
+  connection: Connection;
+  user: User | undefined;
   phone: PhoneControl | undefined;
   call: Call | undefined;
   login: (token: string) => void;
@@ -12,7 +14,8 @@ export interface ApplicationContextType {
 }
 
 const DefaultApplicationContext: ApplicationContextType = {
-  user: new User(),
+  connection: new Connection(),
+  user: undefined,
   phone: undefined,
   call: undefined,
   login: () => {},

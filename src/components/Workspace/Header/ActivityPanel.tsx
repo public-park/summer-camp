@@ -1,15 +1,15 @@
 import { useSelector } from 'react-redux';
-import { selectActivity } from '../../../store/Store';
 import { UserActivity } from '../../../models/UserActivity';
 import { FormControlLabel, withStyles } from '@material-ui/core';
 import React, { useContext, useState } from 'react';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import Switch from '@material-ui/core/Switch';
+import { selectUser } from '../../../store/Store';
 
 export const ActivityPanel = () => {
   const { user } = useContext(ApplicationContext);
 
-  const activity = useSelector(selectActivity);
+  const { activity } = useSelector(selectUser);
 
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -36,7 +36,7 @@ export const ActivityPanel = () => {
 
     const activity = event.target.checked ? UserActivity.WaitingForWork : UserActivity.Away;
 
-    await user.setActivity(activity);
+    await user?.setActivity(activity);
 
     setIsProcessing(false);
   };

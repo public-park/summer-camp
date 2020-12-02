@@ -52,7 +52,7 @@ const getHeaderWithAuthentication = (method: 'POST' | 'GET', user: User) => {
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      Token: user.token,
+      Token: user.connection.token,
     },
   };
 };

@@ -13,6 +13,7 @@ import { selectSetupConfiguration, selectSetupIsSaving, selectSetupValidation } 
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { updateTwilioAccount, validateConfigurationComplete } from '../../../actions/SetupAction';
 import { updateAccountConfiguration, validateAccountConfiguration } from '../../../services/RequestService';
+import { User } from '../../../models/User';
 
 export const AccountSetupForm = () => {
   const dispatch = useDispatch();
@@ -43,7 +44,7 @@ export const AccountSetupForm = () => {
 
   const save = async () => {
     try {
-      const result = await validateAccountConfiguration(user, {
+      const result = await validateAccountConfiguration(user as User, {
         ...twilio,
         key: key,
         secret: secret,
@@ -53,7 +54,7 @@ export const AccountSetupForm = () => {
       if (!result.isValid) {
         dispatch(validateConfigurationComplete(result));
       } else {
-        await updateAccountConfiguration(user, {
+        await updateAccountConfiguration(user as User, {
           ...twilio,
           key: key,
           secret: secret,

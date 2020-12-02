@@ -15,6 +15,7 @@ import { ApplicationContext } from '../../../context/ApplicationContext';
 
 import { validateConfiguration } from '../../../actions/SetupAction';
 import { fetchAccountConfiguration, validateAccountConfiguration } from '../../../services/RequestService';
+import { User } from '../../../models/User';
 
 const getPhoneView = (view: SetupView) => {
   switch (view) {
@@ -47,7 +48,7 @@ export const ConfigurationView = () => {
     async function validate() {
       dispatch(validateConfiguration());
       try {
-        const result = await validateAccountConfiguration(user, configuration.twilio as any);
+        const result = await validateAccountConfiguration(user as User, configuration.twilio as any);
 
         dispatch(validateConfigurationComplete(result as ValidationResult));
       } catch (error) {
@@ -65,7 +66,7 @@ export const ConfigurationView = () => {
       dispatch(fetchConfiguration());
 
       try {
-        const configuration = await fetchAccountConfiguration(user);
+        const configuration = await fetchAccountConfiguration(user as User);
 
         dispatch(fetchConfigurationComplete(configuration as SetupStore['configuration']['twilio']));
       } catch (error) {

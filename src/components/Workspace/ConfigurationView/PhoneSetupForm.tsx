@@ -8,6 +8,7 @@ import { selectSetupConfiguration, selectSetupIsSaving, selectSetupValidation } 
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { saveConfiguration, saveConfigurationComplete } from '../../../actions/SetupAction';
 import { updateAccountConfiguration } from '../../../services/RequestService';
+import { User } from '../../../models/User';
 
 export const PhoneSetupForm = () => {
   const dispatch = useDispatch();
@@ -22,7 +23,7 @@ export const PhoneSetupForm = () => {
     dispatch(saveConfiguration());
 
     try {
-      await updateAccountConfiguration(user, twilio);
+      await updateAccountConfiguration(user as User, twilio);
 
       dispatch(saveConfigurationComplete());
     } catch (error) {

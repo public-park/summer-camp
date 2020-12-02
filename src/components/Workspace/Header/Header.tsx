@@ -2,7 +2,6 @@ import React, { useContext } from 'react';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import { IconButton, Avatar } from '@material-ui/core';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectProfileImageUrl, selectName, selectRole, selectCall } from '../../../store/Store';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { setWorkspaceView } from '../../../actions/WorkspaceViewAction';
 import { ActivityPanel } from './ActivityPanel';
@@ -12,26 +11,26 @@ import { PhoneButton } from './Navigation/PhoneButton';
 import { SetupButton } from './Navigation/SetupButton';
 import { SetupButtonDisabled } from './Navigation/SetupButtonDisabled';
 import { UsersButton } from './Navigation/UsersButton';
+import { ConnectionState } from '../../../models/Connection';
+import { selectCall, selectUser } from '../../../store/Store';
 
 export const Header = () => {
-  const { logout, user } = useContext(ApplicationContext);
+  const { logout, connection } = useContext(ApplicationContext);
 
   const dispatch = useDispatch();
 
-  const name = useSelector(selectName);
-  const role = useSelector(selectRole);
+  const user = useSelector(selectUser);
   const call = useSelector(selectCall);
-  const profileImageUrl = useSelector(selectProfileImageUrl);
 
   return (
     <div className="header">
       <div>
-        <Avatar src={profileImageUrl} alt={name}>
-          {name?.toUpperCase().substr(0, 1)}
+        <Avatar src={user.profileImageUrl} alt={user.name}>
+          {user.name?.toUpperCase().substr(0, 1)}
         </Avatar>
-        <div className="name">{name}</div>
+        <div className="name">{user.name}</div>
 
-        <div className="user-status-toggle">{user.isConnected() && <ActivityPanel />}</div>
+        <div className="user-status-toggle">{connection.state === ConnectionState.Open && <ActivityPanel />}</div>
         <div>
           <PhoneButton name="phone" onClick={() => dispatch(setWorkspaceView('PHONE_VIEW'))} color="secondary" />
         </div>
@@ -52,7 +51,7 @@ export const Header = () => {
         <div>
           <UsersButton name="users" onClick={() => dispatch(setWorkspaceView('USERS_VIEW'))} color="secondary" />
         </div>
-        {role === 'owner' && (
+        {user.role === 'owner' && (
           <div>
             {call ? (
               <SetupButtonDisabled name="setup" color="secondary" />

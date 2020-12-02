@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { ConnectionLostAlert } from './NotificationLayer/ConnectionLostAlert';
 import { Header } from './Header/Header';
 import { useSelector, useDispatch } from 'react-redux';
@@ -6,13 +6,13 @@ import {
   selectWorkspaceView,
   selectConnectionState,
   selectWorkspaceNotification,
-  selectPhoneInputDevice,
-  selectPhoneOutputDevice,
   selectAudioInputDevices,
   selectAudioOutputDevices,
+  selectPhoneInputDevice,
+  selectPhoneOutputDevice,
+  selectPhoneState,
 } from '../../store/Store';
 import { PhoneView } from './PhoneView/PhoneView';
-import { UserConnectionState } from '../../models/UserConnectionState';
 import { HeaderThemeProvider } from './Header/HeaderThemeProvider';
 import { WorkspaceView } from '../../actions/WorkspaceViewAction';
 import { ConnectView } from './ConnectView/ConnectView';
@@ -32,6 +32,9 @@ import { useAudioDevices } from '../../hooks/useAudioDevices';
 import { setAudioDevicesException, updateAudioDevices } from '../../actions/AudioDeviceAction';
 import { showNotification } from '../../actions/NotificationAction';
 import { UsersView } from './UsersView/UsersView';
+import { ConnectionState } from '../../models/Connection';
+import { ApplicationContext } from '../../context/ApplicationContext';
+import { PhoneState } from '../../phone/PhoneState';
 
 const hasLostDevice = (deviceId: string | undefined, devices: MediaDeviceInfo[] | undefined) => {
   if (!deviceId || !devices) {
@@ -42,13 +45,16 @@ const hasLostDevice = (deviceId: string | undefined, devices: MediaDeviceInfo[] 
 };
 
 export const Workspace = () => {
+  const { phone } = useContext(ApplicationContext);
+
   const state = useSelector(selectConnectionState);
   const view = useSelector(selectWorkspaceView);
   const notification = useSelector(selectWorkspaceNotification);
-  const phoneInputDevice = useSelector(selectPhoneInputDevice);
-  const phoneOutputDevice = useSelector(selectPhoneOutputDevice);
-  const audioInputDevices = useSelector(selectAudioInputDevices);
-  const audioOutputDevices = useSelector(selectAudioOutputDevices);
+  const inputDevice = useSelector(selectPhoneInputDevice);
+  const outputDevice = useSelector(selectPhoneOutputDevice);
+  const inputDeviceList = useSelector(selectAudioInputDevices);
+  const outputDeviceList = useSelector(selectAudioOutputDevices);
+  const phoneState = useSelector(selectPhoneState);
 
   const { devices, exception } = useAudioDevices();
   const { timer } = useReconnectWebSocket();
@@ -75,22 +81,50 @@ export const Workspace = () => {
   }, [devices, dispatch]);
 
   useEffect(() => {
-    if (hasLostDevice(phoneInputDevice, audioInputDevices)) {
+    if (hasLostDevice(inputDevice, inputDeviceList)) {
       dispatch(lostPhoneInputDevice());
       dispatch(showNotification('Your active microphone device was removed.'));
 
       dispatch(setPhoneInputDevice('default'));
     }
-  }, [phoneInputDevice, audioInputDevices, dispatch]);
+  }, [inputDevice, inputDeviceList, dispatch]);
 
   useEffect(() => {
-    if (hasLostDevice(phoneOutputDevice, audioOutputDevices)) {
+    if (hasLostDevice(outputDevice, outputDeviceList)) {
       dispatch(lostPhoneOutputDevice());
       dispatch(showNotification('Your active speaker device was removed.'));
 
       dispatch(setPhoneOutputDevice('default'));
     }
-  }, [phoneOutputDevice, audioOutputDevices, dispatch]);
+  }, [outputDevice, outputDeviceList, dispatch]);
+
+  useEffect(() => {
+    if (!inputDevice || !phone || phoneState !== PhoneState.Idle) {
+      return;
+    }
+
+    if (inputDeviceList.some((device: MediaDeviceInfo) => device.deviceId === inputDevice)) {
+      try {
+        phone && phone.setInputDevice(inputDevice);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }, [inputDevice, inputDeviceList, phoneState, phone]);
+
+  useEffect(() => {
+    if (!outputDevice || !phone || phoneState !== PhoneState.Idle) {
+      return;
+    }
+
+    if (outputDeviceList.some((device: MediaDeviceInfo) => device.deviceId === outputDevice)) {
+      try {
+        phone && phone.setOutputDevice(outputDevice);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }, [outputDevice, outputDeviceList, phoneState, phone]);
 
   const getWorkspaceView = (view: WorkspaceView) => {
     switch (view) {
@@ -117,7 +151,7 @@ export const Workspace = () => {
     <div className="page-body">
       <div className="workspace">
         {timer && <ConnectionLostWithReconnectAlert />}
-        {state === UserConnectionState.Expired && <ConnectionLostAlert />}
+        {state === ConnectionState.Expired && <ConnectionLostAlert />}
         {notification && <NotificationLayer />}
 
         <HeaderThemeProvider>

@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { selectPhoneToken, selectConfiguration } from '../store/Store';
 import { createPhoneToken } from '../services/RequestService';
 
-export const useFetchPhoneToken = (user: User) => {
+export const useFetchPhoneToken = (user: User | undefined) => {
   const token = useSelector(selectPhoneToken);
   const configuration = useSelector(selectConfiguration);
 
@@ -14,7 +14,7 @@ export const useFetchPhoneToken = (user: User) => {
   useEffect(() => {
     const run = async () => {
       try {
-        const token = await createPhoneToken(user);
+        const token = await createPhoneToken(user as User);
 
         setLocalToken(token);
       } catch (error) {
@@ -22,7 +22,7 @@ export const useFetchPhoneToken = (user: User) => {
       }
     };
 
-    if (!token && configuration) {
+    if (!token && configuration && user) {
       run();
     }
   }, [token, configuration, user]);

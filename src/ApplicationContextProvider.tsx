@@ -3,27 +3,21 @@ import React, { useEffect, useState } from 'react';
 import { ApplicationContext } from './context/ApplicationContext';
 import { useDispatch, useSelector } from 'react-redux';
 import { UserActivity } from './models/UserActivity';
-import { UserConnectionState } from './models/UserConnectionState';
-import { getWebSocketUrl, getUrl } from './helpers/UrlHelper';
+import { getWebSocketUrl } from './helpers/UrlHelper';
 import { User } from './models/User';
 import { TwilioPhone } from './phone/twilio/TwilioPhone';
-import { setActivity, setConnectionState, setLogout, setLogin } from './actions/UserAction';
+import { setActivity, setReady } from './actions/UserAction';
 import { PhoneState } from './phone/PhoneState';
 import { usePageLifecycle } from './hooks/usePageLifecycle';
 import {
   selectToken,
   selectConnectionState,
-  selectPhoneState,
   selectPhoneInputDevice,
   selectPhoneOutputDevice,
-  selectAudioInputDevices,
-  selectAudioOutputDevices,
   selectPhoneToken,
   selectWorkspaceView,
 } from './store/Store';
 import {
-  setPhoneInputDevice,
-  setPhoneOutputDevice,
   setPhoneConfiguration,
   setPhoneToken,
   setPhoneException,
@@ -31,14 +25,11 @@ import {
   setPhoneCall,
 } from './actions/PhoneAction';
 
-import { useLocalStorageOnPageLoad } from './hooks/useLocalStorageOnPageLoad';
-import { useQueryStringToken } from './hooks/useQueryStringToken';
 /* Salesforce OpenCTI 
 import { useSalesforceOpenCti } from './hooks/useSalesforceOpenCti';
 */
 
 import { Call } from './models/Call';
-import { useLocalStorage } from './hooks/useLocalStorage';
 import { PhoneControl } from './phone/PhoneControl';
 import { useFetchPhoneToken } from './hooks/useFetchPhoneToken';
 
@@ -53,31 +44,26 @@ import { CallStatus } from './models/CallStatus';
 import { ConnectMessage } from './models/socket/messages/ConnectMessage';
 import { ConfigurationMessage } from './models/socket/messages/ConfigurationMessage';
 import { ErrorMessage } from './models/socket/messages/ErrorMessage';
+import { Connection, ConnectionState } from './models/Connection';
+import { setConnectionState, setLogin, setLogout } from './actions/ConnectionAction';
+import { validateUserToken } from './services/RequestService';
+import { onPageLoad } from './actions/PageLoadAction';
+import { getContextFromLocalStorage, setContextOnLocalStorage } from './services/LocalStorageContext';
 
 export const ApplicationContextProvider = (props: any) => {
-  const phoneState = useSelector(selectPhoneState);
-  const phoneToken = useSelector(selectPhoneToken);
-
-  const [persistetToken, setPersistetToken] = useLocalStorageOnPageLoad('token');
-  const [persistedAudioInputDeviceId, setPersistedAudioInputDeviceId] = useLocalStorage('audio-input-device-id');
-  const [persistedAudioOutputDeviceId, setPersistedAudioOutputDeviceId] = useLocalStorage('audio-output-device-id');
-
-  const queryStringToken = useQueryStringToken();
-
   const { isResume } = usePageLifecycle();
 
+  const phoneToken = useSelector(selectPhoneToken);
+  const inputDevice = useSelector(selectPhoneInputDevice);
+  const outputDevice = useSelector(selectPhoneOutputDevice);
   const token = useSelector(selectToken);
   const connectionState = useSelector(selectConnectionState);
 
-  const [user, setUser] = useState<User>(new User());
+  const [connection, setConnection] = useState<Connection>(new Connection());
+  const [user, setUser] = useState<User | undefined>();
   const [phone, setPhone] = useState<PhoneControl>();
   const [call, setCall] = useState<undefined | Call>();
-
-  const phoneInputDevice = useSelector(selectPhoneInputDevice);
-  const phoneOutputDevice = useSelector(selectPhoneOutputDevice);
-
-  const audioInputDevices = useSelector(selectAudioInputDevices);
-  const audioOutputDevices = useSelector(selectAudioOutputDevices);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const { token: phoneTokenFetched, error: phoneTokenError } = useFetchPhoneToken(user);
 
@@ -90,17 +76,17 @@ export const ApplicationContextProvider = (props: any) => {
   const dispatch = useDispatch();
 
   const login = (token: string) => {
-    const user = new User();
+    const connection = new Connection();
 
-    user.onConnectionStateChanged((state: UserConnectionState, code: number | undefined) => {
+    connection.onStateChanged((state: ConnectionState, code: number | undefined) => {
       console.log(`connection state changed to: ${state}`);
 
-      if (state === UserConnectionState.Closed && code === CloseCode.TokenExpired) {
+      if (state === ConnectionState.Closed && code === CloseCode.TokenExpired) {
         logout('Your session ended, please login again');
         return;
       }
 
-      if (state === UserConnectionState.Closed && code === CloseCode.ConcurrentSession) {
+      if (state === ConnectionState.Closed && code === CloseCode.ConcurrentSession) {
         logout('Your session ended, this user logged in from another device');
         return;
       }
@@ -108,9 +94,27 @@ export const ApplicationContextProvider = (props: any) => {
       dispatch(setConnectionState(state, code));
     });
 
-    user.onConnectionError((event: Event) => {
+    connection.onError((event: Event) => {
       console.log(`connection error`, event);
     });
+
+    connection.on<ErrorMessage>(MessageType.Error, (message: ErrorMessage) => {
+      dispatch(showNotification(`An error occured, please check the JS error log (${message.payload})`));
+    });
+
+    connection.on<UserMessage>(MessageType.User, (message: UserMessage) => {
+      dispatch(updateUserList(message.payload));
+    });
+
+    connection.on<ConnectMessage>(MessageType.Connect, (message: ConnectMessage) => {
+      dispatch(updateUserList(message.payload.list));
+    });
+
+    connection.on<ConfigurationMessage>(MessageType.Configuration, (message: ConfigurationMessage) => {
+      dispatch(setPhoneConfiguration(message.payload));
+    });
+
+    const user = new User(connection);
 
     user.onActivityChanged((activity: UserActivity) => {
       console.log(`activity changed to: ${activity}`);
@@ -119,6 +123,7 @@ export const ApplicationContextProvider = (props: any) => {
     });
 
     user.onReady(() => {
+      dispatch(setReady(user));
       dispatch(setPhoneConfiguration(user.configuration));
 
       if (view === 'CONNECT_VIEW') {
@@ -126,23 +131,7 @@ export const ApplicationContextProvider = (props: any) => {
       }
     });
 
-    user.on<ErrorMessage>(MessageType.Error, (message: ErrorMessage) => {
-      dispatch(showNotification(`An error occured, please check the JS error log (${message.payload})`));
-    });
-
-    user.on<UserMessage>(MessageType.User, (message: UserMessage) => {
-      dispatch(updateUserList(message.payload));
-    });
-
-    user.on<ConnectMessage>(MessageType.Connect, (message: ConnectMessage) => {
-      dispatch(updateUserList(message.payload.list));
-    });
-
-    user.on<ConfigurationMessage>(MessageType.Configuration, (message: ConfigurationMessage) => {
-      dispatch(setPhoneConfiguration(message.payload));
-    });
-
-    const phone = new TwilioPhone(user);
+    const phone = new TwilioPhone(connection, user);
 
     phone.onStateChanged((state: PhoneState) => {
       console.debug(`Phone onStateChange: ${state}`);
@@ -151,7 +140,7 @@ export const ApplicationContextProvider = (props: any) => {
 
     phone.onCallStateChanged((call) => {
       if (call && call.direction === CallDirection.Inbound && call.status === CallStatus.Ringing) {
-        //doScreenPop(call.phoneNumber);
+        /* doScreenPop(call.phoneNumber); */
       }
 
       dispatch(setPhoneCall(call));
@@ -164,19 +153,17 @@ export const ApplicationContextProvider = (props: any) => {
       dispatch(setPhoneException(error));
     });
 
-    user.login(getWebSocketUrl(), token);
+    connection.login(getWebSocketUrl(), token);
 
     setUser(user);
     setPhone(phone);
-    setPersistetToken(token);
+    setConnection(connection);
 
     dispatch(setLogin(token));
   };
 
   const logout = async (reason?: string) => {
-    await user.logout();
-
-    setPersistetToken(undefined);
+    await connection.logout();
 
     dispatch(setLogout(reason));
 
@@ -185,7 +172,7 @@ export const ApplicationContextProvider = (props: any) => {
 
   useEffect(() => {
     if (phoneToken && phone) {
-      console.log(`Phone device init with token: ${phoneToken?.substr(0, 10)} state was:  ${phoneState}`);
+      console.log(`Phone device init with token: ${phoneToken?.substr(0, 10)}`);
       phone.init(phoneToken);
     }
   }, [phoneToken, phone]);
@@ -203,88 +190,59 @@ export const ApplicationContextProvider = (props: any) => {
   }, [phoneTokenFetched, dispatch]);
 
   useEffect(() => {
-    const updateDevice = async (deviceId: string) => {
-      console.debug('set phone inbound to: ', deviceId);
+    const initiate = async () => {
+      const context = getContextFromLocalStorage();
 
-      try {
-        phone && phone.setInputDevice(deviceId);
-      } catch (error) {
-        console.log(error);
+      /* check for SAML 2.0 token */
+      const params = new URLSearchParams(window.location.search);
+
+      if (params.has('token')) {
+        console.log(`found ${params.get('token')} on query string`);
+
+        /* always remove tokens from url, it should never be bookmarked or shared */
+        window.history.pushState('', 'Summe Camp', '/');
+
+        context.token = params.get('token') as string;
       }
+
+      if (context.token && (await validateUserToken(context.token))) {
+        login(context.token);
+      } else {
+        context.token = undefined;
+      }
+
+      setIsLoaded(true);
+
+      dispatch(onPageLoad(context));
     };
 
-    if (phoneInputDevice && phoneState === PhoneState.Idle) {
-      updateDevice(phoneInputDevice);
-    }
-  }, [phoneInputDevice, phoneState, phone]);
+    initiate();
+  }, [dispatch]);
 
   useEffect(() => {
-    const updateDevice = async (deviceId: string) => {
-      console.debug('set phone outbound to: ', deviceId);
-
-      try {
-        phone && phone.setOutputDevice(deviceId);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    if (phoneOutputDevice && phoneState === PhoneState.Idle) {
-      updateDevice(phoneOutputDevice);
+    if (!isLoaded) {
+      return;
     }
-  }, [phoneOutputDevice, phoneState]);
+
+    setContextOnLocalStorage({
+      token: token,
+      input: inputDevice,
+      output: outputDevice,
+    });
+  }, [token, inputDevice, outputDevice, isLoaded]);
 
   useEffect(() => {
-    if (phoneInputDevice) {
-      setPersistedAudioInputDeviceId(phoneInputDevice);
+    if (isResume && token && connectionState === ConnectionState.Closed) {
+      connection.login(getWebSocketUrl(), token);
     }
-  }, [phoneInputDevice]);
-
-  useEffect(() => {
-    if (phoneOutputDevice) {
-      setPersistedAudioOutputDeviceId(phoneOutputDevice);
-    }
-  }, [phoneOutputDevice]);
-
-  /* local storage listeners */
-  useEffect(() => {
-    if (persistetToken) {
-      login(persistetToken);
-    }
-  }, [persistetToken]);
-
-  useEffect(() => {
-    if (persistedAudioInputDeviceId && audioInputDevices.length > 0 && !phoneInputDevice) {
-      if (audioInputDevices.some((device: MediaDeviceInfo) => device.deviceId === persistedAudioInputDeviceId)) {
-        dispatch(setPhoneInputDevice(persistedAudioInputDeviceId));
-      }
-    }
-  }, [persistedAudioInputDeviceId, phoneInputDevice, audioInputDevices, dispatch]);
-
-  useEffect(() => {
-    if (persistedAudioOutputDeviceId && audioOutputDevices.length > 0 && !phoneOutputDevice) {
-      if (audioOutputDevices.some((device: MediaDeviceInfo) => device.deviceId === persistedAudioOutputDeviceId)) {
-        dispatch(setPhoneOutputDevice(persistedAudioOutputDeviceId));
-      }
-    }
-  }, [persistedAudioOutputDeviceId, phoneOutputDevice, audioOutputDevices, dispatch]);
-
-  useEffect(() => {
-    if (isResume && token && connectionState === UserConnectionState.Closed) {
-      user.login(getWebSocketUrl(), token);
-    }
-  }, [isResume, user]);
-
-  useEffect(() => {
-    if (queryStringToken) {
-      login(queryStringToken);
-    }
-  }, [queryStringToken]);
+  }, [isResume, token]);
 
   return (
     <ApplicationContext.Provider
       value={{
         login,
         logout,
+        connection,
         user,
         phone,
         call,

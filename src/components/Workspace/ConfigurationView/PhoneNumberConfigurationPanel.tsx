@@ -16,6 +16,7 @@ import {
 } from '../../../actions/SetupAction';
 import { selectSetupConfiguration, selectSetupIsSaving, selectSetupPhoneNumbers } from '../../../store/Store';
 import { fetchAccountPhoneNumbers } from '../../../services/RequestService';
+import { User } from '../../../models/User';
 
 export const PhoneNumberConfigurationPanel = () => {
   const dispatch = useDispatch();
@@ -44,7 +45,7 @@ export const PhoneNumberConfigurationPanel = () => {
       try {
         setIsFetching(true);
 
-        const body = await fetchAccountPhoneNumbers(user);
+        const body = await fetchAccountPhoneNumbers(user as User);
 
         setIsFetching(false);
 

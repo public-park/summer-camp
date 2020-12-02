@@ -31,7 +31,7 @@ export const CallButton = () => {
     <button
       ref={ref}
       onClick={initiate}
-      disabled={!phoneDisplay.isValidPhoneNumber || !user.isConnected()}
+      disabled={!phoneDisplay.isValidPhoneNumber || !user?.isOnline()}
       className="start-call-button"
     ></button>
   );

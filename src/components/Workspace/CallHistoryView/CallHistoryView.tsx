@@ -3,6 +3,7 @@ import { CallItem } from './CallItem';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { LoadIndicator } from '../ConfigurationView/LoadIndicator';
 import { fetchCalls } from '../../../services/RequestService';
+import { User } from '../../../models/User';
 
 export const CallHistoryView = () => {
   // TODO, add hook useFetchCallHistory(start, limit) => isFetching, calls
@@ -17,7 +18,7 @@ export const CallHistoryView = () => {
       try {
         setIsFetching(true);
 
-        const calls = await fetchCalls(user, 0, 50);
+        const calls = await fetchCalls(user as User, 0, 50);
 
         setIsFetching(false);
 

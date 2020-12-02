@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 export const Offline = () => {
   const [showOfflineNotification, setShowOfflineNotification] = useState(false);
-  const [timer, setTimer] = useState<NodeJS.Timeout>();
+  const [, setTimer] = useState<NodeJS.Timeout>();
 
   useEffect(() => {
     const timer = setTimeout(() => {

@@ -37,7 +37,7 @@ import { ApplicationContext } from '../../context/ApplicationContext';
 import { PhoneState } from '../../phone/PhoneState';
 
 const hasLostDevice = (deviceId: string | undefined, devices: MediaDeviceInfo[] | undefined) => {
-  if (!deviceId || !devices) {
+  if (!deviceId || !devices || devices.length === 0) {
     return false;
   }
 

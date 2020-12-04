@@ -165,7 +165,17 @@ export const ApplicationContextProvider = (props: any) => {
   const logout = async (reason?: string) => {
     await connection.logout();
 
+    const input = inputDevice;
+    const output = outputDevice;
+
     dispatch(setLogout(reason));
+
+    dispatch(
+      onPageLoad({
+        input: input,
+        output: output,
+      })
+    );
 
     phone?.destroy();
   };

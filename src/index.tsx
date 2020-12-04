@@ -10,16 +10,27 @@ import ApplicationThemeProvider from './ApplicationThemeProvider';
 import { ApplicationContextProvider } from './ApplicationContextProvider';
 import setup from './reducers/SetupReducer';
 import application from './reducers/ApplicationReducer';
+import user from './reducers/UserReducer';
 import { enableMapSet } from 'immer';
+import { LoginAction } from './actions/ConnectionAction';
 
 enableMapSet();
 
 const reducer = combineReducers({
   application: application,
   setup: setup,
+  user: user,
 });
 
-const store = createStore(reducer, applyMiddleware(logger));
+export const root = (state: any, action: LoginAction) => {
+  if (action.type === 'USER_LOGOUT') {
+    state = undefined;
+  }
+
+  return reducer(state, action as any);
+};
+
+const store = createStore(root, applyMiddleware(logger));
 
 ReactDOM.render(
   <React.StrictMode>

@@ -16,12 +16,26 @@ export const setConnectionState = (state: ConnectionState, code: number | undefi
   };
 };
 
-export const setLogout = (reason?: string) => {
+export interface LogoutAction {
+  type: ActionType;
+  payload: {
+    reason?: string;
+  };
+}
+
+export const setLogout = (reason?: string): LogoutAction => {
   return {
     type: ActionType.USER_LOGOUT,
     payload: { reason: reason },
   };
 };
+
+export interface LoginAction {
+  type: ActionType;
+  payload: {
+    token: string;
+  };
+}
 
 export const setLogin = (token: string) => {
   return {

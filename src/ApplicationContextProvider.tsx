@@ -20,7 +20,7 @@ import {
 import {
   setPhoneConfiguration,
   setPhoneToken,
-  setPhoneException,
+  setPhoneError,
   setPhoneState,
   setPhoneCall,
 } from './actions/PhoneAction';
@@ -45,10 +45,10 @@ import { ConnectMessage } from './models/socket/messages/ConnectMessage';
 import { ConfigurationMessage } from './models/socket/messages/ConfigurationMessage';
 import { ErrorMessage } from './models/socket/messages/ErrorMessage';
 import { Connection, ConnectionState } from './models/Connection';
-import { setConnectionState, setLogin, setLogout } from './actions/ConnectionAction';
+import { setConnectionState } from './actions/ConnectionAction';
 import { validateUserToken } from './services/RequestService';
-import { onPageLoad } from './actions/PageLoadAction';
 import { getContextFromLocalStorage, setContextOnLocalStorage } from './services/LocalStorageContext';
+import { onPageLoad, setLogin, setLogout } from './actions/ApplicationAction';
 
 export const ApplicationContextProvider = (props: any) => {
   const { isResume } = usePageLifecycle();
@@ -126,6 +126,7 @@ export const ApplicationContextProvider = (props: any) => {
       dispatch(setReady(user));
       dispatch(setPhoneConfiguration(user.configuration));
 
+      // TODO reducer?
       if (view === 'CONNECT_VIEW') {
         dispatch(setWorkspaceView('PHONE_VIEW'));
       }
@@ -150,7 +151,7 @@ export const ApplicationContextProvider = (props: any) => {
 
     phone.onError((error: Error) => {
       console.error(error);
-      dispatch(setPhoneException(error));
+      dispatch(setPhoneError(error));
     });
 
     connection.login(getWebSocketUrl(), token);
@@ -165,17 +166,7 @@ export const ApplicationContextProvider = (props: any) => {
   const logout = async (reason?: string) => {
     await connection.logout();
 
-    const input = inputDevice;
-    const output = outputDevice;
-
     dispatch(setLogout(reason));
-
-    dispatch(
-      onPageLoad({
-        input: input,
-        output: output,
-      })
-    );
 
     phone?.destroy();
   };
@@ -189,7 +180,7 @@ export const ApplicationContextProvider = (props: any) => {
 
   useEffect(() => {
     if (phoneTokenError) {
-      dispatch(setPhoneException(new Error('Could not fetch token, check your internet connection')));
+      dispatch(setPhoneError(new Error('Could not fetch token, check your internet connection')));
     }
   }, [phoneTokenError, dispatch]);
 
@@ -215,21 +206,24 @@ export const ApplicationContextProvider = (props: any) => {
         context.token = params.get('token') as string;
       }
 
-      if (context.token && (await validateUserToken(context.token))) {
-        login(context.token);
-      } else {
+      if (context.token && !(await validateUserToken(context.token))) {
         context.token = undefined;
       }
 
+      dispatch(onPageLoad(context));
+
       setIsLoaded(true);
 
-      dispatch(onPageLoad(context));
+      if (context.token) {
+        login(context.token);
+      }
     };
 
     initiate();
   }, [dispatch]);
 
   useEffect(() => {
+    /* persist only after page was initiated */
     if (!isLoaded) {
       return;
     }

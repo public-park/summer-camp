@@ -35,14 +35,7 @@ import { UsersView } from './UsersView/UsersView';
 import { ConnectionState } from '../../models/Connection';
 import { ApplicationContext } from '../../context/ApplicationContext';
 import { PhoneState } from '../../phone/PhoneState';
-
-const hasLostDevice = (deviceId: string | undefined, devices: MediaDeviceInfo[] | undefined) => {
-  if (!deviceId || !devices || devices.length === 0) {
-    return false;
-  }
-
-  return !devices.find((device) => device.deviceId === deviceId);
-};
+import { useHasLostMediaDevice } from '../../hooks/useHasLostMediaDevice';
 
 export const Workspace = () => {
   const { phone } = useContext(ApplicationContext);
@@ -58,6 +51,9 @@ export const Workspace = () => {
 
   const { devices, exception } = useAudioDevices();
   const { timer } = useReconnectWebSocket();
+
+  const hasLostInputDevice = useHasLostMediaDevice(outputDevice, outputDeviceList);
+  const hasLostOutputDevice = useHasLostMediaDevice(outputDevice, outputDeviceList);
 
   const dispatch = useDispatch();
 
@@ -81,22 +77,18 @@ export const Workspace = () => {
   }, [devices, dispatch]);
 
   useEffect(() => {
-    if (hasLostDevice(inputDevice, inputDeviceList)) {
+    if (hasLostInputDevice) {
       dispatch(lostPhoneInputDevice());
       dispatch(showNotification('Your active microphone device was removed.'));
-
-      dispatch(setPhoneInputDevice('default'));
     }
-  }, [inputDevice, inputDeviceList, dispatch]);
+  }, [hasLostInputDevice, dispatch]);
 
   useEffect(() => {
-    if (hasLostDevice(outputDevice, outputDeviceList)) {
+    if (hasLostOutputDevice) {
       dispatch(lostPhoneOutputDevice());
       dispatch(showNotification('Your active speaker device was removed.'));
-
-      dispatch(setPhoneOutputDevice('default'));
     }
-  }, [outputDevice, outputDeviceList, dispatch]);
+  }, [hasLostOutputDevice, dispatch]);
 
   useEffect(() => {
     if (!inputDevice || !phone || phoneState !== PhoneState.Idle) {

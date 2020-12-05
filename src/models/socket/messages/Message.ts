@@ -32,5 +32,6 @@ export enum MessageType {
   Acknowledge = 'acknowledge',
   Call = 'call',
   Record = 'record',
+  Transfer = 'transfer',
   Error = 'error',
 }

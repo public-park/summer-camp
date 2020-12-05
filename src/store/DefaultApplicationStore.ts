@@ -1,24 +1,9 @@
 import { ApplicationStore } from './ApplicationStore';
-import { PhoneState } from '../phone/PhoneState';
 
 export const DefaultApplicationStore: ApplicationStore = {
   connection: {
     state: undefined,
     sockets: 0,
-  },
-  phone: {
-    state: PhoneState.Offline,
-    token: undefined,
-    configuration: undefined,
-    error: undefined,
-    display: {
-      value: '',
-      isValidPhoneNumber: false,
-    },
-    devices: {
-      input: undefined,
-      output: undefined,
-    },
   },
   devices: {
     audio: {

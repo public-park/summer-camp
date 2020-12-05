@@ -1,62 +1,73 @@
-import { ActionType } from './ActionType';
 import { PhoneState } from '../phone/PhoneState';
 import { Call } from '../models/Call';
 import { UserConfiguration } from '../models/UserConfiguration';
 
+export enum PhoneActionType {
+  STATE_CHANGE = 'STATE_CHANGE',
+  DISPLAY_UPDATE = 'DISPLAY_UPDATE',
+  TOKEN_UPDATE = 'TOKEN_UPDATE',
+  CONFIGURATION_UPDATE = 'CONFIGURATION_UPDATE',
+  OUTPUT_DEVICE_UPDATE = 'OUTPUT_DEVICE_UPDATE',
+  INPUT_DEVICE_UPDATE = 'INPUT_DEVICE_UPDATE',
+  OUTPUT_DEVICE_LOST = 'OUTPUT_DEVICE_LOST',
+  INPUT_DEVICE_LOST = 'INPUT_DEVICE_LOST',
+  PHONE_ERROR = 'PHONE_ERROR',
+}
+
 export interface PhoneDisplayAction {
-  type: ActionType;
+  type: PhoneActionType;
   payload: string;
 }
 
 export const updatePhoneDisplay = (value: string): PhoneDisplayAction => {
   return {
-    type: ActionType.PHONE_DISPLAY_UPDATE,
+    type: PhoneActionType.DISPLAY_UPDATE,
     payload: value,
   };
 };
 
 export interface PhoneTokenAction {
-  type: ActionType;
+  type: PhoneActionType;
   payload: string;
 }
 
 export const setPhoneToken = (token: string): PhoneTokenAction => {
   return {
-    type: ActionType.PHONE_TOKEN_UPDATE,
+    type: PhoneActionType.TOKEN_UPDATE,
     payload: token,
   };
 };
 
-export interface PhoneExceptionAction {
-  type: ActionType;
+export interface PhoneErrorAction {
+  type: PhoneActionType;
   payload: Error;
 }
 
-export const setPhoneException = (error: Error): PhoneExceptionAction => {
+export const setPhoneError = (error: Error): PhoneErrorAction => {
   return {
-    type: ActionType.PHONE_ERROR,
+    type: PhoneActionType.PHONE_ERROR,
     payload: error,
   };
 };
 
 export interface PhoneConfigurationAction {
-  type: ActionType;
+  type: PhoneActionType;
   payload: UserConfiguration | undefined;
 }
 
 export const setPhoneConfiguration = (configuration?: UserConfiguration | undefined): PhoneConfigurationAction => {
   return {
-    type: ActionType.PHONE_CONFIGURATION_UPDATE,
+    type: PhoneActionType.CONFIGURATION_UPDATE,
     payload: configuration,
   };
 };
 
-export interface PhoneDeviceAction {
-  type: ActionType;
+export interface PhoneInputDeviceAction {
+  type: PhoneActionType;
   payload: string | undefined;
 }
 
-export const setPhoneInputDevice = (device: MediaDeviceInfo | string | undefined): PhoneDeviceAction => {
+export const setPhoneInputDevice = (device: MediaDeviceInfo | string | undefined): PhoneInputDeviceAction => {
   let deviceId;
 
   if (device instanceof MediaDeviceInfo) {
@@ -66,12 +77,17 @@ export const setPhoneInputDevice = (device: MediaDeviceInfo | string | undefined
   }
 
   return {
-    type: ActionType.PHONE_INPUT_DEVICE_UPDATE,
+    type: PhoneActionType.INPUT_DEVICE_UPDATE,
     payload: deviceId,
   };
 };
 
-export const setPhoneOutputDevice = (device: MediaDeviceInfo | string | undefined): PhoneDeviceAction => {
+export interface PhoneOutputDeviceAction {
+  type: PhoneActionType;
+  payload: string | undefined;
+}
+
+export const setPhoneOutputDevice = (device: MediaDeviceInfo | string | undefined): PhoneOutputDeviceAction => {
   let deviceId;
 
   if (device instanceof MediaDeviceInfo) {
@@ -81,59 +97,66 @@ export const setPhoneOutputDevice = (device: MediaDeviceInfo | string | undefine
   }
 
   return {
-    type: ActionType.PHONE_OUTPUT_DEVICE_UPDATE,
+    type: PhoneActionType.OUTPUT_DEVICE_UPDATE,
     payload: deviceId,
   };
 };
 
-export interface PhoneDeviceLostAction {
-  type: ActionType;
+export interface PhoneInputDeviceLostAction {
+  type: PhoneActionType;
   payload: undefined;
 }
 
-export const lostPhoneInputDevice = (): PhoneDeviceLostAction => {
+export const lostPhoneInputDevice = (): PhoneInputDeviceLostAction => {
   return {
-    type: ActionType.PHONE_INPUT_DEVICE_LOST,
+    type: PhoneActionType.INPUT_DEVICE_LOST,
     payload: undefined,
   };
 };
 
-export const lostPhoneOutputDevice = (): PhoneDeviceLostAction => {
+export interface PhoneOutputDeviceLostAction {
+  type: PhoneActionType;
+  payload: undefined;
+}
+
+export const lostPhoneOutputDevice = (): PhoneOutputDeviceLostAction => {
   return {
-    type: ActionType.PHONE_OUTPUT_DEVICE_LOST,
+    type: PhoneActionType.OUTPUT_DEVICE_LOST,
     payload: undefined,
   };
 };
 
 export interface PhoneCallAction {
-  type: ActionType;
+  type: PhoneActionType;
   payload: Call | undefined;
 }
 
 export const setPhoneCall = (call: Call | undefined): PhoneCallAction => {
   return {
-    type: ActionType.CALL_STATE_CHANGE,
+    type: PhoneActionType.STATE_CHANGE,
     payload: call,
   };
 };
 
 export interface PhoneStateAction {
-  type: ActionType;
+  type: PhoneActionType;
   payload: PhoneState;
 }
 
 export const setPhoneState = (state: PhoneState): PhoneStateAction => {
   return {
-    type: ActionType.PHONE_STATE_CHANGE,
+    type: PhoneActionType.STATE_CHANGE,
     payload: state,
   };
 };
 
-export type PhoneActionType =
+export type PhoneAction =
   | PhoneDisplayAction
   | PhoneTokenAction
-  | PhoneExceptionAction
+  | PhoneErrorAction
   | PhoneConfigurationAction
-  | PhoneDeviceAction
-  | PhoneDeviceLostAction
+  | PhoneInputDeviceAction
+  | PhoneOutputDeviceAction
+  | PhoneInputDeviceLostAction
+  | PhoneOutputDeviceLostAction
   | PhoneStateAction;

@@ -16,6 +16,7 @@ export const selectWorkspaceNotification = (store: Store) => store.application.w
 export const selectConnectionState = (store: Store) => store.application.connection.state;
 export const selectToken = (store: Store) => store.application.token;
 export const selectPage = (store: Store) => store.application.page;
+export const selectIsPageLoaded = (store: Store) => store.application.isPageLoaded;
 export const selectLogoutReason = (store: Store) => store.application.logout.reason;
 export const selectPhoneError = (store: Store) => store.phone.error;
 export const selectPhoneDisplay = (store: Store) => store.phone.display;

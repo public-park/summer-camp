@@ -28,4 +28,5 @@ export interface ApplicationStore {
   token: string | undefined;
   page: ApplicationPage | undefined;
   users: Map<string, UserWithPresenceDocument>;
+  isPageLoaded: boolean;
 }

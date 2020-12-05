@@ -23,4 +23,5 @@ export const DefaultApplicationStore: ApplicationStore = {
   token: undefined,
   page: 'INIT_PAGE',
   users: new Map(),
+  isPageLoaded: false,
 };

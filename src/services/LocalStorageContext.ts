@@ -29,9 +29,17 @@ export const setContextOnLocalStorage = (context: LocalStorageContext) => {
     return;
   }
 
-  setValue('token', context.token);
-  setValue('audio-input-device-id', context.input);
-  setValue('audio-output-device-id', context.output);
+  if (context.token !== getValue('token')) {
+    setValue('token', context.token);
+  }
+
+  if (context.input !== getValue('audio-input-device-id')) {
+    setValue('audio-input-device-id', context.input);
+  }
+
+  if (context.output !== getValue('audio-output-device-id')) {
+    setValue('audio-output-device-id', context.output);
+  }
 };
 
 export const getContextFromLocalStorage = () => {

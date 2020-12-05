@@ -11,8 +11,9 @@ import { ApplicationContextProvider } from './ApplicationContextProvider';
 import setup from './reducers/SetupReducer';
 import application from './reducers/ApplicationReducer';
 import user from './reducers/UserReducer';
+import phone from './reducers/PhoneReducer';
 import { enableMapSet } from 'immer';
-import { LoginAction } from './actions/ConnectionAction';
+import { LoginAction } from './actions/ApplicationAction';
 
 enableMapSet();
 
@@ -20,6 +21,7 @@ const reducer = combineReducers({
   application: application,
   setup: setup,
   user: user,
+  phone: phone,
 });
 
 export const root = (state: any, action: LoginAction) => {

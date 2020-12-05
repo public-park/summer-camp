@@ -18,12 +18,7 @@ import { WorkspaceView } from '../../actions/WorkspaceViewAction';
 import { ConnectView } from './ConnectView/ConnectView';
 import { CallHistoryView } from './CallHistoryView/CallHistoryView';
 import { ConfigurationView } from './ConfigurationView/ConfigurationView';
-import {
-  lostPhoneInputDevice,
-  lostPhoneOutputDevice,
-  setPhoneInputDevice,
-  setPhoneOutputDevice,
-} from '../../actions/PhoneAction';
+import { lostPhoneInputDevice, lostPhoneOutputDevice } from '../../actions/PhoneAction';
 import { AudioDeviceView } from './AudioDeviceView/AudioDeviceView';
 import { NotificationLayer } from './NotificationLayer/NotificationLayer';
 import { useReconnectWebSocket } from '../../hooks/useReconnectWebSocket';

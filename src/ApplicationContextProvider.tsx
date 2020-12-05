@@ -16,6 +16,7 @@ import {
   selectPhoneOutputDevice,
   selectPhoneToken,
   selectWorkspaceView,
+  selectIsPageLoaded,
 } from './store/Store';
 import {
   setPhoneConfiguration,
@@ -58,12 +59,12 @@ export const ApplicationContextProvider = (props: any) => {
   const outputDevice = useSelector(selectPhoneOutputDevice);
   const token = useSelector(selectToken);
   const connectionState = useSelector(selectConnectionState);
+  const isPageLoaded = useSelector(selectIsPageLoaded);
 
   const [connection, setConnection] = useState<Connection>(new Connection());
   const [user, setUser] = useState<User | undefined>();
   const [phone, setPhone] = useState<PhoneControl>();
   const [call, setCall] = useState<undefined | Call>();
-  const [isLoaded, setIsLoaded] = useState(false);
 
   const { token: phoneTokenFetched, error: phoneTokenError } = useFetchPhoneToken(user);
 
@@ -164,11 +165,22 @@ export const ApplicationContextProvider = (props: any) => {
   };
 
   const logout = async (reason?: string) => {
+    phone?.destroy();
+
     await connection.logout();
+
+    /* store context temporary */
+    const context = setContextOnLocalStorage({
+      token: undefined,
+      input: inputDevice,
+      output: outputDevice,
+    });
 
     dispatch(setLogout(reason));
 
-    phone?.destroy();
+    if (context) {
+      dispatch(onPageLoad(context));
+    }
   };
 
   useEffect(() => {
@@ -212,8 +224,6 @@ export const ApplicationContextProvider = (props: any) => {
 
       dispatch(onPageLoad(context));
 
-      setIsLoaded(true);
-
       if (context.token) {
         login(context.token);
       }
@@ -224,7 +234,7 @@ export const ApplicationContextProvider = (props: any) => {
 
   useEffect(() => {
     /* persist only after page was initiated */
-    if (!isLoaded) {
+    if (!isPageLoaded) {
       return;
     }
 
@@ -233,7 +243,7 @@ export const ApplicationContextProvider = (props: any) => {
       input: inputDevice,
       output: outputDevice,
     });
-  }, [token, inputDevice, outputDevice, isLoaded]);
+  }, [token, inputDevice, outputDevice, isPageLoaded]);
 
   useEffect(() => {
     if (isResume && token && connectionState === ConnectionState.Closed) {

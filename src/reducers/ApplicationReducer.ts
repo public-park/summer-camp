@@ -8,6 +8,8 @@ const application = (state: ApplicationStore = DefaultApplicationStore, action: 
   return produce(state, (draft) => {
     switch (action.type) {
       case 'PAGE_LOAD':
+        draft.isPageLoaded = true;
+
         if (!action.payload.token) {
           draft.page = 'LOGIN_PAGE';
         }

@@ -5,6 +5,14 @@ export interface LocalStorageContext {
 }
 
 const setValue = (key: string, value: string | undefined) => {
+  if (value && value === getValue(key)) {
+    return;
+  }
+
+  if (!value && !getValue(key)) {
+    return;
+  }
+
   if (value) {
     console.log(`persist ${key} with ${value}`);
 
@@ -29,17 +37,11 @@ export const setContextOnLocalStorage = (context: LocalStorageContext) => {
     return;
   }
 
-  if (context.token !== getValue('token')) {
-    setValue('token', context.token);
-  }
+  setValue('token', context.token);
+  setValue('audio-input-device-id', context.input);
+  setValue('audio-output-device-id', context.output);
 
-  if (context.input !== getValue('audio-input-device-id')) {
-    setValue('audio-input-device-id', context.input);
-  }
-
-  if (context.output !== getValue('audio-output-device-id')) {
-    setValue('audio-output-device-id', context.output);
-  }
+  return context;
 };
 
 export const getContextFromLocalStorage = () => {

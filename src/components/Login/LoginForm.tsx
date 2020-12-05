@@ -38,6 +38,10 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
   const handleSubmit = async (e: MouseEvent) => {
     e.preventDefault();
 
+    if (isEmpty) {
+      return;
+    }
+
     console.log(`login: ${name}`);
 
     try {
@@ -101,7 +105,7 @@ export const LoginForm = ({ isVisible }: LoginFormProps) => {
           </div>
           <div>
             <Button
-              disabled={isFetching || isEmpty}
+              disabled={isFetching}
               fullWidth
               onClick={handleSubmit}
               variant="contained"

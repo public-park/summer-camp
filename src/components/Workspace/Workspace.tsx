@@ -47,7 +47,7 @@ export const Workspace = () => {
   const { devices, exception } = useAudioDevices();
   const { timer } = useReconnectWebSocket();
 
-  const hasLostInputDevice = useHasLostMediaDevice(outputDevice, outputDeviceList);
+  const hasLostInputDevice = useHasLostMediaDevice(inputDevice, inputDeviceList);
   const hasLostOutputDevice = useHasLostMediaDevice(outputDevice, outputDeviceList);
 
   const dispatch = useDispatch();

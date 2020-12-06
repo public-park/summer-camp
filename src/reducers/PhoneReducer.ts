@@ -3,6 +3,7 @@ import { ApplicationAction, ApplicationActionType, PageLoadAction } from '../act
 import {
   PhoneAction,
   PhoneActionType,
+  PhoneCallStateAction,
   PhoneConfigurationAction,
   PhoneDisplayAction,
   PhoneErrorAction,
@@ -19,11 +20,11 @@ import { DefaultPhoneStore } from '../store/DefaultPhoneStore';
 import { PhoneStore } from '../store/PhoneStore';
 
 const isPhoneStateAction = (action: PhoneAction | ApplicationAction): action is PhoneStateAction => {
-  return action.type === PhoneActionType.STATE_CHANGE;
+  return action.type === PhoneActionType.PHONE_STATE_CHANGE;
 };
 
 const isPhoneDisplayAction = (action: PhoneAction | ApplicationAction): action is PhoneDisplayAction => {
-  return action.type === PhoneActionType.DISPLAY_UPDATE;
+  return action.type === PhoneActionType.PHONE_DISPLAY_UPDATE;
 };
 
 const isPhoneErrorAction = (action: PhoneAction | ApplicationAction): action is PhoneErrorAction => {
@@ -31,35 +32,39 @@ const isPhoneErrorAction = (action: PhoneAction | ApplicationAction): action is 
 };
 
 const isPhoneTokenAction = (action: PhoneAction | ApplicationAction): action is PhoneTokenAction => {
-  return action.type === PhoneActionType.TOKEN_UPDATE;
+  return action.type === PhoneActionType.PHONE_TOKEN_UPDATE;
 };
 
 const isPhoneConfigurationAction = (action: PhoneAction | ApplicationAction): action is PhoneConfigurationAction => {
-  return action.type === PhoneActionType.CONFIGURATION_UPDATE;
+  return action.type === PhoneActionType.PHONE_CONFIGURATION_UPDATE;
 };
 
 const isPhoneInputDeviceAction = (action: PhoneAction | ApplicationAction): action is PhoneInputDeviceAction => {
-  return action.type === PhoneActionType.INPUT_DEVICE_UPDATE;
+  return action.type === PhoneActionType.PHONE_INPUT_DEVICE_UPDATE;
 };
 
 const isPhoneOutputDeviceAction = (action: PhoneAction | ApplicationAction): action is PhoneOutputDeviceAction => {
-  return action.type === PhoneActionType.OUTPUT_DEVICE_UPDATE;
+  return action.type === PhoneActionType.PHONE_OUTPUT_DEVICE_UPDATE;
 };
 
 const isPhoneInputDeviceLostAction = (
   action: PhoneAction | ApplicationAction
 ): action is PhoneInputDeviceLostAction => {
-  return action.type === PhoneActionType.INPUT_DEVICE_LOST;
+  return action.type === PhoneActionType.PHONE_INPUT_DEVICE_LOST;
 };
 
 const isPhoneOutputDeviceLostAction = (
   action: PhoneAction | ApplicationAction
 ): action is PhoneOutputDeviceLostAction => {
-  return action.type === PhoneActionType.OUTPUT_DEVICE_LOST;
+  return action.type === PhoneActionType.PHONE_OUTPUT_DEVICE_LOST;
 };
 
 const isPageLoadAction = (action: PhoneAction | ApplicationAction): action is PageLoadAction => {
   return action.type === ApplicationActionType.PAGE_LOAD;
+};
+
+const isCallStateAction = (action: PhoneAction | ApplicationAction): action is PhoneCallStateAction => {
+  return action.type === PhoneActionType.PHONE_CALL_STATE_CHANGE;
 };
 
 const phone = (state: PhoneStore = DefaultPhoneStore, action: PhoneAction | ApplicationAction): PhoneStore => {
@@ -119,6 +124,10 @@ const phone = (state: PhoneStore = DefaultPhoneStore, action: PhoneAction | Appl
     if (isPageLoadAction(action)) {
       draft.devices.input = action.payload.input;
       draft.devices.output = action.payload.output;
+    }
+
+    if (isCallStateAction(action)) {
+      draft.call = action.payload;
     }
   });
 };

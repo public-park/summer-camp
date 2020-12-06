@@ -12,7 +12,6 @@ export const DefaultApplicationStore: ApplicationStore = {
     },
     exception: undefined,
   },
-  call: undefined,
   workspace: {
     view: 'CONNECT_VIEW',
     notification: undefined,

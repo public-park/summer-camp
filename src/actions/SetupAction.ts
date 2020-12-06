@@ -1,18 +1,18 @@
 import { PhoneNumber, SetupStore, ValidationResult } from '../store/SetupStore';
 
 export enum SetupActionType {
-  PHONE_NUMBERS_UPDATE = 'PHONE_NUMBERS_UPDATE',
-  TWILIO_ACCOUNT_RESET = 'TWILIO_ACCOUNT_RESET',
-  TWILIO_ACCOUNT_UPDATE = 'TWILIO_ACCOUNT_UPDATE',
-  TWILIO_OUTBOUND_UPDATE = 'TWILIO_OUTBOUND_UPDATE',
-  TWILIO_INBOUND_UPDATE = 'TWILIO_INBOUND_UPDATE',
-  FETCH_CONFIGURATION_OPEN = 'FETCH_CONFIGURATION_OPEN',
-  FETCH_CONFIGURATION_COMPLETE = 'FETCH_CONFIGURATION_COMPLETE',
-  VALIDATE_CONFIGURATION_OPEN = 'VALIDATE_CONFIGURATION_OPEN',
-  VALIDATE_CONFIGURATION_COMPLETE = 'VALIDATE_CONFIGURATION_COMPLETE',
-  VALIDATE_CONFIGURATION_LOCAL = 'VALIDATE_CONFIGURATION_LOCAL',
-  SAVE_CONFIGURATION_OPEN = 'SAVE_CONFIGURATION_OPEN',
-  SAVE_CONFIGURATION_COMPLETE = 'SAVE_CONFIGURATION_COMPLETE',
+  SETUP_PHONE_NUMBERS_UPDATE = 'SETUP_PHONE_NUMBERS_UPDATE',
+  SETUP_TWILIO_ACCOUNT_RESET = 'SETUP_TWILIO_ACCOUNT_RESET',
+  SETUP_TWILIO_ACCOUNT_UPDATE = 'SETUP_TWILIO_ACCOUNT_UPDATE',
+  SETUP_TWILIO_OUTBOUND_UPDATE = 'SETUP_TWILIO_OUTBOUND_UPDATE',
+  SETUP_TWILIO_INBOUND_UPDATE = 'SETUP_TWILIO_INBOUND_UPDATE',
+  SETUP_FETCH_CONFIGURATION_OPEN = 'SETUP_FETCH_CONFIGURATION_OPEN',
+  SETUP_FETCH_CONFIGURATION_COMPLETE = 'SETUP_FETCH_CONFIGURATION_COMPLETE',
+  SETUP_VALIDATE_CONFIGURATION_OPEN = 'SETUP_VALIDATE_CONFIGURATION_OPEN',
+  SETUP_VALIDATE_CONFIGURATION_COMPLETE = 'SETUP_VALIDATE_CONFIGURATION_COMPLETE',
+  SETUP_VALIDATE_CONFIGURATION_LOCAL = 'SETUP_VALIDATE_CONFIGURATION_LOCAL',
+  SETUP_SAVE_CONFIGURATION_OPEN = 'SETUP_SAVE_CONFIGURATION_OPEN',
+  SETUP_SAVE_CONFIGURATION_COMPLETE = 'SETUP_SAVE_CONFIGURATION_COMPLETE',
 }
 
 export interface PhoneNumberAction {
@@ -22,7 +22,7 @@ export interface PhoneNumberAction {
 
 export const updatePhoneNumbers = (callerIds: PhoneNumber[], phoneNumbers: PhoneNumber[]): PhoneNumberAction => {
   return {
-    type: SetupActionType.PHONE_NUMBERS_UPDATE,
+    type: SetupActionType.SETUP_PHONE_NUMBERS_UPDATE,
     payload: { phoneNumbers, callerIds },
   };
 };
@@ -33,7 +33,7 @@ export interface TwilioAccountResetAction {
 
 export const resetTwilioAccount = (): TwilioAccountResetAction => {
   return {
-    type: SetupActionType.TWILIO_ACCOUNT_RESET,
+    type: SetupActionType.SETUP_TWILIO_ACCOUNT_RESET,
   };
 };
 
@@ -44,7 +44,7 @@ export interface TwilioAccountAction {
 
 export const updateTwilioAccount = (accountSid: string, key: string, secret: string): TwilioAccountAction => {
   return {
-    type: SetupActionType.TWILIO_ACCOUNT_UPDATE,
+    type: SetupActionType.SETUP_TWILIO_ACCOUNT_UPDATE,
     payload: { accountSid, key, secret },
   };
 };
@@ -56,7 +56,7 @@ export interface TwilioInboundAction {
 
 export const updateTwilioInbound = (isEnabled: boolean, phoneNumber?: string | undefined): TwilioInboundAction => {
   return {
-    type: SetupActionType.TWILIO_INBOUND_UPDATE,
+    type: SetupActionType.SETUP_TWILIO_INBOUND_UPDATE,
     payload: { isEnabled, phoneNumber },
   };
 };
@@ -72,7 +72,7 @@ export const updateTwilioOutbound = (
   phoneNumber?: string | undefined
 ): TwilioOutboundAction => {
   return {
-    type: SetupActionType.TWILIO_OUTBOUND_UPDATE,
+    type: SetupActionType.SETUP_TWILIO_OUTBOUND_UPDATE,
     payload: { isEnabled, mode, phoneNumber },
   };
 };
@@ -83,7 +83,7 @@ export interface FetchConfigurationAction {
 
 export const fetchConfiguration = (): FetchConfigurationAction => {
   return {
-    type: SetupActionType.FETCH_CONFIGURATION_OPEN,
+    type: SetupActionType.SETUP_FETCH_CONFIGURATION_OPEN,
   };
 };
 
@@ -96,7 +96,7 @@ export const fetchConfigurationComplete = (
   configuration: SetupStore['configuration']['twilio']
 ): FetchConfigurationCompleteAction => {
   return {
-    type: SetupActionType.FETCH_CONFIGURATION_COMPLETE,
+    type: SetupActionType.SETUP_FETCH_CONFIGURATION_COMPLETE,
     payload: configuration,
   };
 };
@@ -107,7 +107,7 @@ export interface ValidateConfigurationAction {
 
 export const validateConfiguration = (): ValidateConfigurationAction => {
   return {
-    type: SetupActionType.VALIDATE_CONFIGURATION_OPEN,
+    type: SetupActionType.SETUP_VALIDATE_CONFIGURATION_OPEN,
   };
 };
 
@@ -118,7 +118,7 @@ export interface ValidateConfigurationCompleteAction {
 
 export const validateConfigurationComplete = (result: ValidationResult): ValidateConfigurationCompleteAction => {
   return {
-    type: SetupActionType.VALIDATE_CONFIGURATION_COMPLETE,
+    type: SetupActionType.SETUP_VALIDATE_CONFIGURATION_COMPLETE,
     payload: result,
   };
 };
@@ -130,7 +130,7 @@ export interface ValidateConfigurationLocalAction {
 
 export const validateConfigurationLocal = (isValid: boolean, text: string = ''): ValidateConfigurationLocalAction => {
   return {
-    type: SetupActionType.VALIDATE_CONFIGURATION_LOCAL,
+    type: SetupActionType.SETUP_VALIDATE_CONFIGURATION_LOCAL,
     payload: { isValid, text },
   };
 };
@@ -141,7 +141,7 @@ export interface SaveConfigurationAction {
 
 export const saveConfiguration = (): SaveConfigurationAction => {
   return {
-    type: SetupActionType.SAVE_CONFIGURATION_OPEN,
+    type: SetupActionType.SETUP_SAVE_CONFIGURATION_OPEN,
   };
 };
 
@@ -151,7 +151,7 @@ export interface SaveConfigurationCompleteAction {
 
 export const saveConfigurationComplete = (): SaveConfigurationCompleteAction => {
   return {
-    type: SetupActionType.SAVE_CONFIGURATION_COMPLETE,
+    type: SetupActionType.SETUP_SAVE_CONFIGURATION_COMPLETE,
   };
 };
 

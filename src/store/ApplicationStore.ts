@@ -2,7 +2,6 @@ import { ApplicationPage } from '../actions/PageAction';
 import { WorkspaceView } from '../actions/WorkspaceViewAction';
 import { MediaDeviceException } from '../exceptions/MediaDeviceException';
 import { UserWithPresenceDocument } from '../models/documents/UserDocument';
-import { CallStatusDocument } from '../models/documents/CallDocument';
 import { ConnectionState } from '../models/Connection';
 
 export interface ApplicationStore {
@@ -10,7 +9,6 @@ export interface ApplicationStore {
     state: ConnectionState | undefined;
     sockets: number;
   };
-  call: CallStatusDocument | undefined;
   devices: {
     audio: {
       input: Array<MediaDeviceInfo>;

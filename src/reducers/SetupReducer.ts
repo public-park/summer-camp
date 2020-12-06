@@ -19,51 +19,51 @@ import { DefaultSetupStore } from '../store/DefaultSetupStore';
 import { SetupStore, SetupView } from '../store/SetupStore';
 
 const isPhoneNumberAction = (action: SetupAction): action is PhoneNumberAction => {
-  return action.type === SetupActionType.PHONE_NUMBERS_UPDATE;
+  return action.type === SetupActionType.SETUP_PHONE_NUMBERS_UPDATE;
 };
 
 const isTwilioAccountAction = (action: SetupAction): action is TwilioAccountAction => {
-  return action.type === SetupActionType.TWILIO_ACCOUNT_UPDATE;
+  return action.type === SetupActionType.SETUP_TWILIO_ACCOUNT_UPDATE;
 };
 
 const isTwilioAccountResetAction = (action: SetupAction): action is TwilioAccountResetAction => {
-  return action.type === SetupActionType.TWILIO_ACCOUNT_RESET;
+  return action.type === SetupActionType.SETUP_TWILIO_ACCOUNT_RESET;
 };
 
 const isTwilioOutboundAction = (action: SetupAction): action is TwilioOutboundAction => {
-  return action.type === SetupActionType.TWILIO_OUTBOUND_UPDATE;
+  return action.type === SetupActionType.SETUP_TWILIO_OUTBOUND_UPDATE;
 };
 
 const isTwilioInboundAction = (action: SetupAction): action is TwilioInboundAction => {
-  return action.type === SetupActionType.TWILIO_INBOUND_UPDATE;
+  return action.type === SetupActionType.SETUP_TWILIO_INBOUND_UPDATE;
 };
 
 const isFetchConfigurationAction = (action: SetupAction): action is FetchConfigurationAction => {
-  return action.type === SetupActionType.FETCH_CONFIGURATION_OPEN;
+  return action.type === SetupActionType.SETUP_FETCH_CONFIGURATION_OPEN;
 };
 
 const isFetchConfigurationCompleteAction = (action: SetupAction): action is FetchConfigurationCompleteAction => {
-  return action.type === SetupActionType.FETCH_CONFIGURATION_COMPLETE;
+  return action.type === SetupActionType.SETUP_FETCH_CONFIGURATION_COMPLETE;
 };
 
 const isValidateConfigurationAction = (action: SetupAction): action is ValidateConfigurationAction => {
-  return action.type === SetupActionType.VALIDATE_CONFIGURATION_OPEN;
+  return action.type === SetupActionType.SETUP_VALIDATE_CONFIGURATION_OPEN;
 };
 
 const isValidateConfigurationCompleteAction = (action: SetupAction): action is ValidateConfigurationCompleteAction => {
-  return action.type === SetupActionType.VALIDATE_CONFIGURATION_COMPLETE;
+  return action.type === SetupActionType.SETUP_VALIDATE_CONFIGURATION_COMPLETE;
 };
 
 const isValidateConfigurationLocalAction = (action: SetupAction): action is ValidateConfigurationLocalAction => {
-  return action.type === SetupActionType.VALIDATE_CONFIGURATION_LOCAL;
+  return action.type === SetupActionType.SETUP_VALIDATE_CONFIGURATION_LOCAL;
 };
 
 const isSaveConfigurationAction = (action: SetupAction): action is SaveConfigurationAction => {
-  return action.type === SetupActionType.SAVE_CONFIGURATION_OPEN;
+  return action.type === SetupActionType.SETUP_SAVE_CONFIGURATION_OPEN;
 };
 
 const isSaveConfigurationCompleteAction = (action: SetupAction): action is SaveConfigurationCompleteAction => {
-  return action.type === SetupActionType.SAVE_CONFIGURATION_COMPLETE;
+  return action.type === SetupActionType.SETUP_SAVE_CONFIGURATION_COMPLETE;
 };
 
 const setup = (state: SetupStore = DefaultSetupStore, action: SetupAction): SetupStore => {

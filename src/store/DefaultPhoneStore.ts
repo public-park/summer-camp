@@ -14,4 +14,5 @@ export const DefaultPhoneStore: PhoneStore = {
     input: undefined,
     output: undefined,
   },
+  call: undefined,
 };

@@ -6,7 +6,7 @@ import { UserStore } from './UserStore';
 export const selectUser = (store: Store) => store.user;
 export const selectPhone = (store: Store) => store.phone;
 export const selectConfiguration = (store: Store) => store.phone.configuration;
-export const selectCall = (store: Store) => store.application.call;
+export const selectCall = (store: Store) => store.phone.call;
 export const selectPhoneState = (store: Store) => store.phone.state;
 export const selectPhoneToken = (store: Store) => store.phone.token;
 export const selectPhoneInputDevice = (store: Store) => store.phone.devices.input;

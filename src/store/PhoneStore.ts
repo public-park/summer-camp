@@ -1,3 +1,4 @@
+import { CallStatusDocument } from '../models/documents/CallDocument';
 import { UserConfiguration } from '../models/UserConfiguration';
 import { PhoneState } from '../phone/PhoneState';
 
@@ -14,4 +15,5 @@ export interface PhoneStore {
     input: string | undefined;
     output: string | undefined;
   };
+  call: CallStatusDocument | undefined;
 }

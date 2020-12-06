@@ -19,10 +19,6 @@ const application = (state: ApplicationStore = DefaultApplicationStore, action: 
         draft.connection.state = action.payload.state;
         break;
 
-      case 'CALL_STATE_CHANGE':
-        draft.call = action.payload;
-        break;
-
       case 'AUDIO_DEVICES_EXCEPTION':
         draft.devices.exception = action.payload;
         break;

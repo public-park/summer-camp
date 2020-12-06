@@ -23,7 +23,7 @@ import {
   setPhoneToken,
   setPhoneError,
   setPhoneState,
-  setPhoneCall,
+  setPhoneCallState,
 } from './actions/PhoneAction';
 
 /* Salesforce OpenCTI 
@@ -145,7 +145,7 @@ export const ApplicationContextProvider = (props: any) => {
         /* doScreenPop(call.phoneNumber); */
       }
 
-      dispatch(setPhoneCall(call));
+      dispatch(setPhoneCallState(call));
 
       setCall(call);
     });

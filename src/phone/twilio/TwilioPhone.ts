@@ -143,14 +143,20 @@ export class TwilioPhone implements PhoneControl {
     this.inputDeviceId && this.device.audio && (await this.device.audio.unsetInputDevice(this.inputDeviceId));
   }
 
-  init(token: string) {
+  init(token: string, edge?: string) {
     if ([PhoneState.Offline, PhoneState.Expired].includes(this.state)) {
       this.setState(PhoneState.Connecting);
     }
 
+    edge =
+      edge && ['sydney', 'sao-paulo', 'dublin', 'frankfurt', 'tokyo', 'singapore', 'ashburn'].includes(edge)
+        ? edge
+        : 'roaming';
+
     try {
       this.device.setup(token, {
         debug: true,
+        edge: edge,
         codecPreferences: ['opus', 'pcmu'],
       });
 

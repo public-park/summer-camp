@@ -1,9 +1,11 @@
 import { Call } from '../models/Call';
 import { PhoneState } from './PhoneState';
 
+type option = string | undefined;
+
 export interface PhoneControl {
   call: Call | undefined;
-  init: (token: string) => void;
+  init: (token: string, ...options: option[]) => void;
   connect: (to: string, from?: string) => Promise<Call>;
   getState: () => PhoneState;
   destroy: () => void;

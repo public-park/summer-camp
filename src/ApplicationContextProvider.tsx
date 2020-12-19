@@ -50,6 +50,7 @@ import { setConnectionState } from './actions/ConnectionAction';
 import { validateUserToken } from './services/RequestService';
 import { getContextFromLocalStorage, setContextOnLocalStorage } from './services/LocalStorageContext';
 import { onPageLoad, setLogin, setLogout } from './actions/ApplicationAction';
+import { useQueryStringParameter } from './hooks/useQueryStringParameter';
 
 export const ApplicationContextProvider = (props: any) => {
   const { isResume } = usePageLifecycle();
@@ -65,6 +66,7 @@ export const ApplicationContextProvider = (props: any) => {
   const [user, setUser] = useState<User | undefined>();
   const [phone, setPhone] = useState<PhoneControl>();
   const [call, setCall] = useState<undefined | Call>();
+  const edge = useQueryStringParameter('edge');
 
   const { token: phoneTokenFetched, error: phoneTokenError } = useFetchPhoneToken(user);
 
@@ -114,7 +116,7 @@ export const ApplicationContextProvider = (props: any) => {
     connection.on<ConfigurationMessage>(MessageType.Configuration, (message: ConfigurationMessage) => {
       dispatch(setPhoneConfiguration(message.payload));
     });
-
+    // TODO user should be returned by connection.onReady....
     const user = new User(connection);
 
     user.onActivityChanged((activity: UserActivity) => {
@@ -127,7 +129,6 @@ export const ApplicationContextProvider = (props: any) => {
       dispatch(setReady(user));
       dispatch(setPhoneConfiguration(user.configuration));
 
-      // TODO reducer?
       if (view === 'CONNECT_VIEW') {
         dispatch(setWorkspaceView('PHONE_VIEW'));
       }
@@ -141,10 +142,6 @@ export const ApplicationContextProvider = (props: any) => {
     });
 
     phone.onCallStateChanged((call) => {
-      if (call && call.direction === CallDirection.Inbound && call.status === CallStatus.Ringing) {
-        /* doScreenPop(call.phoneNumber); */
-      }
-
       dispatch(setPhoneCallState(call));
 
       setCall(call);
@@ -186,9 +183,9 @@ export const ApplicationContextProvider = (props: any) => {
   useEffect(() => {
     if (phoneToken && phone) {
       console.log(`Phone device init with token: ${phoneToken?.substr(0, 10)}`);
-      phone.init(phoneToken);
+      phone.init(phoneToken, edge);
     }
-  }, [phoneToken, phone]);
+  }, [phoneToken, phone, edge]);
 
   useEffect(() => {
     if (phoneTokenError) {

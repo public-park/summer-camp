@@ -7,15 +7,7 @@ import { RecordMessage } from '../../models/socket/messages/RecordMessage';
 import { AcceptMessage } from '../../models/socket/messages/AcceptMessage';
 import { CallDirection } from '../../models/CallDirection';
 import { CallStatus } from '../../models/CallStatus';
-
-export interface TwilioConnection {
-  reject: () => void;
-  disconnect: () => void;
-  sendDigits: (digit: string) => void;
-  mute: (state: boolean) => void;
-  accept: () => void;
-  on: (event: string, listener: (name: string) => void) => void;
-}
+import * as Client from 'twilio-client';
 
 enum CallEventType {
   Answer = 'answer',
@@ -23,7 +15,7 @@ enum CallEventType {
 }
 
 export class TwilioCall implements Call {
-  _connection: TwilioConnection | undefined;
+  _connection: Client.Connection | undefined;
 
   readonly user: User;
   readonly id: string;
@@ -141,7 +133,7 @@ export class TwilioCall implements Call {
     return this._connection;
   }
 
-  set connection(connection: TwilioConnection | undefined) {
+  set connection(connection: Client.Connection | undefined) {
     if (!connection) {
       return;
     }

@@ -64,6 +64,8 @@ export const ApplicationContextProvider = (props: any) => {
   const [user, setUser] = useState<User | undefined>();
   const [phone, setPhone] = useState<PhoneControl | undefined>();
   const [call, setCall] = useState<Call | undefined>();
+  const [isPageUnload, setIsPageUnload] = useState(false);
+
   const edge = useQueryStringParameter('edge');
 
   const { token: phoneTokenFetched, error: phoneTokenError } = useFetchPhoneToken(user);
@@ -166,9 +168,9 @@ export const ApplicationContextProvider = (props: any) => {
   };
 
   const logout = async (reason?: string) => {
-    phone?.destroy();
-
-    await connection.logout();
+    if (connection.state !== ConnectionState.Closed) {
+      await connection.logout();
+    }
 
     /* store context temporary */
     const context = setContextOnLocalStorage({
@@ -182,7 +184,17 @@ export const ApplicationContextProvider = (props: any) => {
     if (context) {
       dispatch(onPageLoad(context));
     }
+
+    setIsPageUnload(true);
   };
+
+  useEffect(() => {
+    if (isPageUnload) {
+      phone?.destroy();
+
+      setIsPageUnload(false);
+    }
+  }, [isPageUnload]);
 
   useEffect(() => {
     if (phoneToken && phone) {

@@ -30,7 +30,6 @@ import {
 import { useSalesforceOpenCti } from './hooks/useSalesforceOpenCti';
 */
 
-import { Call } from './models/Call';
 import { PhoneControl } from './phone/PhoneControl';
 import { useFetchPhoneToken } from './hooks/useFetchPhoneToken';
 
@@ -40,8 +39,6 @@ import { showNotification } from './actions/NotificationAction';
 import { MessageType } from './models/socket/messages/Message';
 import { UserMessage } from './models/socket/messages/UserMessage';
 import { updateUserList } from './actions/UserListAction';
-import { CallDirection } from './models/CallDirection';
-import { CallStatus } from './models/CallStatus';
 import { ConnectMessage } from './models/socket/messages/ConnectMessage';
 import { ConfigurationMessage } from './models/socket/messages/ConfigurationMessage';
 import { ErrorMessage } from './models/socket/messages/ErrorMessage';
@@ -51,6 +48,7 @@ import { validateUserToken } from './services/RequestService';
 import { getContextFromLocalStorage, setContextOnLocalStorage } from './services/LocalStorageContext';
 import { onPageLoad, setLogin, setLogout } from './actions/ApplicationAction';
 import { useQueryStringParameter } from './hooks/useQueryStringParameter';
+import { CallControl } from './phone/CallControl';
 
 export const ApplicationContextProvider = (props: any) => {
   const { isResume } = usePageLifecycle();
@@ -64,8 +62,8 @@ export const ApplicationContextProvider = (props: any) => {
 
   const [connection, setConnection] = useState<Connection>(new Connection());
   const [user, setUser] = useState<User | undefined>();
-  const [phone, setPhone] = useState<PhoneControl>();
-  const [call, setCall] = useState<undefined | Call>();
+  const [phone, setPhone] = useState<PhoneControl | undefined>();
+  const [call, setCall] = useState<CallControl | undefined>();
   const edge = useQueryStringParameter('edge');
 
   const { token: phoneTokenFetched, error: phoneTokenError } = useFetchPhoneToken(user);
@@ -138,7 +136,7 @@ export const ApplicationContextProvider = (props: any) => {
 
     phone.onStateChanged((state: PhoneState) => {
       console.debug(`Phone onStateChange: ${state}`);
-      dispatch(setPhoneState(state));
+      dispatch(setPhoneState(state, user.id as string));
     });
 
     phone.onCallStateChanged((call) => {
@@ -215,8 +213,12 @@ export const ApplicationContextProvider = (props: any) => {
         context.token = params.get('token') as string;
       }
 
-      if (context.token && !(await validateUserToken(context.token))) {
-        context.token = undefined;
+      try {
+        if (context.token && !(await validateUserToken(context.token))) {
+          context.token = undefined;
+        }
+      } catch (error) {
+        console.log(error);
       }
 
       dispatch(onPageLoad(context));

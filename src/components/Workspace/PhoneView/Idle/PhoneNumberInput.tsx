@@ -30,6 +30,7 @@ export const PhoneNumberInput = () => {
   return (
     <div className="display">
       <input
+        placeholder="Enter phone number"
         onPaste={handlePaste}
         className="phone-number-input"
         onChange={(e) => handleChange(e)}

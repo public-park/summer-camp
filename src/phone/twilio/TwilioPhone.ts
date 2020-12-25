@@ -1,7 +1,7 @@
 import * as Client from 'twilio-client';
 import { PhoneControl } from '../PhoneControl';
 import { Call } from '../../models/Call';
-import { TwilioCall, TwilioConnection } from './TwilioCall';
+import { TwilioCall } from './TwilioCall';
 import { EventEmitter } from 'events';
 import { PhoneState } from '../PhoneState';
 import { User } from '../../models/User';
@@ -35,6 +35,7 @@ export class TwilioPhone implements PhoneControl {
   private isInitialized: boolean;
   private ringtone: HTMLAudioElement;
   private inputDeviceId: string | undefined;
+  private constraints: MediaTrackConstraints | undefined;
 
   private readonly eventEmitter: EventEmitter;
 
@@ -135,14 +136,6 @@ export class TwilioPhone implements PhoneControl {
     }
   }
 
-  private async registerInputDeviceId() {
-    this.inputDeviceId && this.device.audio && (await this.device.audio.setInputDevice(this.inputDeviceId));
-  }
-
-  private async unregisterInputDeviceId() {
-    this.inputDeviceId && this.device.audio && (await this.device.audio.unsetInputDevice(this.inputDeviceId));
-  }
-
   init(token: string, edge?: string) {
     if ([PhoneState.Offline, PhoneState.Expired].includes(this.state)) {
       this.setState(PhoneState.Connecting);
@@ -166,16 +159,22 @@ export class TwilioPhone implements PhoneControl {
 
       this.isInitialized = true;
 
-      this.device.on('incoming', async (connection: TwilioConnection) => {
+      this.device.on('incoming', async (connection: Client.Connection) => {
         if (!this.call) {
           return this.setState(PhoneState.Error, new CallNotFoundException());
         }
 
-        await this.registerInputDeviceId();
+        if (this.constraints) {
+          await this.device.audio.setAudioConstraints(this.constraints);
+        }
+
+        if (this.inputDeviceId) {
+          await this.device.audio.setInputDevice(this.inputDeviceId);
+        }
 
         this.call.connection = connection;
 
-        connection.accept();
+        connection.accept(this.constraints);
       });
 
       this.device.on('ready', () => {
@@ -192,7 +191,10 @@ export class TwilioPhone implements PhoneControl {
       });
 
       this.device.on('disconnect', async () => {
-        await this.unregisterInputDeviceId();
+        if (this.inputDeviceId && this.device.audio) {
+          await this.device.audio.unsetInputDevice(this.inputDeviceId);
+        }
+
         await this.onCallEnd();
       });
 
@@ -310,5 +312,13 @@ export class TwilioPhone implements PhoneControl {
 
   private pauseRingtone() {
     this.ringtone.pause();
+  }
+
+  async setConstraints(constraints: MediaTrackConstraints) {
+    this.constraints = constraints;
+
+    if (this.device && this.device.audio) {
+      await this.device.audio.setAudioConstraints(this.constraints);
+    }
   }
 }

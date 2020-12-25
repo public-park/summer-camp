@@ -134,6 +134,12 @@ export const ApplicationContextProvider = (props: any) => {
 
     const phone = new TwilioPhone(connection, user);
 
+    phone.setConstraints({
+      echoCancellation: false,
+      autoGainControl: false,
+      noiseSuppression: true,
+    });
+
     phone.onStateChanged((state: PhoneState) => {
       console.debug(`Phone onStateChange: ${state}`);
       dispatch(setPhoneState(state, user.id as string));

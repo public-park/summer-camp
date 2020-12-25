@@ -11,6 +11,7 @@ import {
   PhoneInputDeviceLostAction,
   PhoneOutputDeviceAction,
   PhoneOutputDeviceLostAction,
+  PhoneOverlayAction,
   PhoneStateAction,
   PhoneTokenAction,
 } from '../actions/PhoneAction';
@@ -67,18 +68,27 @@ const isCallStateAction = (action: PhoneAction | ApplicationAction): action is P
   return action.type === PhoneActionType.PHONE_CALL_STATE_CHANGE;
 };
 
+const isPhoneOverlayAction = (action: PhoneAction | ApplicationAction): action is PhoneOverlayAction => {
+  return action.type === PhoneActionType.PHONE_OVERLAY;
+};
+
 const phone = (state: PhoneStore = DefaultPhoneStore, action: PhoneAction | ApplicationAction): PhoneStore => {
   return produce(state, (draft) => {
     if (isPhoneStateAction(action)) {
-      if (action.payload === PhoneState.Expired) {
+      if (action.payload.state === PhoneState.Expired) {
         draft.token = undefined;
       }
 
-      if (action.payload !== PhoneState.Error) {
+      if (action.payload.state !== PhoneState.Error) {
         draft.error = undefined;
       }
 
-      draft.state = action.payload;
+      if (action.payload.state !== PhoneState.Busy) {
+        draft.overlay = false;
+      }
+
+      draft.state = action.payload.state;
+      draft.userId = action.payload.userId;
     }
 
     if (isPhoneDisplayAction(action)) {
@@ -128,6 +138,10 @@ const phone = (state: PhoneStore = DefaultPhoneStore, action: PhoneAction | Appl
 
     if (isCallStateAction(action)) {
       draft.call = action.payload;
+    }
+
+    if (isPhoneOverlayAction(action)) {
+      draft.overlay = action.payload;
     }
   });
 };

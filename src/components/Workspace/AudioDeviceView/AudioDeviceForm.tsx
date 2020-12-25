@@ -4,6 +4,7 @@ import { AudioDeviceSelect } from './AudioDeviceSelect';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectPhoneInputDevice, selectPhoneOutputDevice } from '../../../store/Store';
 import { setPhoneInputDevice, setPhoneOutputDevice } from '../../../actions/PhoneAction';
+import { Alert } from '@material-ui/lab';
 
 interface AudioDeviceFormProps {
   audioInputDevices: Array<MediaDeviceInfo>;
@@ -54,6 +55,15 @@ export const AudioDeviceForm = (props: AudioDeviceFormProps) => {
             value={output ? output : 'default'}
             devices={props.audioOutputDevices}
           />
+        )}
+
+        {props.audioOutputDevices.length === 0 && (
+          <span>
+            <Alert variant="filled" severity="warning">
+              Your browser does not support setting the speaker device, please configure the speaker on your operating
+              system
+            </Alert>
+          </span>
         )}
       </Box>
     </div>

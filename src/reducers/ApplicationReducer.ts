@@ -10,7 +10,7 @@ const application = (state: ApplicationStore = DefaultApplicationStore, action: 
       case 'PAGE_LOAD':
         draft.isPageLoaded = true;
 
-        if (!action.payload.token) {
+        if (!action.payload.token && !draft.logout.reason) {
           draft.page = 'LOGIN_PAGE';
         }
         break;
@@ -21,6 +21,7 @@ const application = (state: ApplicationStore = DefaultApplicationStore, action: 
 
       case 'AUDIO_DEVICES_EXCEPTION':
         draft.devices.exception = action.payload;
+        draft.workspace.notification = action.payload.message;
         break;
 
       case 'AUDIO_DEVICES_CHANGE':

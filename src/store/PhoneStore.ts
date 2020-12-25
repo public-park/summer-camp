@@ -3,6 +3,7 @@ import { UserConfiguration } from '../models/UserConfiguration';
 import { PhoneState } from '../phone/PhoneState';
 
 export interface PhoneStore {
+  userId: string | undefined;
   state: PhoneState;
   token: string | undefined;
   configuration: UserConfiguration | undefined;
@@ -16,4 +17,5 @@ export interface PhoneStore {
     output: string | undefined;
   };
   call: CallStatusDocument | undefined;
+  overlay: boolean;
 }

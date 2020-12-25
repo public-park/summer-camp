@@ -2,6 +2,7 @@ import { PhoneState } from '../phone/PhoneState';
 import { PhoneStore } from './PhoneStore';
 
 export const DefaultPhoneStore: PhoneStore = {
+  userId: undefined,
   state: PhoneState.Offline,
   token: undefined,
   configuration: undefined,
@@ -15,4 +16,5 @@ export const DefaultPhoneStore: PhoneStore = {
     output: undefined,
   },
   call: undefined,
+  overlay: false,
 };

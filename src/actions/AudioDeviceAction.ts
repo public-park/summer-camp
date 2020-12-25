@@ -1,5 +1,5 @@
 import { ActionType } from './ActionType';
-import { MediaDeviceException } from '../exceptions/MediaDeviceException';
+import { DeviceNotFoundException } from '../exceptions/DeviceNotFoundException';
 
 export interface AudioDevicesUpdateAction {
   type: ActionType;
@@ -21,10 +21,10 @@ export const updateAudioDevices = (devices: {
 
 export interface AudioDevicesExceptionAction {
   type: ActionType;
-  payload: MediaDeviceException;
+  payload: Error;
 }
 
-export const setAudioDevicesException = (exception: MediaDeviceException): AudioDevicesExceptionAction => {
+export const setAudioDevicesException = (exception: Error): AudioDevicesExceptionAction => {
   return {
     type: ActionType.AUDIO_DEVICES_EXCEPTION,
     payload: exception,

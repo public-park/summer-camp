@@ -13,6 +13,7 @@ export enum PhoneActionType {
   PHONE_INPUT_DEVICE_LOST = 'PHONE_INPUT_DEVICE_LOST',
   PHONE_ERROR = 'PHONE_ERROR',
   PHONE_CALL_STATE_CHANGE = 'PHONE_CALL_STATE_CHANGE',
+  PHONE_OVERLAY = 'PHONE_OVERLAY',
 }
 
 export interface PhoneDisplayAction {
@@ -129,13 +130,19 @@ export const lostPhoneOutputDevice = (): PhoneOutputDeviceLostAction => {
 
 export interface PhoneStateAction {
   type: PhoneActionType;
-  payload: PhoneState;
+  payload: {
+    state: PhoneState;
+    userId: string;
+  };
 }
 
-export const setPhoneState = (state: PhoneState): PhoneStateAction => {
+export const setPhoneState = (state: PhoneState, userId: string): PhoneStateAction => {
   return {
     type: PhoneActionType.PHONE_STATE_CHANGE,
-    payload: state,
+    payload: {
+      state: state,
+      userId: userId,
+    },
   };
 };
 
@@ -151,6 +158,18 @@ export const setPhoneCallState = (call: Call | undefined): PhoneCallStateAction 
   };
 };
 
+export interface PhoneOverlayAction {
+  type: PhoneActionType;
+  payload: boolean;
+}
+
+export const setPhoneOverlay = (state: boolean): PhoneOverlayAction => {
+  return {
+    type: PhoneActionType.PHONE_OVERLAY,
+    payload: state,
+  };
+};
+
 export type PhoneAction =
   | PhoneDisplayAction
   | PhoneTokenAction
@@ -161,4 +180,5 @@ export type PhoneAction =
   | PhoneInputDeviceLostAction
   | PhoneOutputDeviceLostAction
   | PhoneStateAction
-  | PhoneCallStateAction;
+  | PhoneCallStateAction
+  | PhoneOverlayAction;

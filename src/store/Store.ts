@@ -11,6 +11,7 @@ export const selectPhoneState = (store: Store) => store.phone.state;
 export const selectPhoneToken = (store: Store) => store.phone.token;
 export const selectPhoneInputDevice = (store: Store) => store.phone.devices.input;
 export const selectPhoneOutputDevice = (store: Store) => store.phone.devices.output;
+export const selectPhoneOverlay = (store: Store) => store.phone.overlay;
 export const selectWorkspaceView = (store: Store) => store.application.workspace.view;
 export const selectWorkspaceNotification = (store: Store) => store.application.workspace.notification;
 export const selectConnectionState = (store: Store) => store.application.connection.state;

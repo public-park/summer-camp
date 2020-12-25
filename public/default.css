@@ -136,6 +136,60 @@ button {
   flex: auto;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.phone .overlay {
+  position: absolute;
+  height: 90%;
+  background-color: white;
+  overflow: hidden;
+  width: 100%;
+  z-index: 100;
+  box-shadow: 0px -2px 10px 0px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transition: bottom 0.7s cubic-bezier(0.14, 0.62, 0.44, 0.9);
+  bottom: 0;
+}
+
+.phone .overlay-hidden {
+  bottom: -800px;
+}
+
+.phone .overlay .header {
+  height: 50px;
+  line-height: 50px;
+  padding-left: 10px;
+  position: relative;
+  cursor: pointer;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.phone .overlay .header span {
+  font-size: 1.1em;
+  color: #aaaaaa;
+}
+
+.phone .overlay .header .collapse-button {
+  background-image: url(images/icon-collapse.svg);
+  background-position: center center;
+  background-repeat: no-repeat;
+  width: 50px;
+  height: 50px;
+  display: block;
+  background-size: 75%;
+  border: 0;
+  position: absolute;
+  right: 10px;
+  top: 0;
+  opacity: 0.4;
+}
+
+.phone .overlay .body {
+  flex: 1;
+  display: flex;
 }
 
 .phone .keypad {
@@ -380,6 +434,20 @@ button {
   background-position: center center;
   background-size: auto 32px;
   background-repeat: no-repeat;
+  opacity: 0.5;
+}
+
+.phone .call .control .add-button-disabled {
+  background-image: url(images/icon-add.svg);
+  background-position: center center;
+  background-size: auto 48px;
+  opacity: 0.2;
+}
+
+.phone .call .control .add-button {
+  background-image: url(images/icon-add.svg);
+  background-position: center center;
+  background-size: auto 48px;
   opacity: 0.5;
 }
 

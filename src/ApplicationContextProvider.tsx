@@ -48,7 +48,7 @@ import { validateUserToken } from './services/RequestService';
 import { getContextFromLocalStorage, setContextOnLocalStorage } from './services/LocalStorageContext';
 import { onPageLoad, setLogin, setLogout } from './actions/ApplicationAction';
 import { useQueryStringParameter } from './hooks/useQueryStringParameter';
-import { CallControl } from './phone/CallControl';
+import { Call } from './models/Call';
 
 export const ApplicationContextProvider = (props: any) => {
   const { isResume } = usePageLifecycle();
@@ -63,7 +63,7 @@ export const ApplicationContextProvider = (props: any) => {
   const [connection, setConnection] = useState<Connection>(new Connection());
   const [user, setUser] = useState<User | undefined>();
   const [phone, setPhone] = useState<PhoneControl | undefined>();
-  const [call, setCall] = useState<CallControl | undefined>();
+  const [call, setCall] = useState<Call | undefined>();
   const edge = useQueryStringParameter('edge');
 
   const { token: phoneTokenFetched, error: phoneTokenError } = useFetchPhoneToken(user);

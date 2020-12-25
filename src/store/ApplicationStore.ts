@@ -1,6 +1,5 @@
 import { ApplicationPage } from '../actions/PageAction';
 import { WorkspaceView } from '../actions/WorkspaceViewAction';
-import { MediaDeviceException } from '../exceptions/MediaDeviceException';
 import { UserWithPresenceDocument } from '../models/documents/UserDocument';
 import { ConnectionState } from '../models/Connection';
 
@@ -14,7 +13,7 @@ export interface ApplicationStore {
       input: Array<MediaDeviceInfo>;
       output: Array<MediaDeviceInfo>;
     };
-    exception: MediaDeviceException | undefined;
+    exception: Error | undefined;
   };
   workspace: {
     view: WorkspaceView;

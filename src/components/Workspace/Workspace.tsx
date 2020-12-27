@@ -31,6 +31,7 @@ import { ConnectionState } from '../../models/Connection';
 import { ApplicationContext } from '../../context/ApplicationContext';
 import { PhoneState } from '../../phone/PhoneState';
 import { useHasLostMediaDevice } from '../../hooks/useHasLostMediaDevice';
+import { PhonePreflight } from './PhonePreflight';
 
 export const Workspace = () => {
   const { phone } = useContext(ApplicationContext);
@@ -144,7 +145,8 @@ export const Workspace = () => {
         <HeaderThemeProvider>
           <Header />
         </HeaderThemeProvider>
-        {getWorkspaceView(view)}
+
+        <PhonePreflight>{getWorkspaceView(view)}</PhonePreflight>
       </div>
     </div>
   );

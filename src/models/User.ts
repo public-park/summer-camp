@@ -4,7 +4,6 @@ import { UserRole } from './UserRole';
 import { MessageType } from './socket/messages/Message';
 import { ActivityMessage } from './socket/messages/ActivityMessage';
 import { TagMessage } from './socket/messages/TagMessage';
-import { ConnectMessage } from './socket/messages/ConnectMessage';
 import { UserConfiguration } from './UserConfiguration';
 import { Connection, ConnectionState } from './Connection';
 
@@ -15,45 +14,39 @@ enum UserEventType {
 }
 
 export class User {
-  id: string | undefined;
-  name: string | undefined;
+  id: string;
+  name: string;
   profileImageUrl: string | undefined;
-  accountId: string | undefined;
+  accountId: string;
   tags: Set<string>;
   activity: UserActivity;
-  role: UserRole | undefined;
+  role: UserRole;
   configuration: UserConfiguration | undefined;
   connection: Connection;
 
   private events: EventEmitter;
 
-  constructor(connection: Connection) {
+  constructor(
+    connection: Connection,
+    id: string,
+    name: string,
+    profileImageUrl: string | undefined,
+    accountId: string,
+    tags: Set<string> = new Set(),
+    activity: UserActivity,
+    role: UserRole,
+    configuration: UserConfiguration | undefined
+  ) {
     this.events = new EventEmitter();
 
-    this.id = undefined;
-    this.name = undefined;
-    this.profileImageUrl = undefined;
-    this.accountId = undefined;
-    this.tags = new Set();
-    this.activity = UserActivity.Unknown;
-    this.role = undefined;
-
-    connection.on<ConnectMessage>(MessageType.Connect, (message: ConnectMessage) => {
-      const {
-        payload: { user, configuration },
-      } = message as ConnectMessage;
-
-      this.id = user.id;
-      this.name = user.name;
-      this.profileImageUrl = user.profileImageUrl;
-      this.accountId = user.accountId;
-      this.tags = new Set(user.tags);
-      this.role = user.role;
-      this.activity = user.activity;
-      this.configuration = configuration;
-
-      this.events.emit(UserEventType.Ready, this);
-    });
+    this.id = id;
+    this.name = name;
+    this.profileImageUrl = profileImageUrl;
+    this.accountId = accountId;
+    this.tags = tags;
+    this.activity = activity;
+    this.role = role;
+    this.configuration = configuration;
 
     connection.on<ActivityMessage>(MessageType.Activity, (message: ActivityMessage) => {
       this.activity = message.payload.activity;

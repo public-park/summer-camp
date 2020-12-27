@@ -14,25 +14,16 @@ import {
   selectConnectionState,
   selectPhoneInputDevice,
   selectPhoneOutputDevice,
-  selectPhoneToken,
   selectWorkspaceView,
   selectIsPageLoaded,
 } from './store/Store';
-import {
-  setPhoneConfiguration,
-  setPhoneToken,
-  setPhoneError,
-  setPhoneState,
-  setPhoneCallState,
-} from './actions/PhoneAction';
+import { setPhoneConfiguration, setPhoneError, setPhoneState, setPhoneCallState } from './actions/PhoneAction';
 
 /* Salesforce OpenCTI 
 import { useSalesforceOpenCti } from './hooks/useSalesforceOpenCti';
 */
 
 import { PhoneControl } from './phone/PhoneControl';
-import { useFetchPhoneToken } from './hooks/useFetchPhoneToken';
-
 import { setWorkspaceView } from './actions/WorkspaceViewAction';
 import { CloseCode } from './models/socket/CloseCode';
 import { showNotification } from './actions/NotificationAction';
@@ -47,13 +38,11 @@ import { setConnectionState } from './actions/ConnectionAction';
 import { validateUserToken } from './services/RequestService';
 import { getContextFromLocalStorage, setContextOnLocalStorage } from './services/LocalStorageContext';
 import { onPageLoad, setLogin, setLogout } from './actions/ApplicationAction';
-import { useQueryStringParameter } from './hooks/useQueryStringParameter';
 import { Call } from './models/Call';
 
 export const ApplicationContextProvider = (props: any) => {
   const { isResume } = usePageLifecycle();
 
-  const phoneToken = useSelector(selectPhoneToken);
   const inputDevice = useSelector(selectPhoneInputDevice);
   const outputDevice = useSelector(selectPhoneOutputDevice);
   const token = useSelector(selectToken);
@@ -61,14 +50,10 @@ export const ApplicationContextProvider = (props: any) => {
   const isPageLoaded = useSelector(selectIsPageLoaded);
 
   const [connection, setConnection] = useState<Connection>(new Connection());
+
   const [user, setUser] = useState<User | undefined>();
   const [phone, setPhone] = useState<PhoneControl | undefined>();
   const [call, setCall] = useState<Call | undefined>();
-  const [isPageUnload, setIsPageUnload] = useState(false);
-
-  const edge = useQueryStringParameter('edge');
-
-  const { token: phoneTokenFetched, error: phoneTokenError } = useFetchPhoneToken(user);
 
   const view = useSelector(selectWorkspaceView);
 
@@ -111,21 +96,54 @@ export const ApplicationContextProvider = (props: any) => {
 
     connection.on<ConnectMessage>(MessageType.Connect, (message: ConnectMessage) => {
       dispatch(updateUserList(message.payload.list));
-    });
 
-    connection.on<ConfigurationMessage>(MessageType.Configuration, (message: ConfigurationMessage) => {
-      dispatch(setPhoneConfiguration(message.payload));
-    });
-    // TODO user should be returned by connection.onReady....
-    const user = new User(connection);
+      const { id, name, profileImageUrl, accountId, tags, activity, role } = message.payload.user;
 
-    user.onActivityChanged((activity: UserActivity) => {
-      console.log(`activity changed to: ${activity}`);
+      const user = new User(
+        connection,
+        id,
+        name,
+        profileImageUrl,
+        accountId,
+        new Set(tags),
+        activity,
+        role,
+        message.payload.configuration
+      );
 
-      dispatch(setActivity(user));
-    });
+      user.onActivityChanged((activity: UserActivity) => {
+        console.log(`activity changed to: ${activity}`);
 
-    user.onReady(() => {
+        dispatch(setActivity(user));
+      });
+
+      const phone = new TwilioPhone(user);
+
+      phone.setConstraints({
+        echoCancellation: false,
+        autoGainControl: false,
+        noiseSuppression: true,
+      });
+
+      phone.onStateChanged((state: PhoneState) => {
+        console.debug(`Phone onStateChange: ${state}`);
+        dispatch(setPhoneState(state, user.id as string));
+      });
+
+      phone.onCallStateChanged((call) => {
+        setCall(call);
+
+        dispatch(setPhoneCallState(call));
+      });
+
+      phone.onError((error: Error) => {
+        console.error(error);
+        dispatch(setPhoneError(error));
+      });
+
+      setPhone(phone);
+      setUser(user);
+
       dispatch(setReady(user));
       dispatch(setPhoneConfiguration(user.configuration));
 
@@ -134,35 +152,13 @@ export const ApplicationContextProvider = (props: any) => {
       }
     });
 
-    const phone = new TwilioPhone(connection, user);
-
-    phone.setConstraints({
-      echoCancellation: false,
-      autoGainControl: false,
-      noiseSuppression: true,
+    connection.on<ConfigurationMessage>(MessageType.Configuration, (message: ConfigurationMessage) => {
+      dispatch(setPhoneConfiguration(message.payload));
     });
 
-    phone.onStateChanged((state: PhoneState) => {
-      console.debug(`Phone onStateChange: ${state}`);
-      dispatch(setPhoneState(state, user.id as string));
-    });
-
-    phone.onCallStateChanged((call) => {
-      dispatch(setPhoneCallState(call));
-
-      setCall(call);
-    });
-
-    phone.onError((error: Error) => {
-      console.error(error);
-      dispatch(setPhoneError(error));
-    });
+    setConnection(connection);
 
     connection.login(getWebSocketUrl(), token);
-
-    setUser(user);
-    setPhone(phone);
-    setConnection(connection);
 
     dispatch(setLogin(token));
   };
@@ -180,40 +176,8 @@ export const ApplicationContextProvider = (props: any) => {
     });
 
     dispatch(setLogout(reason));
-
-    if (context) {
-      dispatch(onPageLoad(context));
-    }
-
-    setIsPageUnload(true);
+    dispatch(onPageLoad(context!));
   };
-
-  useEffect(() => {
-    if (isPageUnload) {
-      phone?.destroy();
-
-      setIsPageUnload(false);
-    }
-  }, [isPageUnload]);
-
-  useEffect(() => {
-    if (phoneToken && phone) {
-      console.log(`Phone device init with token: ${phoneToken?.substr(0, 10)}`);
-      phone.init(phoneToken, edge);
-    }
-  }, [phoneToken, phone, edge]);
-
-  useEffect(() => {
-    if (phoneTokenError) {
-      dispatch(setPhoneError(new Error('Could not fetch token, check your internet connection')));
-    }
-  }, [phoneTokenError, dispatch]);
-
-  useEffect(() => {
-    if (phoneTokenFetched) {
-      dispatch(setPhoneToken(phoneTokenFetched));
-    }
-  }, [phoneTokenFetched, dispatch]);
 
   useEffect(() => {
     const initiate = async () => {

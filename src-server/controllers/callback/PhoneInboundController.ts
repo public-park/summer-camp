@@ -17,7 +17,7 @@ export const handleConnectWithFilter = async (req: StatusCallbackRequest, res: R
   try {
     log.info(`${To} called`);
 
-    let users: Array<UserWithSocket> = pool.getAll(req.resource.account as Account);
+    let users: Array<UserWithSocket> = pool.getAll(req.resource.account);
 
     const tag = req.query.tag?.toString();
 

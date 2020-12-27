@@ -53,7 +53,7 @@ const handleOutbound = async (request: StatusCallbackRequest, response: Response
     if (ParticipantLabel === 'agent') {
       log.info(`${ConferenceSid}, user ${call.userId} joined, adding number ${call.to}`);
 
-      const helper = new TwilioHelper(request.resource.account as Account); // TODO add helper to request
+      const helper = new TwilioHelper(request.resource.account); // TODO add helper to request
 
       call.callSid = await helper.addCustomerToConference(call);
 

@@ -4,7 +4,7 @@ import { Call } from '../models/Call';
 
 export interface StatusCallbackRequest extends Request {
   resource: {
-    call: Call | undefined;
-    account: Account | undefined;
+    call: Call;
+    account: Account;
   };
 }

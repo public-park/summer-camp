@@ -12,7 +12,7 @@ const authenticate = async (req: RequestWithProfile, res: Response, next: NextFu
   try {
     log.debug(req.profile);
 
-    let user = await users.getByNameId(req.resource.account as Account, req.profile.nameID as string);
+    let user = await users.getByNameId(req.resource.account, req.profile.nameID as string);
 
     if (!user) {
       const provider = new SamlAuthenticationProvider();
@@ -31,7 +31,7 @@ const authenticate = async (req: RequestWithProfile, res: Response, next: NextFu
         req.profile.name,
         undefined,
         new Set(['none']),
-        req.resource.account as Account,
+        req.resource.account,
         authentication,
         req.profile.role
       );

@@ -24,7 +24,7 @@ export class TwilioCallControlHelper {
       throw new ConfigurationNotFoundException();
     }
 
-    const { key, secret, accountSid } = account.configuration as AccountConfiguration;
+    const { key, secret, accountSid } = account.configuration!;
 
     if (!key || !secret || !accountSid) {
       throw new InvalidConfigurationException();

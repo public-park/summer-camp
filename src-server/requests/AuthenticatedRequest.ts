@@ -10,8 +10,8 @@ export interface AuthenticatedRequest extends Request {
   };
 
   resource: {
-    user: User | undefined;
-    call: Call | undefined;
-    account: Account | undefined;
+    user: User;
+    call: Call;
+    account: Account;
   };
 }

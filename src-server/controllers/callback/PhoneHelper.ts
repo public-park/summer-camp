@@ -11,7 +11,13 @@ export const getCallbackUrl = (path: string) => {
   const segment = stripLeadingSlash(path);
   const base = stripTrailingSlash(process.env.PUBLIC_BASE_URL);
 
-  return [base, 'api', segment].join('/');
+  const url = [base, 'api', segment].join('/');
+
+  if (process.env.TWILIO_API_EDGE) {
+    return `${url}#e=${process.env.TWILIO_API_EDGE}`;
+  } else {
+    return url;
+  }
 };
 
 export const getCallerId = (account: Account): string => {

@@ -23,7 +23,7 @@ export const PhoneSetupForm = () => {
     dispatch(saveConfiguration());
 
     try {
-      await updateAccountConfiguration(user as User, twilio);
+      await updateAccountConfiguration(user!, twilio);
 
       dispatch(saveConfigurationComplete());
     } catch (error) {

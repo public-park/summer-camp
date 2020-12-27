@@ -174,7 +174,7 @@ const validateUserToken = async (token: string): Promise<boolean> => {
   return parsed.isValid;
 };
 
-const createPhoneToken = async (user: User): Promise<string> => {
+const fetchPhoneToken = async (user: User): Promise<string> => {
   const url = getUrl(`users/${user.id}/phone/token`);
 
   const response = await fetchWithTimeout(url, getHeaderWithAuthentication('POST', user));
@@ -248,7 +248,7 @@ const fetchCalls = async (user: User, skip: number, limit: number): Promise<any>
 export {
   registerUser,
   loginUser,
-  createPhoneToken,
+  fetchPhoneToken,
   validateUserToken,
   fetchAccountConfiguration,
   updateAccountConfiguration,

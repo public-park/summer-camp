@@ -45,7 +45,7 @@ export const PhoneNumberConfigurationPanel = () => {
       try {
         setIsFetching(true);
 
-        const body = await fetchAccountPhoneNumbers(user as User);
+        const body = await fetchAccountPhoneNumbers(user!);
 
         setIsFetching(false);
 

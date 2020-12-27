@@ -18,7 +18,7 @@ export const CallHistoryView = () => {
       try {
         setIsFetching(true);
 
-        const calls = await fetchCalls(user as User, 0, 50);
+        const calls = await fetchCalls(user!, 0, 50);
 
         setIsFetching(false);
 

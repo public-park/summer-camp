@@ -44,7 +44,7 @@ export const AccountSetupForm = () => {
 
   const save = async () => {
     try {
-      const result = await validateAccountConfiguration(user as User, {
+      const result = await validateAccountConfiguration(user!, {
         ...twilio,
         key: key,
         secret: secret,
@@ -54,7 +54,7 @@ export const AccountSetupForm = () => {
       if (!result.isValid) {
         dispatch(validateConfigurationComplete(result));
       } else {
-        await updateAccountConfiguration(user as User, {
+        await updateAccountConfiguration(user!, {
           ...twilio,
           key: key,
           secret: secret,

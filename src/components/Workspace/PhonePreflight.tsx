@@ -24,13 +24,13 @@ export const PhonePreflight = (props: any) => {
 
       phone!.init(current, edge);
     }
+  }, [current, phone, edge]);
 
+  useEffect(() => {
     return () => {
-      console.debug('Destroy phone instance');
-
       phone?.destroy();
     };
-  }, [current, phone, edge]);
+  }, []);
 
   useEffect(() => {
     if (error) {

@@ -13,13 +13,4 @@ export interface ApplicationContextType {
   logout: (reason?: string) => void;
 }
 
-const DefaultApplicationContext: ApplicationContextType = {
-  connection: new Connection(),
-  user: undefined,
-  phone: undefined,
-  call: undefined,
-  login: () => {},
-  logout: () => {},
-};
-
-export const ApplicationContext = createContext(DefaultApplicationContext);
+export const ApplicationContext = createContext<ApplicationContextType>(null!);

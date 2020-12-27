@@ -12,7 +12,6 @@ import { CallMessage } from '../../models/socket/messages/CallMessage';
 import { InitiateCallMessage } from '../../models/socket/messages/InitiateCallMessage';
 import { CallStatus } from '../../models/CallStatus';
 import { CallDirection } from '../../models/CallDirection';
-import { Connection } from '../../models/Connection';
 
 interface DelayedState {
   state: PhoneState;
@@ -26,7 +25,6 @@ enum PhoneEventType {
 }
 
 export class TwilioPhone implements PhoneControl {
-  private readonly connection: Connection;
   private readonly user: User;
   call: TwilioCall | undefined;
   private readonly device: any;
@@ -39,8 +37,8 @@ export class TwilioPhone implements PhoneControl {
 
   private readonly eventEmitter: EventEmitter;
 
-  constructor(connection: Connection, user: User) {
-    connection.on<CallMessage>(MessageType.Call, async (message: CallMessage) => {
+  constructor(user: User) {
+    user.connection.on<CallMessage>(MessageType.Call, async (message: CallMessage) => {
       if (this.hasEnded(message)) {
         this.pauseRingtone();
 
@@ -72,7 +70,6 @@ export class TwilioPhone implements PhoneControl {
       this.eventEmitter.emit(PhoneEventType.CallStateChanged, this.call);
     });
 
-    this.connection = connection;
     this.user = user;
 
     this.device = new Client.Device();
@@ -101,7 +98,7 @@ export class TwilioPhone implements PhoneControl {
   private convertMessageToCall(message: CallMessage) {
     const { id, from, to, status, direction } = message.payload;
 
-    return new TwilioCall(id, this.user as User, from, to, status, direction);
+    return new TwilioCall(id, this.user, from, to, status, direction);
   }
 
   getState() {
@@ -229,7 +226,9 @@ export class TwilioPhone implements PhoneControl {
       throw new InvalidPhoneStateException();
     }
 
-    const message = await this.connection.send<InitiateCallMessage, CallMessage>(new InitiateCallMessage(to, from));
+    const message = await this.user.connection.send<InitiateCallMessage, CallMessage>(
+      new InitiateCallMessage(to, from)
+    );
 
     this.setState(PhoneState.Busy);
 

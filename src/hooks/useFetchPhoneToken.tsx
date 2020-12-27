@@ -1,31 +1,32 @@
 import { useEffect, useState } from 'react';
 import { User } from '../models/User';
-import { useSelector } from 'react-redux';
-import { selectPhoneToken, selectConfiguration } from '../store/Store';
-import { createPhoneToken } from '../services/RequestService';
+import { fetchPhoneToken } from '../services/RequestService';
 
-export const useFetchPhoneToken = (user: User | undefined) => {
-  const token = useSelector(selectPhoneToken);
-  const configuration = useSelector(selectConfiguration);
-
+export const useFetchPhoneToken = (current: string | undefined, user: User | undefined) => {
   const [error, setError] = useState<Error | undefined>();
-  const [localToken, setLocalToken] = useState<string>();
+  const [token, setToken] = useState<string>();
+  const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
-    const run = async () => {
-      try {
-        const token = await createPhoneToken(user as User);
+    const fetchToken = async () => {
+      setIsFetching(true);
 
-        setLocalToken(token);
+      try {
+        const token = await fetchPhoneToken(user!);
+
+        setToken(token);
       } catch (error) {
         setError(error);
+      } finally {
+        setIsFetching(false);
       }
     };
+    if (!current && !isFetching && user && user.configuration) {
+      console.debug('fetch phone token');
 
-    if (!token && configuration && user) {
-      run();
+      fetchToken();
     }
-  }, [token, configuration, user]);
+  }, [current, user]);
 
-  return { token: localToken, error };
+  return { token, error, isFetching };
 };

@@ -25,6 +25,7 @@ export enum MessageType {
   User = 'user',
   Hold = 'hold',
   Accept = 'accept',
+  Reject = 'reject',
   Configuration = 'configuration',
   Connect = 'connect',
   Activity = 'activity',

@@ -30,6 +30,7 @@ export enum MessageType {
   InitiateCall = 'initiate-connect',
   Call = 'call',
   Accept = 'accept',
+  Reject = 'reject',
   Record = 'record',
   Hold = 'hold',
   Transfer = 'transfer',

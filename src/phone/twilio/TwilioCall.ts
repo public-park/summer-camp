@@ -8,6 +8,7 @@ import { AcceptMessage } from '../../models/socket/messages/AcceptMessage';
 import { CallDirection } from '../../models/CallDirection';
 import { CallStatus } from '../../models/CallStatus';
 import * as Client from 'twilio-client';
+import { RejectMessage } from '../../models/socket/messages/RejectMessage';
 
 enum CallEventType {
   Answer = 'answer',
@@ -49,14 +50,10 @@ export class TwilioCall implements Call {
     this.eventEmitter = new EventEmitter();
   }
 
-  reject() {
-    if (!this._connection) {
-      throw new CallNotConnectedException();
-    }
+  async reject() {
+    console.log(`call ${this.id}, rejected`);
 
-    this._connection.reject();
-
-    return Promise.resolve();
+    await this.user.connection.send(new RejectMessage(this.id));
   }
 
   async hold(state: boolean): Promise<void> {
@@ -113,8 +110,6 @@ export class TwilioCall implements Call {
     this.answeredAt = new Date();
 
     await this.user.connection.send(new AcceptMessage(this.id));
-
-    return;
   }
 
   async end() {

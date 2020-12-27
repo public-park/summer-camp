@@ -208,11 +208,16 @@ export class TwilioPhone implements PhoneControl {
         }
 
         /* do not publish states while on the call */
-        if (this.state === PhoneState.Busy || this.state === PhoneState.Ringing) {
-          this.setDelayedState(state, error);
-        } else {
-          this.setState(state, error);
+        if (this.state === PhoneState.Busy) {
+          return this.setDelayedState(state, error);
         }
+
+        /* reject calls in state ringing, the other option would be to fetch a new token, release the RINGING event after IDLE state */
+        if (this.state === PhoneState.Ringing && this.call) {
+          this.call.reject();
+        }
+
+        this.setState(state, error);
       });
     } catch (error) {
       this.setState(PhoneState.Error, error);

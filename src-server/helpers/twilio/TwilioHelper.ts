@@ -58,7 +58,7 @@ export class TwilioHelper {
   ): Promise<undefined> {
     const phoneNumbers = await this.client.incomingPhoneNumbers.list({ phoneNumber: phoneNumber });
 
-    if (phoneNumbers.length === 1) {
+    if (phoneNumbers.length === 1 && phoneNumbers[0]) {
       await this.client.incomingPhoneNumbers(phoneNumbers[0].sid).update({
         voiceUrl: voiceUrl,
         voiceMethod: 'POST',

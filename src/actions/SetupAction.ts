@@ -1,169 +1,104 @@
 import { PhoneNumber, SetupStore, ValidationResult } from '../store/SetupStore';
+import {
+  ActionType,
+  SetupFetchConfigurationAction,
+  SetupFetchConfigurationCompleteAction,
+  SetupPhoneNumberAction,
+  SetupSaveConfigurationAction,
+  SetupSaveConfigurationCompleteAction,
+  SetupTwilioAccountAction,
+  SetupTwilioAccountResetAction,
+  SetupTwilioInboundAction,
+  SetupTwilioOutboundAction,
+  SetupValidateConfigurationAction,
+  SetupValidateConfigurationCompleteAction,
+  SetupValidateConfigurationLocalAction,
+} from './Action';
 
-export enum SetupActionType {
-  SETUP_PHONE_NUMBERS_UPDATE = 'SETUP_PHONE_NUMBERS_UPDATE',
-  SETUP_TWILIO_ACCOUNT_RESET = 'SETUP_TWILIO_ACCOUNT_RESET',
-  SETUP_TWILIO_ACCOUNT_UPDATE = 'SETUP_TWILIO_ACCOUNT_UPDATE',
-  SETUP_TWILIO_OUTBOUND_UPDATE = 'SETUP_TWILIO_OUTBOUND_UPDATE',
-  SETUP_TWILIO_INBOUND_UPDATE = 'SETUP_TWILIO_INBOUND_UPDATE',
-  SETUP_FETCH_CONFIGURATION_OPEN = 'SETUP_FETCH_CONFIGURATION_OPEN',
-  SETUP_FETCH_CONFIGURATION_COMPLETE = 'SETUP_FETCH_CONFIGURATION_COMPLETE',
-  SETUP_VALIDATE_CONFIGURATION_OPEN = 'SETUP_VALIDATE_CONFIGURATION_OPEN',
-  SETUP_VALIDATE_CONFIGURATION_COMPLETE = 'SETUP_VALIDATE_CONFIGURATION_COMPLETE',
-  SETUP_VALIDATE_CONFIGURATION_LOCAL = 'SETUP_VALIDATE_CONFIGURATION_LOCAL',
-  SETUP_SAVE_CONFIGURATION_OPEN = 'SETUP_SAVE_CONFIGURATION_OPEN',
-  SETUP_SAVE_CONFIGURATION_COMPLETE = 'SETUP_SAVE_CONFIGURATION_COMPLETE',
-}
-
-export interface PhoneNumberAction {
-  type: SetupActionType;
-  payload: { callerIds: Array<PhoneNumber>; phoneNumbers: Array<PhoneNumber> };
-}
-
-export const updatePhoneNumbers = (callerIds: PhoneNumber[], phoneNumbers: PhoneNumber[]): PhoneNumberAction => {
+export const updatePhoneNumbers = (callerIds: PhoneNumber[], phoneNumbers: PhoneNumber[]): SetupPhoneNumberAction => {
   return {
-    type: SetupActionType.SETUP_PHONE_NUMBERS_UPDATE,
+    type: ActionType.SETUP_PHONE_NUMBERS_UPDATE,
     payload: { phoneNumbers, callerIds },
   };
 };
 
-export interface TwilioAccountResetAction {
-  type: SetupActionType;
-}
-
-export const resetTwilioAccount = (): TwilioAccountResetAction => {
+export const resetTwilioAccount = (): SetupTwilioAccountResetAction => {
   return {
-    type: SetupActionType.SETUP_TWILIO_ACCOUNT_RESET,
+    type: ActionType.SETUP_TWILIO_ACCOUNT_RESET,
   };
 };
 
-export interface TwilioAccountAction {
-  type: SetupActionType;
-  payload: { accountSid: string; key: string; secret: string };
-}
-
-export const updateTwilioAccount = (accountSid: string, key: string, secret: string): TwilioAccountAction => {
+export const updateTwilioAccount = (accountSid: string, key: string, secret: string): SetupTwilioAccountAction => {
   return {
-    type: SetupActionType.SETUP_TWILIO_ACCOUNT_UPDATE,
+    type: ActionType.SETUP_TWILIO_ACCOUNT_UPDATE,
     payload: { accountSid, key, secret },
   };
 };
 
-export interface TwilioInboundAction {
-  type: SetupActionType;
-  payload: { isEnabled: boolean; phoneNumber: string | undefined };
-}
-
-export const updateTwilioInbound = (isEnabled: boolean, phoneNumber?: string | undefined): TwilioInboundAction => {
+export const updateTwilioInbound = (isEnabled: boolean, phoneNumber?: string | undefined): SetupTwilioInboundAction => {
   return {
-    type: SetupActionType.SETUP_TWILIO_INBOUND_UPDATE,
+    type: ActionType.SETUP_TWILIO_INBOUND_UPDATE,
     payload: { isEnabled, phoneNumber },
   };
 };
-
-export interface TwilioOutboundAction {
-  type: SetupActionType;
-  payload: { isEnabled: boolean; mode: 'internal-caller-id' | 'external-caller-id'; phoneNumber: string | undefined };
-}
 
 export const updateTwilioOutbound = (
   isEnabled: boolean,
   mode: 'internal-caller-id' | 'external-caller-id',
   phoneNumber?: string | undefined
-): TwilioOutboundAction => {
+): SetupTwilioOutboundAction => {
   return {
-    type: SetupActionType.SETUP_TWILIO_OUTBOUND_UPDATE,
+    type: ActionType.SETUP_TWILIO_OUTBOUND_UPDATE,
     payload: { isEnabled, mode, phoneNumber },
   };
 };
 
-export interface FetchConfigurationAction {
-  type: SetupActionType;
-}
-
-export const fetchConfiguration = (): FetchConfigurationAction => {
+export const fetchConfiguration = (): SetupFetchConfigurationAction => {
   return {
-    type: SetupActionType.SETUP_FETCH_CONFIGURATION_OPEN,
+    type: ActionType.SETUP_FETCH_CONFIGURATION_OPEN,
   };
 };
 
-export interface FetchConfigurationCompleteAction {
-  type: SetupActionType;
-  payload: SetupStore['configuration']['twilio'];
-}
-
 export const fetchConfigurationComplete = (
   configuration: SetupStore['configuration']['twilio']
-): FetchConfigurationCompleteAction => {
+): SetupFetchConfigurationCompleteAction => {
   return {
-    type: SetupActionType.SETUP_FETCH_CONFIGURATION_COMPLETE,
+    type: ActionType.SETUP_FETCH_CONFIGURATION_COMPLETE,
     payload: configuration,
   };
 };
 
-export interface ValidateConfigurationAction {
-  type: SetupActionType;
-}
-
-export const validateConfiguration = (): ValidateConfigurationAction => {
+export const validateConfiguration = (): SetupValidateConfigurationAction => {
   return {
-    type: SetupActionType.SETUP_VALIDATE_CONFIGURATION_OPEN,
+    type: ActionType.SETUP_VALIDATE_CONFIGURATION_OPEN,
   };
 };
 
-export interface ValidateConfigurationCompleteAction {
-  type: SetupActionType;
-  payload: ValidationResult;
-}
-
-export const validateConfigurationComplete = (result: ValidationResult): ValidateConfigurationCompleteAction => {
+export const validateConfigurationComplete = (result: ValidationResult): SetupValidateConfigurationCompleteAction => {
   return {
-    type: SetupActionType.SETUP_VALIDATE_CONFIGURATION_COMPLETE,
+    type: ActionType.SETUP_VALIDATE_CONFIGURATION_COMPLETE,
     payload: result,
   };
 };
 
-export interface ValidateConfigurationLocalAction {
-  type: SetupActionType;
-  payload: ValidationResult;
-}
-
-export const validateConfigurationLocal = (isValid: boolean, text: string = ''): ValidateConfigurationLocalAction => {
+export const validateConfigurationLocal = (
+  isValid: boolean,
+  text: string = ''
+): SetupValidateConfigurationLocalAction => {
   return {
-    type: SetupActionType.SETUP_VALIDATE_CONFIGURATION_LOCAL,
+    type: ActionType.SETUP_VALIDATE_CONFIGURATION_LOCAL,
     payload: { isValid, text },
   };
 };
 
-export interface SaveConfigurationAction {
-  type: SetupActionType;
-}
-
-export const saveConfiguration = (): SaveConfigurationAction => {
+export const saveConfiguration = (): SetupSaveConfigurationAction => {
   return {
-    type: SetupActionType.SETUP_SAVE_CONFIGURATION_OPEN,
+    type: ActionType.SETUP_SAVE_CONFIGURATION_OPEN,
   };
 };
 
-export interface SaveConfigurationCompleteAction {
-  type: SetupActionType;
-}
-
-export const saveConfigurationComplete = (): SaveConfigurationCompleteAction => {
+export const saveConfigurationComplete = (): SetupSaveConfigurationCompleteAction => {
   return {
-    type: SetupActionType.SETUP_SAVE_CONFIGURATION_COMPLETE,
+    type: ActionType.SETUP_SAVE_CONFIGURATION_COMPLETE,
   };
 };
-
-export type SetupAction =
-  | PhoneNumberAction
-  | TwilioAccountAction
-  | TwilioInboundAction
-  | TwilioOutboundAction
-  | FetchConfigurationAction
-  | FetchConfigurationCompleteAction
-  | ValidateConfigurationAction
-  | ValidateConfigurationCompleteAction
-  | ValidateConfigurationLocalAction
-  | SaveConfigurationAction
-  | SaveConfigurationCompleteAction;

@@ -1,32 +1,16 @@
 import { User } from '../models/User';
-import { UserActivity } from '../models/UserActivity';
-import { UserStore } from '../store/UserStore';
+import { ActionType, UserActivityAction, UserReadyAction } from './Action';
 
-export enum UserActionType {
-  ACTIVITY_CHANGE = 'USER_ACTIVITY_CHANGE',
-  READY = 'USER_READY',
-}
-
-export interface ActivityAction {
-  type: UserActionType;
-  payload: UserActivity;
-}
-
-export const setActivity = (user: User): ActivityAction => {
+export const setActivity = (user: User): UserActivityAction => {
   return {
-    type: UserActionType.ACTIVITY_CHANGE,
+    type: ActionType.USER_ACTIVITY_CHANGE,
     payload: user.activity,
   };
 };
 
-export interface ReadyAction {
-  type: UserActionType;
-  payload: UserStore;
-}
-
-export const setReady = (user: User): ReadyAction => {
+export const setReady = (user: User): UserReadyAction => {
   return {
-    type: UserActionType.READY,
+    type: ActionType.USER_READY,
     payload: {
       id: user.id,
       name: user.name,
@@ -38,5 +22,3 @@ export const setReady = (user: User): ReadyAction => {
     },
   };
 };
-
-export type UserAction = ActivityAction | ReadyAction;

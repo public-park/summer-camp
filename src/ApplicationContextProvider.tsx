@@ -24,12 +24,9 @@ import { useSalesforceOpenCti } from './hooks/useSalesforceOpenCti';
 */
 
 import { PhoneControl } from './phone/PhoneControl';
-import { setWorkspaceView } from './actions/WorkspaceViewAction';
 import { CloseCode } from './models/socket/CloseCode';
-import { showNotification } from './actions/NotificationAction';
 import { MessageType } from './models/socket/messages/Message';
 import { UserMessage } from './models/socket/messages/UserMessage';
-import { updateUserList } from './actions/UserListAction';
 import { ConnectMessage } from './models/socket/messages/ConnectMessage';
 import { ConfigurationMessage } from './models/socket/messages/ConfigurationMessage';
 import { ErrorMessage } from './models/socket/messages/ErrorMessage';
@@ -39,6 +36,8 @@ import { validateUserToken } from './services/RequestService';
 import { getContextFromLocalStorage, setContextOnLocalStorage } from './services/LocalStorageContext';
 import { onPageLoad, setLogin, setLogout } from './actions/ApplicationAction';
 import { Call } from './models/Call';
+import { setNotification, setView } from './actions/WorkspaceAction';
+import { updateList } from './actions/UserListAction';
 
 export const ApplicationContextProvider = (props: any) => {
   const { isResume } = usePageLifecycle();
@@ -87,15 +86,15 @@ export const ApplicationContextProvider = (props: any) => {
     });
 
     connection.on<ErrorMessage>(MessageType.Error, (message: ErrorMessage) => {
-      dispatch(showNotification(`An error occured, please check the JS error log (${message.payload})`));
+      dispatch(setNotification(true, `An error occured, please check the JS error log (${message.payload})`));
     });
 
     connection.on<UserMessage>(MessageType.User, (message: UserMessage) => {
-      dispatch(updateUserList(message.payload));
+      dispatch(updateList(message.payload));
     });
 
     connection.on<ConnectMessage>(MessageType.Connect, (message: ConnectMessage) => {
-      dispatch(updateUserList(message.payload.list));
+      dispatch(updateList(message.payload.list));
 
       const { id, name, profileImageUrl, accountId, tags, activity, role } = message.payload.user;
 
@@ -127,7 +126,7 @@ export const ApplicationContextProvider = (props: any) => {
 
       phone.onStateChanged((state: PhoneState) => {
         console.debug(`Phone onStateChange: ${state}`);
-        dispatch(setPhoneState(state, user.id as string));
+        dispatch(setPhoneState(state, user.id));
       });
 
       phone.onCallStateChanged((call) => {
@@ -148,7 +147,7 @@ export const ApplicationContextProvider = (props: any) => {
       dispatch(setPhoneConfiguration(user.configuration));
 
       if (view === 'CONNECT_VIEW') {
-        dispatch(setWorkspaceView('PHONE_VIEW'));
+        dispatch(setView('PHONE_VIEW'));
       }
     });
 

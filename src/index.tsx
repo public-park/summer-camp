@@ -13,7 +13,7 @@ import application from './reducers/ApplicationReducer';
 import user from './reducers/UserReducer';
 import phone from './reducers/PhoneReducer';
 import { enableMapSet } from 'immer';
-import { LoginAction } from './actions/ApplicationAction';
+import { ActionType, ApplicationAction } from './actions/Action';
 
 enableMapSet();
 
@@ -24,8 +24,8 @@ const reducer = combineReducers({
   phone: phone,
 });
 
-export const root = (state: any, action: LoginAction) => {
-  if (action.type === 'USER_LOGOUT') {
+export const root = (state: any, action: ApplicationAction) => {
+  if (action.type === ActionType.APPLICATON_LOGOUT) {
     state = undefined;
   }
 

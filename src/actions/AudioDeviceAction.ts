@@ -1,13 +1,4 @@
-import { ActionType } from './ActionType';
-import { DeviceNotFoundException } from '../exceptions/DeviceNotFoundException';
-
-export interface AudioDevicesUpdateAction {
-  type: ActionType;
-  payload: {
-    input: MediaDeviceInfo[];
-    output: MediaDeviceInfo[];
-  };
-}
+import { AudioDevicesUpdateAction, ActionType, AudioDevicesExceptionAction } from './Action';
 
 export const updateAudioDevices = (devices: {
   input: MediaDeviceInfo[];
@@ -18,11 +9,6 @@ export const updateAudioDevices = (devices: {
     payload: devices,
   };
 };
-
-export interface AudioDevicesExceptionAction {
-  type: ActionType;
-  payload: Error;
-}
 
 export const setAudioDevicesException = (exception: Error): AudioDevicesExceptionAction => {
   return {

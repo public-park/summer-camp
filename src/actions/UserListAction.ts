@@ -1,9 +1,9 @@
 import { UserWithPresenceDocument } from '../models/documents/UserDocument';
-import { ActionType } from './ActionType';
+import { ActionType, UserListUpdateAction } from './Action';
 
-export const updateUserList = (users: Array<UserWithPresenceDocument>) => {
+export const updateList = (users: Array<UserWithPresenceDocument>): UserListUpdateAction => {
   return {
-    type: ActionType.USER_LIST_UPDATE,
+    type: ActionType.USERS_UPDATE,
     payload: users,
   };
 };

@@ -4,7 +4,7 @@ import { selectPage } from './store/Store';
 import { Login } from './components/Login/Login';
 import { Logout } from './components/Logout/Logout';
 import { Workspace } from './components/Workspace/Workspace';
-import { ApplicationPage } from './actions/PageAction';
+import { ApplicationPage } from './store/ApplicationStore';
 import { Init } from './components/Logout/Init';
 
 export const Page = () => {

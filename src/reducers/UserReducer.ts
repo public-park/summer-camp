@@ -1,23 +1,15 @@
-import produce from 'immer';
-import { ActivityAction, ReadyAction, UserAction, UserActionType } from '../actions/UserAction';
+import { produce } from 'immer';
+import { ActionType, ApplicationAction } from '../actions/Action';
 import { DefaultUserStore } from '../store/DefaultUserStore';
 import { UserStore } from '../store/UserStore';
 
-const isActivityAction = (action: UserAction): action is ActivityAction => {
-  return action.type === UserActionType.ACTIVITY_CHANGE;
-};
-
-const isReadyAction = (action: UserAction): action is ReadyAction => {
-  return action.type === UserActionType.READY;
-};
-
-const user = (state: UserStore = DefaultUserStore, action: UserAction): UserStore => {
+const user = (state: UserStore = DefaultUserStore, action: ApplicationAction): UserStore => {
   return produce(state, (draft) => {
-    if (isActivityAction(action)) {
+    if (action.type === ActionType.USER_ACTIVITY_CHANGE) {
       draft.activity = action.payload;
     }
 
-    if (isReadyAction(action)) {
+    if (action.type === ActionType.USER_READY) {
       return action.payload;
     }
   });

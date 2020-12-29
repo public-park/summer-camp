@@ -1,50 +1,37 @@
+import { ConnectionState } from '../models/Connection';
 import { LocalStorageContext } from '../services/LocalStorageContext';
-import { ActionType } from './ActionType';
+import {
+  ActionType,
+  ApplicationLoginAction,
+  ApplicationLogoutAction,
+  ApplicationPageLoadAction,
+  ConnectionStateAction,
+} from './Action';
 
-export enum ApplicationActionType {
-  USER_LOGIN = 'USER_LOGIN',
-  USER_LOGOUT = 'USER_LOGOUT',
-  PAGE_LOAD = 'PAGE_LOAD',
-}
-
-export interface LogoutAction {
-  type: ApplicationActionType;
-  payload: {
-    reason?: string;
-  };
-}
-
-export const setLogout = (reason?: string): LogoutAction => {
+export const setLogout = (reason?: string): ApplicationLogoutAction => {
   return {
-    type: ApplicationActionType.USER_LOGOUT,
+    type: ActionType.APPLICATON_LOGOUT,
     payload: { reason: reason },
   };
 };
 
-export interface LoginAction {
-  type: ActionType;
-  payload: {
-    token: string;
-  };
-}
-
-export const setLogin = (token: string) => {
+export const setLogin = (token: string): ApplicationLoginAction => {
   return {
-    type: ApplicationActionType.USER_LOGIN,
+    type: ActionType.APPLICATION_LOGIN,
     payload: { token: token },
   };
 };
 
-export interface PageLoadAction {
-  type: ApplicationActionType;
-  payload: LocalStorageContext;
-}
-
-export const onPageLoad = (context: LocalStorageContext) => {
+export const onPageLoad = (context: LocalStorageContext): ApplicationPageLoadAction => {
   return {
-    type: ApplicationActionType.PAGE_LOAD,
+    type: ActionType.APPLICATION_PAGE_LOAD,
     payload: context,
   };
 };
 
-export type ApplicationAction = LoginAction | LogoutAction | PageLoadAction;
+export const setConnectionState = (state: ConnectionState, code?: number): ConnectionStateAction => {
+  return {
+    type: ActionType.CONNECTION_STATE_CHANGE,
+    payload: { state, code },
+  };
+};

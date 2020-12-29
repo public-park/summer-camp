@@ -14,7 +14,7 @@ import {
 } from '../../store/Store';
 import { PhoneView } from './PhoneView/PhoneView';
 import { HeaderThemeProvider } from './Header/HeaderThemeProvider';
-import { WorkspaceView } from '../../actions/WorkspaceViewAction';
+import { setNotification, WorkspaceView } from '../../actions/WorkspaceAction';
 import { ConnectView } from './ConnectView/ConnectView';
 import { CallHistoryView } from './CallHistoryView/CallHistoryView';
 import { ConfigurationView } from './ConfigurationView/ConfigurationView';
@@ -25,7 +25,6 @@ import { useReconnectWebSocket } from '../../hooks/useReconnectWebSocket';
 import { ConnectionLostWithReconnectAlert } from './NotificationLayer/ConnectionLostWithReconnectAlert';
 import { useAudioDevices } from '../../hooks/useAudioDevices';
 import { setAudioDevicesException, updateAudioDevices } from '../../actions/AudioDeviceAction';
-import { showNotification } from '../../actions/NotificationAction';
 import { UsersView } from './UsersView/UsersView';
 import { ConnectionState } from '../../models/Connection';
 import { ApplicationContext } from '../../context/ApplicationContext';
@@ -75,14 +74,14 @@ export const Workspace = () => {
   useEffect(() => {
     if (hasLostInputDevice) {
       dispatch(lostPhoneInputDevice());
-      dispatch(showNotification('Your active microphone device was removed.'));
+      dispatch(setNotification(true, 'Your active microphone device was removed.'));
     }
   }, [hasLostInputDevice, dispatch]);
 
   useEffect(() => {
     if (hasLostOutputDevice) {
       dispatch(lostPhoneOutputDevice());
-      dispatch(showNotification('Your active speaker device was removed.'));
+      dispatch(setNotification(true, 'Your active speaker device was removed.'));
     }
   }, [hasLostOutputDevice, dispatch]);
 

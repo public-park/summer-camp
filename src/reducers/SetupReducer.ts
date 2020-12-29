@@ -1,79 +1,17 @@
 import produce from 'immer';
-import {
-  FetchConfigurationAction,
-  FetchConfigurationCompleteAction,
-  PhoneNumberAction,
-  SaveConfigurationAction,
-  SaveConfigurationCompleteAction,
-  SetupAction,
-  SetupActionType,
-  TwilioAccountAction,
-  TwilioAccountResetAction,
-  TwilioInboundAction,
-  TwilioOutboundAction,
-  ValidateConfigurationAction,
-  ValidateConfigurationCompleteAction,
-  ValidateConfigurationLocalAction,
-} from '../actions/SetupAction';
+import { ActionType, ApplicationAction } from '../actions/Action';
+
 import { DefaultSetupStore } from '../store/DefaultSetupStore';
 import { SetupStore, SetupView } from '../store/SetupStore';
 
-const isPhoneNumberAction = (action: SetupAction): action is PhoneNumberAction => {
-  return action.type === SetupActionType.SETUP_PHONE_NUMBERS_UPDATE;
-};
-
-const isTwilioAccountAction = (action: SetupAction): action is TwilioAccountAction => {
-  return action.type === SetupActionType.SETUP_TWILIO_ACCOUNT_UPDATE;
-};
-
-const isTwilioAccountResetAction = (action: SetupAction): action is TwilioAccountResetAction => {
-  return action.type === SetupActionType.SETUP_TWILIO_ACCOUNT_RESET;
-};
-
-const isTwilioOutboundAction = (action: SetupAction): action is TwilioOutboundAction => {
-  return action.type === SetupActionType.SETUP_TWILIO_OUTBOUND_UPDATE;
-};
-
-const isTwilioInboundAction = (action: SetupAction): action is TwilioInboundAction => {
-  return action.type === SetupActionType.SETUP_TWILIO_INBOUND_UPDATE;
-};
-
-const isFetchConfigurationAction = (action: SetupAction): action is FetchConfigurationAction => {
-  return action.type === SetupActionType.SETUP_FETCH_CONFIGURATION_OPEN;
-};
-
-const isFetchConfigurationCompleteAction = (action: SetupAction): action is FetchConfigurationCompleteAction => {
-  return action.type === SetupActionType.SETUP_FETCH_CONFIGURATION_COMPLETE;
-};
-
-const isValidateConfigurationAction = (action: SetupAction): action is ValidateConfigurationAction => {
-  return action.type === SetupActionType.SETUP_VALIDATE_CONFIGURATION_OPEN;
-};
-
-const isValidateConfigurationCompleteAction = (action: SetupAction): action is ValidateConfigurationCompleteAction => {
-  return action.type === SetupActionType.SETUP_VALIDATE_CONFIGURATION_COMPLETE;
-};
-
-const isValidateConfigurationLocalAction = (action: SetupAction): action is ValidateConfigurationLocalAction => {
-  return action.type === SetupActionType.SETUP_VALIDATE_CONFIGURATION_LOCAL;
-};
-
-const isSaveConfigurationAction = (action: SetupAction): action is SaveConfigurationAction => {
-  return action.type === SetupActionType.SETUP_SAVE_CONFIGURATION_OPEN;
-};
-
-const isSaveConfigurationCompleteAction = (action: SetupAction): action is SaveConfigurationCompleteAction => {
-  return action.type === SetupActionType.SETUP_SAVE_CONFIGURATION_COMPLETE;
-};
-
-const setup = (state: SetupStore = DefaultSetupStore, action: SetupAction): SetupStore => {
+const setup = (state: SetupStore = DefaultSetupStore, action: ApplicationAction): SetupStore => {
   return produce(state, (draft) => {
-    if (isPhoneNumberAction(action)) {
+    if (action.type === ActionType.SETUP_PHONE_NUMBERS_UPDATE) {
       draft.callerIds = action.payload.callerIds;
       draft.phoneNumbers = action.payload.phoneNumbers;
     }
 
-    if (isTwilioAccountAction(action)) {
+    if (action.type === ActionType.SETUP_TWILIO_ACCOUNT_UPDATE) {
       draft.configuration.twilio.accountSid = action.payload.accountSid;
       draft.configuration.twilio.key = action.payload.key;
       draft.configuration.twilio.secret = action.payload.secret;
@@ -81,7 +19,7 @@ const setup = (state: SetupStore = DefaultSetupStore, action: SetupAction): Setu
       draft.view = SetupView.PHONE_NUMBER_FORM;
     }
 
-    if (isTwilioAccountResetAction(action)) {
+    if (action.type === ActionType.SETUP_TWILIO_ACCOUNT_RESET) {
       draft.configuration.twilio.inbound = {
         isEnabled: false,
         phoneNumber: undefined,
@@ -96,24 +34,24 @@ const setup = (state: SetupStore = DefaultSetupStore, action: SetupAction): Setu
       draft.view = SetupView.ACCOUNT_FORM;
     }
 
-    if (isTwilioInboundAction(action)) {
+    if (action.type === ActionType.SETUP_TWILIO_INBOUND_UPDATE) {
       draft.configuration.twilio.inbound = {
         ...action.payload,
       };
     }
 
-    if (isTwilioOutboundAction(action)) {
+    if (action.type === ActionType.SETUP_TWILIO_OUTBOUND_UPDATE) {
       draft.configuration.twilio.outbound = {
         ...action.payload,
       };
     }
 
-    if (isFetchConfigurationAction(action)) {
+    if (action.type === ActionType.SETUP_FETCH_CONFIGURATION_OPEN) {
       draft.view = SetupView.FETCH;
       draft.configuration = DefaultSetupStore.configuration;
     }
 
-    if (isFetchConfigurationCompleteAction(action)) {
+    if (action.type === ActionType.SETUP_FETCH_CONFIGURATION_COMPLETE) {
       if (action.payload) {
         draft.view = SetupView.FETCH_COMPLETE;
         draft.configuration.twilio = {
@@ -127,11 +65,11 @@ const setup = (state: SetupStore = DefaultSetupStore, action: SetupAction): Setu
       draft.phoneNumbers = [];
     }
 
-    if (isValidateConfigurationAction(action)) {
+    if (action.type === ActionType.SETUP_VALIDATE_CONFIGURATION_OPEN) {
       draft.view = SetupView.VALIDATE;
     }
 
-    if (isValidateConfigurationCompleteAction(action)) {
+    if (action.type === ActionType.SETUP_VALIDATE_CONFIGURATION_COMPLETE) {
       draft.validation.remote = action.payload;
 
       if (action.payload.isValid) {
@@ -145,15 +83,15 @@ const setup = (state: SetupStore = DefaultSetupStore, action: SetupAction): Setu
       }
     }
 
-    if (isValidateConfigurationLocalAction(action)) {
+    if (action.type === ActionType.SETUP_VALIDATE_CONFIGURATION_LOCAL) {
       draft.validation.local = action.payload;
     }
 
-    if (isSaveConfigurationAction(action)) {
+    if (action.type === ActionType.SETUP_SAVE_CONFIGURATION_OPEN) {
       draft.isSaving = true;
     }
 
-    if (isSaveConfigurationCompleteAction(action)) {
+    if (action.type === ActionType.SETUP_SAVE_CONFIGURATION_COMPLETE) {
       draft.isSaving = false;
     }
   });

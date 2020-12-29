@@ -1,15 +1,7 @@
-import { ActionType } from './ActionType';
+import { ActionType, ConnectionStateAction } from './Action';
 import { ConnectionState } from '../models/Connection';
 
-export interface ConnectionStateAction {
-  type: ActionType;
-  payload: {
-    state: ConnectionState;
-    code: number | undefined;
-  };
-}
-
-export const setConnectionState = (state: ConnectionState, code: number | undefined): ConnectionStateAction => {
+export const setConnectionState = (state: ConnectionState, code?: number): ConnectionStateAction => {
   return {
     type: ActionType.CONNECTION_STATE_CHANGE,
     payload: { state, code },

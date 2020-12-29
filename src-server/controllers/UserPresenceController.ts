@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 
 const get = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const user = await pool.getByIdWithFallback(req.params.userId);
+    const user = await pool.getByIdWithFallback(req.params.userId!);
 
     if (!user) {
       throw new UserNotFoundException();

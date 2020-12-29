@@ -9,6 +9,7 @@ import { UserMessage } from '../models/socket/messages/UserMessage';
 import { Call } from '../models/Call';
 import { UserWithSocket } from '../models/UserWithSocket';
 import { AccountRepository } from '../repository/AccountRepository';
+import { AccountNotFoundException } from '../exceptions/AccountNotFoundException';
 
 export class UserPoolManager {
   pool: Map<string, UserWithSocket>;
@@ -145,7 +146,11 @@ export class UserPoolManager {
   }
 
   async getUserWithSocket(user: User, sockets: Array<WebSocketWithKeepAlive> = []): Promise<UserWithSocket> {
-    const account = (await this.accounts.getById(user.accountId)) as Account;
+    const account = await this.accounts.getById(user.accountId);
+
+    if (!account) {
+      throw new AccountNotFoundException();
+    }
 
     return new UserWithSocket(account, user, sockets, this.users);
   }

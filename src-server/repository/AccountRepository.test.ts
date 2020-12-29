@@ -53,9 +53,9 @@ describe('Account Repository read, update and delete an account', () => {
     const account = (await accounts.getByName(name))[0];
 
     expect(account).toBeInstanceOf(Account);
-    expect(account.id).toHaveLength(36);
-    expect(account.name).toBe(corporations.mom);
-    expect(account.createdAt).toBeInstanceOf(Date);
+    expect(account?.id).toHaveLength(36);
+    expect(account?.name).toBe(corporations.mom);
+    expect(account?.createdAt).toBeInstanceOf(Date);
 
     done();
   });

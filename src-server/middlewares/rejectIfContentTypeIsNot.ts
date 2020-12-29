@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { InvalidContentTypeException } from '../exceptions/InvalidContentTypeException';
 
-export const rejectIfContentTypeIsNot = (contentType: string) => {
+type ContentType = 'application/json' | 'text/plain';
+
+export const rejectIfContentTypeIsNot = (contentType: ContentType) => {
   return (request: Request, response: Response, next: NextFunction) => {
     if (request.is(contentType)) {
       return next();

@@ -30,7 +30,7 @@ interface ScreenPopResponse {
   errors: Array<any>;
 }
 
-const loadScript = async (url: string) =>
+const loadScript = async (url: string): Promise<void> =>
   new Promise((resolve, reject) => {
     const script = document.createElement('script');
     const node = document.getElementsByTagName('script')[0];

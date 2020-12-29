@@ -22,6 +22,10 @@ export const verifyUserResourcePolicy = async (
       return next(new UserNotFoundException());
     }
 
+    if (user.accountId !== req.jwt.user.accountId) {
+      throw new UserNotFoundException();
+    }
+
     req.resource = {
       ...req.resource,
       user,

@@ -4,6 +4,7 @@
     "strict": true,
     "target": "ES2017",
     "module": "CommonJS",
-    "strictFunctionTypes":false
+    "strictFunctionTypes":false,
+    "noUncheckedIndexedAccess": true
   },
 }

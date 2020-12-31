@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { useSelector } from 'react-redux';
-import { selectPhoneState, selectPhoneError, selectConfiguration } from '../../../store/Store';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectPhoneState, selectPhoneError, selectConfiguration, selectPhoneOverlay } from '../../../store/Store';
 import { IncomingCall } from './IncomingCall';
 import { Busy } from './Busy';
 import { Idle } from './Idle/Idle';
@@ -10,11 +10,20 @@ import { Expired } from './Expired';
 import { PhoneException } from './PhoneException';
 import { PhoneState } from '../../../phone/PhoneState';
 import { Connect } from './Connect';
+import { setPhoneOverlay } from '../../../actions/PhoneAction';
+import { Keypad } from './Idle/Keypad';
 
 export const PhoneView = () => {
   const state = useSelector(selectPhoneState);
   const error = useSelector(selectPhoneError);
   const configuration = useSelector(selectConfiguration);
+  const overlay = useSelector(selectPhoneOverlay);
+
+  const dispatch = useDispatch();
+
+  const hide = () => {
+    dispatch(setPhoneOverlay(false));
+  };
 
   const getPhoneView = (): JSX.Element | undefined => {
     if (!configuration) {
@@ -41,5 +50,19 @@ export const PhoneView = () => {
     }
   };
 
-  return <div className="phone">{getPhoneView()}</div>;
+  return (
+    <div className="phone">
+      <section className={overlay ? 'overlay' : 'overlay overlay-hidden'}>
+        <div className="header" onClick={() => hide()}>
+          <button className="collapse-button"></button>
+        </div>
+
+        <div className="body">
+          <Keypad />
+        </div>
+      </section>
+
+      {getPhoneView()}
+    </div>
+  );
 };

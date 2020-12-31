@@ -11,6 +11,7 @@ import { selectCall } from '../../../store/Store';
 import { RecordButton } from './Controls/RecordButton';
 import { CallNotFoundException } from '../../../exceptions/CallNotFoundException';
 import { CallDirection } from '../../../models/CallDirection';
+import { KeypadButton } from './Controls/KeypadButton';
 
 export const Busy = () => {
   const { call } = useContext(ApplicationContext);
@@ -50,7 +51,7 @@ export const Busy = () => {
           <RecordButton />
         </div>
         <div>
-          <button onClick={() => setShowKeypad(!showKeypad)} className="keypad-button"></button>
+          <KeypadButton />
         </div>
       </div>
 

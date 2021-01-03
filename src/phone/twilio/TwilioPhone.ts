@@ -19,18 +19,17 @@ interface DelayedState {
 }
 
 enum PhoneEventType {
-  StateChanged = 'state_changed',
-  CallStateChanged = 'call_state_changed',
-  Error = 'error',
+  StateChanged = 'phone_state_changed',
+  CallStateChanged = 'phone_call_state_changed',
+  Error = 'phone_error',
 }
 
 export class TwilioPhone implements PhoneControl {
   private readonly user: User;
   call: TwilioCall | undefined;
-  private readonly device: any;
+  private readonly device: Client.Device;
   private state: PhoneState;
   private delayedState: DelayedState | undefined;
-  private isInitialized: boolean;
   private ringtone: HTMLAudioElement;
   private inputDeviceId: string | undefined;
   private constraints: MediaTrackConstraints | undefined;
@@ -73,6 +72,7 @@ export class TwilioPhone implements PhoneControl {
     this.user = user;
 
     this.device = new Client.Device();
+
     this.state = PhoneState.Offline;
     this.delayedState = undefined;
     this.inputDeviceId = undefined;
@@ -81,7 +81,69 @@ export class TwilioPhone implements PhoneControl {
 
     this.eventEmitter = new EventEmitter();
 
-    this.isInitialized = false;
+    this.device.on('incoming', async (connection: Client.Connection) => {
+      if (!this.call) {
+        return this.setState(PhoneState.Error, new CallNotFoundException());
+      }
+
+      if (this.constraints && this.device.audio) {
+        await this.device.audio.setAudioConstraints(this.constraints);
+      }
+
+      if (this.inputDeviceId && this.device.audio) {
+        await this.device.audio.setInputDevice(this.inputDeviceId);
+      }
+
+      this.call.connection = connection;
+
+      connection.accept(this.constraints);
+    });
+
+    this.device.on('ready', () => {
+      console.debug(`Twilio Device 'onReady' event`);
+
+      /* disable ringtone on Twilio Device */
+      (this.device.audio as any).incoming(false);
+
+      this.setState(PhoneState.Idle);
+    });
+
+    this.device.on('offline', () => {
+      console.debug(`Twilio Device 'offline' event`);
+    });
+
+    this.device.on('disconnect', async () => {
+      if (this.inputDeviceId && this.device.audio) {
+        await this.device.audio.unsetInputDevice();
+      }
+
+      await this.onCallEnd();
+    });
+
+    this.device.on('error', (error: any) => {
+      let state: PhoneState;
+
+      switch (error.code) {
+        case 31205:
+          state = PhoneState.Expired;
+          break;
+        default:
+          state = PhoneState.Error;
+          break;
+      }
+
+      /* do not publish states while on the call */
+      if (this.state === PhoneState.Busy) {
+        return this.setDelayedState(state, error);
+      }
+
+      /* reject calls in state ringing, the other option would be to fetch a new token, release the RINGING event after IDLE state */
+      if (this.state === PhoneState.Ringing && this.call) {
+        this.call.reject();
+      }
+
+      this.setState(state, error);
+    });
   }
 
   private async onCallEnd() {
@@ -105,7 +167,7 @@ export class TwilioPhone implements PhoneControl {
     return this.state;
   }
 
-  private setState(state: PhoneState, ...params: any) {
+  private setState(state: PhoneState, ...params: Array<any>) {
     this.state = state;
 
     if (this.delayedState && state === PhoneState.Idle) {
@@ -121,7 +183,7 @@ export class TwilioPhone implements PhoneControl {
     this.eventEmitter.emit(PhoneEventType.StateChanged, this.state, ...params);
   }
 
-  private setDelayedState(state: PhoneState, ...params: any) {
+  private setDelayedState(state: PhoneState, ...params: Array<any>) {
     console.log(`set delayed state to ${state}  params:${JSON.stringify(params)}`);
     this.delayedState = { state, params };
   }
@@ -147,77 +209,7 @@ export class TwilioPhone implements PhoneControl {
       this.device.setup(token, {
         debug: true,
         edge: edge,
-        codecPreferences: ['opus', 'pcmu'],
-      });
-
-      if (this.isInitialized) {
-        return;
-      }
-
-      this.isInitialized = true;
-
-      this.device.on('incoming', async (connection: Client.Connection) => {
-        if (!this.call) {
-          return this.setState(PhoneState.Error, new CallNotFoundException());
-        }
-
-        if (this.constraints) {
-          await this.device.audio.setAudioConstraints(this.constraints);
-        }
-
-        if (this.inputDeviceId) {
-          await this.device.audio.setInputDevice(this.inputDeviceId);
-        }
-
-        this.call.connection = connection;
-
-        connection.accept(this.constraints);
-      });
-
-      this.device.on('ready', () => {
-        console.debug(`Twilio Device 'onReady' event`);
-
-        /* disable ringtone on Twilio Device */
-        this.device.audio.incoming(false);
-
-        this.setState(PhoneState.Idle);
-      });
-
-      this.device.on('offline', () => {
-        console.debug(`Twilio Device 'offline' event`);
-      });
-
-      this.device.on('disconnect', async () => {
-        if (this.inputDeviceId && this.device.audio) {
-          await this.device.audio.unsetInputDevice(this.inputDeviceId);
-        }
-
-        await this.onCallEnd();
-      });
-
-      this.device.on('error', (error: any) => {
-        let state: PhoneState;
-
-        switch (error.code) {
-          case 31205:
-            state = PhoneState.Expired;
-            break;
-          default:
-            state = PhoneState.Error;
-            break;
-        }
-
-        /* do not publish states while on the call */
-        if (this.state === PhoneState.Busy) {
-          return this.setDelayedState(state, error);
-        }
-
-        /* reject calls in state ringing, the other option would be to fetch a new token, release the RINGING event after IDLE state */
-        if (this.state === PhoneState.Ringing && this.call) {
-          this.call.reject();
-        }
-
-        this.setState(state, error);
+        codecPreferences: [Client.Connection.Codec.Opus, Client.Connection.Codec.PCMU],
       });
     } catch (error) {
       this.setState(PhoneState.Error, error);
@@ -272,7 +264,9 @@ export class TwilioPhone implements PhoneControl {
   async setOutputDevice(deviceId: string) {
     console.info(`set output device to: ${deviceId}`);
 
-    return this.device.audio.speakerDevices.set(deviceId);
+    if (this.device.audio) {
+      return this.device.audio.speakerDevices.set(deviceId);
+    }
   }
 
   onCallStateChanged(listener: (call: Call | undefined) => void) {

@@ -28,9 +28,11 @@ export const PhonePreflight = (props: any) => {
 
   useEffect(() => {
     return () => {
-      phone?.destroy();
+      if (phone) {
+        phone.destroy();
+      }
     };
-  }, []);
+  }, [phone]);
 
   useEffect(() => {
     if (error) {

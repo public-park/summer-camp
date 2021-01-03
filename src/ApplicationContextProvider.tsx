@@ -174,6 +174,9 @@ export const ApplicationContextProvider = (props: any) => {
       output: outputDevice,
     });
 
+    setPhone(undefined);
+    setUser(undefined);
+
     dispatch(setLogout(reason));
     dispatch(onPageLoad(context!));
   };

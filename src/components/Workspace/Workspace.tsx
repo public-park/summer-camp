@@ -92,7 +92,7 @@ export const Workspace = () => {
 
     if (inputDeviceList.some((device: MediaDeviceInfo) => device.deviceId === inputDevice)) {
       try {
-        phone && phone.setInputDevice(inputDevice);
+        phone?.setInputDevice(inputDevice);
       } catch (error) {
         console.log(error);
       }
@@ -104,13 +104,15 @@ export const Workspace = () => {
       return;
     }
 
-    if (outputDeviceList.some((device: MediaDeviceInfo) => device.deviceId === outputDevice)) {
+    async function setDevice(deviceId: string) {
       try {
-        phone && phone.setOutputDevice(outputDevice);
+        await phone?.setOutputDevice(deviceId);
       } catch (error) {
-        console.log(error);
+        console.error(error);
+        dispatch(setNotification(true, 'Unable to set output device'));
       }
     }
+    setDevice(outputDevice);
   }, [outputDevice, outputDeviceList, phoneState, phone]);
 
   const getWorkspaceView = (view: WorkspaceView) => {

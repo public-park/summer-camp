@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import { User } from '../models/User';
+import { UserConfiguration } from '../models/UserConfiguration';
 import { fetchPhoneToken } from '../services/RequestService';
 
-export const useFetchPhoneToken = (current: string | undefined, user: User | undefined) => {
+export const useFetchPhoneToken = (
+  current: string | undefined,
+  user: User | undefined,
+  configuration: UserConfiguration | undefined
+) => {
   const [error, setError] = useState<Error | undefined>();
   const [token, setToken] = useState<string>();
   const [isFetching, setIsFetching] = useState(false);
@@ -21,12 +26,12 @@ export const useFetchPhoneToken = (current: string | undefined, user: User | und
         setIsFetching(false);
       }
     };
-    if (!current && !isFetching && user && user.configuration) {
+    if (!current && !isFetching && user && configuration) {
       console.debug('fetch phone token');
 
       fetchToken();
     }
-  }, [current, user]);
+  }, [current, user, configuration]);
 
   return { token, error, isFetching };
 };

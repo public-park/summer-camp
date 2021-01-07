@@ -109,6 +109,8 @@ export const Workspace = () => {
         await phone?.setOutputDevice(deviceId);
       } catch (error) {
         console.error(error);
+
+        dispatch(lostPhoneOutputDevice());
         dispatch(setNotification(true, 'Unable to set output device'));
       }
     }

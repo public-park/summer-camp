@@ -177,7 +177,7 @@ export class TwilioPhone implements PhoneControl {
     }
 
     if (state === PhoneState.Error) {
-      this.eventEmitter.emit('error', ...params);
+      this.eventEmitter.emit(PhoneEventType.Error, ...params);
     }
 
     this.eventEmitter.emit(PhoneEventType.StateChanged, this.state, ...params);

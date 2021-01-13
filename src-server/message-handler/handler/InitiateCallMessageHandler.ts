@@ -37,7 +37,15 @@ const handle = async (
   );
 
   acknowledge.on(message.header.id, async (message: Message) => {
-    await new TwilioHelper(user.account).initiateOutgoingCall(call, user, user.account);
+    try {
+      await new TwilioHelper(user.account).initiateOutgoingCall(call, user, user.account);
+    } catch (error) {
+      user.broadcast(
+        new ErrorMessage(
+          'The call could not be initiated, please check your Twilio account and the phone configuration'
+        ) // TODO create single file for text errors
+      );
+    }
   });
 
   return new CallMessage(call, message.header.id);

@@ -18,7 +18,7 @@ interface UserFirestoreDocument {
   id: string;
   name: string;
   profileImageUrl?: string;
-  labels: string[];
+  tags: string[];
   activity: UserActivity;
   accountId: string;
   authentication: UserAuthentication;
@@ -35,7 +35,7 @@ const isValidUserDocument = (data: unknown) => {
     !data ||
     !data.hasOwnProperty('id') ||
     !data.hasOwnProperty('name') ||
-    !data.hasOwnProperty('labels') ||
+    !data.hasOwnProperty('tags') ||
     !data.hasOwnProperty('activity') ||
     !data.hasOwnProperty('accountId') ||
     !data.hasOwnProperty('authentication') ||
@@ -118,7 +118,7 @@ export class FirestoreUserRepository implements UserRepository {
   getByName = async (name: string) => {
     const list = await this.firestore.collection(this.COLLECTION_NAME).where('name', '==', name).limit(1).get();
 
-    if (!list.empty) {
+    if (!list.empty && list.docs[0]) {
       const user = this.convertDocumentToUser(list.docs[0].data());
 
       return user;
@@ -132,7 +132,7 @@ export class FirestoreUserRepository implements UserRepository {
       .limit(1)
       .get();
 
-    if (!list.empty) {
+    if (!list.empty && list.docs[0]) {
       return await this.convertDocumentToUser(list.docs[0].data());
     }
   };
@@ -145,7 +145,7 @@ export class FirestoreUserRepository implements UserRepository {
       .limit(1)
       .get();
 
-    if (!list.empty) {
+    if (!list.empty && list.docs[0]) {
       return await this.convertDocumentToUser(list.docs[0].data());
     }
   }
@@ -168,7 +168,7 @@ export class FirestoreUserRepository implements UserRepository {
       document.id,
       document.name,
       document.profileImageUrl || undefined,
-      new Set(document.labels),
+      new Set(document.tags),
       document.activity,
       document.accountId,
       document.authentication,
@@ -180,7 +180,7 @@ export class FirestoreUserRepository implements UserRepository {
   create = (
     name: string,
     profileImageUrl: string | undefined,
-    labels: Set<string>,
+    tags: Set<string>,
     account: Account,
     authentication: UserAuthentication,
     role: UserRole,
@@ -189,7 +189,7 @@ export class FirestoreUserRepository implements UserRepository {
     if (!account) {
       throw new AccountNotFoundException();
     }
-    const user = new User(uuidv4(), name, profileImageUrl, labels, activity, account.id, authentication, role);
+    const user = new User(uuidv4(), name, profileImageUrl, tags, activity, account.id, authentication, role);
 
     return this.save(user);
   };

@@ -64,7 +64,8 @@
     "typescript": "^4.1.3",
     "uuid": "^8.3.1",
     "validator": "^13.5.1",
-    "ws": "^7.3.1"
+    "ws": "^7.3.1",
+    "@google-cloud/firestore": "^4.8.1"
   },
   "scripts": {
     "start-server": "ts-node --project src-server/tsconfig.json src-server/worker.ts",

@@ -109,11 +109,24 @@ export const accountRepository = new MongoAccountRepository('accounts');
 export const userRepository = new MongoUserRepository('users');
 export const callRepository = new MongoCallRepository('call');
 
+/* Google Firestore 
+const firestore = new Firestore({
+  projectId: '{project-id}',
+  keyFilename: './google-firestore-credentials.json',
+  ignoreUndefinedProperties: true,
+});
+
+export const accountRepository = new FirestoreAccountRepository(firestore, 'accounts');
+export const userRepository = new FirestoreUserRepository(firestore, 'users');
+export const callRepository = new FirestoreCallRepository(firestore, 'calls');
+*/
+
 /* Local File Repository 
 export const accountRepository = new FileAccountRepository('./accounts.json');
 export const userRepository = new FileUserRepository('./users.json');
 export const callRepository = new FileCallRepository('calls.json');
 */
+
 export const authenticationProvider = new PasswordAuthenticationProvider();
 
 export const pool = new UserPoolManager(accountRepository, userRepository, callRepository);

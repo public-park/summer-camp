@@ -6,6 +6,7 @@ import { User } from '../models/User';
 import { PhoneNumber } from '../store/SetupStore';
 
 async function fetchWithTimeout(request: string, options: any): Promise<Response> {
+  // TODO remove any
   const { timeout = 8000 } = options;
 
   try {
@@ -132,7 +133,7 @@ interface AccountConfigurationValidateJson {
 }
 
 const loginUser = async (name: string, password: string): Promise<UserTokenJson> => {
-  const url = getUrl('login');
+  const url = getUrl('/api/login');
 
   const response = await fetchWithTimeout(url, {
     ...getHeaders('POST'),
@@ -146,7 +147,7 @@ const loginUser = async (name: string, password: string): Promise<UserTokenJson>
 };
 
 const registerUser = async (name: string, password: string) => {
-  const url = getUrl('register');
+  const url = getUrl('/api/register');
 
   const response = await fetchWithTimeout(url, {
     ...getHeaders('POST'),
@@ -160,7 +161,7 @@ const registerUser = async (name: string, password: string) => {
 };
 
 const validateUserToken = async (token: string): Promise<boolean> => {
-  const url = getUrl('validate-token');
+  const url = getUrl('/api/validate-token');
 
   const response = await fetchWithTimeout(url, {
     ...getHeaders('POST'),
@@ -175,7 +176,7 @@ const validateUserToken = async (token: string): Promise<boolean> => {
 };
 
 const fetchPhoneToken = async (user: User): Promise<string> => {
-  const url = getUrl(`users/${user.id}/phone/token`);
+  const url = getUrl(`/api/users/${user.id}/phone/token`);
 
   const response = await fetchWithTimeout(url, getHeaderWithAuthentication('POST', user));
 
@@ -185,7 +186,7 @@ const fetchPhoneToken = async (user: User): Promise<string> => {
 };
 
 const fetchAccountConfiguration = async (user: User): Promise<unknown> => {
-  const url = getUrl(`/accounts/${user.accountId}/configuration`);
+  const url = getUrl(`/api/accounts/${user.accountId}/configuration`);
 
   const response = await fetchWithTimeout(url, getHeaderWithAuthentication('GET', user));
 
@@ -199,7 +200,7 @@ const fetchAccountConfiguration = async (user: User): Promise<unknown> => {
 };
 
 const updateAccountConfiguration = async (user: User, configuration: AccountConfiguration): Promise<void> => {
-  const url = getUrl(`/accounts/${user.accountId}/configuration`);
+  const url = getUrl(`/api/accounts/${user.accountId}/configuration`);
 
   await fetchWithTimeout(url, {
     ...getHeaderWithAuthentication('POST', user),
@@ -211,7 +212,7 @@ const validateAccountConfiguration = async (
   user: User,
   configuration: AccountConfiguration
 ): Promise<AccountConfigurationValidateJson> => {
-  const url = getUrl(`/accounts/${user.accountId}/configuration/validate`);
+  const url = getUrl(`/api/accounts/${user.accountId}/configuration/validate`);
 
   try {
     await fetchWithTimeout(url, {
@@ -226,7 +227,7 @@ const validateAccountConfiguration = async (
 };
 
 const fetchAccountPhoneNumbers = async (user: User): Promise<AccountPhoneNumberJson> => {
-  const url = getUrl(`/accounts/${user.accountId}/phone-numbers`);
+  const url = getUrl(`/api/accounts/${user.accountId}/phone-numbers`);
 
   const response = await fetchWithTimeout(url, getHeaderWithAuthentication('GET', user));
 
@@ -236,7 +237,7 @@ const fetchAccountPhoneNumbers = async (user: User): Promise<AccountPhoneNumberJ
 };
 
 const fetchCalls = async (user: User, skip: number, limit: number): Promise<any> => {
-  const url = getUrl(`/calls?skip=${skip}&limit=${limit}`);
+  const url = getUrl(`/api/calls?skip=${skip}&limit=${limit}`);
 
   const response = await fetchWithTimeout(url, getHeaderWithAuthentication('GET', user));
 

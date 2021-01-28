@@ -10,11 +10,15 @@ export const getBaseUrl = () => {
   return process.env.REACT_APP_SERVER_URL || window.location.host;
 };
 
-export const getUrl = (path: string): string => {
+export const getUrl = (path?: string): string => {
+  if (!path) {
+    return getBaseUrl();
+  }
+
   const segment = stripLeadingSlash(path);
   const base = stripTrailingSlash(getBaseUrl());
 
-  return `${window.location.protocol}//${[base, 'api', segment].join('/')}`;
+  return `${window.location.protocol}//${[base, segment].join('/')}`;
 };
 
 export const getWebSocketUrl = (): string => {

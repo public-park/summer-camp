@@ -5,7 +5,6 @@ import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
 import { InvalidRequestBodyException } from '../../exceptions/InvalidRequestBodyException';
 import { callRepository as calls } from '../../worker';
 import { CallStatus } from '../../models/CallStatus';
-import { Account } from '../../models/Account';
 import { Call } from '../../models/Call';
 
 const rejectIfNotJoinEvent = (event: string) => {

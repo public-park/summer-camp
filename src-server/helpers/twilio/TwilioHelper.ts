@@ -26,7 +26,7 @@ export class TwilioHelper {
   client: Twilio;
 
   constructor(account: Account) {
-    if (!account.hasConfiguration()) {
+    if (!account.configuration) {
       throw new ConfigurationNotFoundException();
     }
 
@@ -145,7 +145,7 @@ export class TwilioHelper {
 }
 
 export const createVoiceToken = (account: Account, user: User, lifetime: number = 600): string => {
-  if (!account.hasConfiguration()) {
+  if (!account.configuration) {
     throw new ConfigurationNotFoundException();
   }
 

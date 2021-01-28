@@ -52,10 +52,6 @@ export class Account {
     return payload;
   }
 
-  hasConfiguration() {
-    return this.configuration !== undefined;
-  }
-
   hasValidConfiguration() {
     if (!this.configuration?.key || !this.configuration?.secret || !this.configuration?.accountSid) {
       return false;

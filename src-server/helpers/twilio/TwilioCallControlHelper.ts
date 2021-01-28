@@ -20,7 +20,7 @@ export class TwilioCallControlHelper {
   client: Twilio;
 
   constructor(account: Account) {
-    if (!account.hasConfiguration()) {
+    if (!account.configuration) {
       throw new ConfigurationNotFoundException();
     }
 

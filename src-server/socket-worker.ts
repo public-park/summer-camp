@@ -12,18 +12,13 @@ import { CloseCode } from './models/socket/CloseCode';
 import { MessageParser } from './message-handler/MessageParser';
 import { Message, MessageType } from './models/socket/messages/Message';
 import { ActivityMessageHandler } from './message-handler/handler/ActivityMessageHandler';
-import { ActivityMessage } from './models/socket/messages/ActivityMessage';
 import { InitiateCallMessageHandler } from './message-handler/handler/InitiateCallMessageHandler';
 import { HoldMessageHandler } from './message-handler/handler/HoldMessageHandler';
-import { HoldMessage } from './models/socket/messages/HoldMessage';
 import { AcceptMessageHandler } from './message-handler/handler/AcceptMessageHandler';
-import { AcceptMessage } from './models/socket/messages/AcceptMessage';
-import { RecordMessage } from './models/socket/messages/RecordMessage';
 import { RecordMessageHandler } from './message-handler/handler/RecordMessageHandler';
 
 import { ConfigurationMessageHandler } from './message-handler/handler/ConfigurationMessageHandler';
 import { InvalidMessageException } from './exceptions/InvalidMessageException';
-import { TagMessage } from './models/socket/messages/TagMessage';
 import { TagMessageHandler } from './message-handler/handler/TagMessageHandler';
 import { ErrorMessage } from './models/socket/messages/ErrorMessage';
 import { InitiateCallMessage } from './models/socket/messages/InitiateCallMessage';
@@ -31,6 +26,7 @@ import { AcknowledgeMessageHandler } from './message-handler/AcknowledgeMessageH
 import { ConnectMessage } from './models/socket/messages/ConnectMessage';
 import { UserNotFoundException } from './exceptions/UserNotFoundException';
 import { UserWithSocket } from './models/UserWithSocket';
+import { RejectMessageHandler } from './message-handler/handler/RejectMessageHandler';
 
 interface SocketWorkerOptions {
   server: WebSocket.ServerOptions;
@@ -117,11 +113,11 @@ export class SocketWorker {
 
             switch (message.header.type) {
               case MessageType.Activity:
-                response = await ActivityMessageHandler.handle(this.pool, user, message as ActivityMessage);
+                response = await ActivityMessageHandler.handle(this.pool, user, message);
                 break;
 
               case MessageType.Tags:
-                response = await TagMessageHandler.handle(user, message as TagMessage);
+                response = await TagMessageHandler.handle(user, message);
                 break;
 
               case MessageType.InitiateCall:
@@ -137,15 +133,19 @@ export class SocketWorker {
                 break;
 
               case MessageType.Hold:
-                response = await HoldMessageHandler.handle(user, message as HoldMessage);
+                response = await HoldMessageHandler.handle(user, message);
                 break;
 
               case MessageType.Accept:
-                response = await AcceptMessageHandler.handle(user, message as AcceptMessage);
+                response = await AcceptMessageHandler.handle(user, message);
+                break;
+
+              case MessageType.Reject:
+                response = await RejectMessageHandler.handle(user, message);
                 break;
 
               case MessageType.Record:
-                response = await RecordMessageHandler.handle(user, message as RecordMessage);
+                response = await RecordMessageHandler.handle(user, message);
                 break;
 
               case MessageType.Acknowledge:

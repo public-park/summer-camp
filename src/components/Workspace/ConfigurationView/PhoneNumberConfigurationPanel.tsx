@@ -14,15 +14,20 @@ import {
   updateTwilioOutbound,
   validateConfigurationLocal,
 } from '../../../actions/SetupAction';
-import { selectSetupConfiguration, selectSetupIsSaving, selectSetupPhoneNumbers } from '../../../store/Store';
+import {
+  selectSetupCallerIds,
+  selectSetupConfiguration,
+  selectSetupIsSaving,
+  selectSetupPhoneNumbers,
+} from '../../../store/Store';
 import { fetchAccountPhoneNumbers } from '../../../services/RequestService';
-import { User } from '../../../models/User';
 
 export const PhoneNumberConfigurationPanel = () => {
   const dispatch = useDispatch();
 
   const { user } = useContext(ApplicationContext);
   const phoneNumbers = useSelector(selectSetupPhoneNumbers);
+  const callerIds = useSelector(selectSetupCallerIds);
 
   const {
     twilio: { inbound, outbound },
@@ -151,7 +156,7 @@ export const PhoneNumberConfigurationPanel = () => {
               <Alert severity="warning">You have no phone numbers on your account</Alert>
             )}
 
-            {outbound.isEnabled && phoneNumbers.length === 0 && (
+            {outbound.isEnabled && callerIds.length === 0 && (
               <Alert severity="warning">You have no verified callerIds on your account</Alert>
             )}
 

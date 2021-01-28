@@ -28,15 +28,12 @@ There are three environment variables you need to set for SAML authentication. P
 
 `REACT_APP_SAML_AUTHENTICATION_ACCOUNT_ID` set it to the UUID of your account.
 
-`SAML_AUTHENTICATION_PUBLIC_URL` this is the file name of your SAML metadata file
-
-`SAML_AUTHENTICATION_METADATA` set this to the public url of your installation, the server backend will redirect to this url and set the JWT token.
+`SAML_AUTHENTICATION_METADATA` this is the file name of your SAML metadata file
 
 Here is an example for a possible configuration.
 
 ```REACT_APP_AUTHENTICATION_MODE=saml
 REACT_APP_SAML_AUTHENTICATION_ACCOUNT_ID=4d8b25ff-0344-47ef-9ed0-3db8ae27bee5
-SAML_AUTHENTICATION_PUBLIC_URL=https://<my-public-server.com>/
 SAML_AUTHENTICATION_METADATA=saml2-metadata.xml
 
 ```

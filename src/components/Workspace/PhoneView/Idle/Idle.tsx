@@ -31,5 +31,5 @@ export const Idle = () => {
     return null;
   }
 
-  return configuration.outbound.isEnabled ? getPhoneCanvas() : getOutgoingDisabledCanvas();
+  return configuration.direction === 'none' ? getOutgoingDisabledCanvas() : getPhoneCanvas();
 };

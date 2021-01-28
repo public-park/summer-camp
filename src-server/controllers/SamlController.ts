@@ -6,7 +6,6 @@ import { UserRole } from '../models/UserRole';
 import { TokenHelper } from '../helpers/TokenHelper';
 import { InvalidSamlAttributeException } from '../exceptions/InvalidSamlAttributeException';
 import { RequestWithProfile } from '../helpers/SamlPassportHelper';
-import { Account } from '../models/Account';
 
 const authenticate = async (req: RequestWithProfile, res: Response, next: NextFunction) => {
   try {
@@ -33,7 +32,9 @@ const authenticate = async (req: RequestWithProfile, res: Response, next: NextFu
         new Set(['none']),
         req.resource.account,
         authentication,
-        req.profile.role
+        req.profile.role,
+        undefined,
+        undefined
       );
     }
 
@@ -41,7 +42,7 @@ const authenticate = async (req: RequestWithProfile, res: Response, next: NextFu
 
     log.info(`authenticated ${req.profile.nameID} name: ${req.profile.name} role: ${req.profile.role} token: ${token}`);
 
-    res.redirect(`${process.env.SAML_AUTHENTICATION_PUBLIC_URL}?token=${token}`);
+    res.redirect(`${process.env.PUBLIC_BASE_URL}?token=${token}`);
   } catch (error) {
     return next(error);
   }

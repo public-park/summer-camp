@@ -13,6 +13,7 @@ import { InvalidDocumentException } from '../../exceptions/InvalidDocumentExcept
 import { Firestore, Timestamp } from '@google-cloud/firestore';
 import { InvalidAccountException } from '../../exceptions/InvalidAccountException';
 import { EventEmitter } from 'events';
+import { UserConfiguration } from '../../models/UserConfiguration';
 
 interface UserFirestoreDocument {
   id: string;
@@ -23,6 +24,7 @@ interface UserFirestoreDocument {
   accountId: string;
   authentication: UserAuthentication;
   role: UserRole;
+  configuration?: UserConfiguration;
   createdAt: Timestamp;
 }
 
@@ -173,6 +175,7 @@ export class FirestoreUserRepository implements UserRepository {
       document.accountId,
       document.authentication,
       document.role,
+      document.configuration,
       document.createdAt.toDate()
     );
   }
@@ -184,12 +187,23 @@ export class FirestoreUserRepository implements UserRepository {
     account: Account,
     authentication: UserAuthentication,
     role: UserRole,
-    activity: UserActivity = UserActivity.Unknown
+    activity: UserActivity = UserActivity.Unknown,
+    configuration?: UserConfiguration
   ) => {
     if (!account) {
       throw new AccountNotFoundException();
     }
-    const user = new User(uuidv4(), name, profileImageUrl, tags, activity, account.id, authentication, role);
+    const user = new User(
+      uuidv4(),
+      name,
+      profileImageUrl,
+      tags,
+      activity,
+      account.id,
+      authentication,
+      role,
+      configuration
+    );
 
     return this.save(user);
   };

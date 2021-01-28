@@ -61,6 +61,7 @@ export class UserWithSocket extends User {
       account.id,
       user.authentication,
       user.role,
+      user.configuration,
       user.createdAt
     );
 

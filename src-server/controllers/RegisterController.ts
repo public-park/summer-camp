@@ -27,7 +27,8 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
       account,
       authentication,
       UserRole.Owner,
-      UserActivity.Away
+      UserActivity.Away,
+      undefined
     );
 
     const payload = {

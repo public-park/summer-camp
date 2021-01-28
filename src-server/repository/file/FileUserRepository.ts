@@ -14,6 +14,7 @@ import { SamlUserAuthentication } from '../../security/authentication/SamlAuthen
 import { InvalidDocumentException } from '../../exceptions/InvalidDocumentException';
 import { InvalidAccountException } from '../../exceptions/InvalidAccountException';
 import { UserDocument } from '../../models/documents/UserDocument';
+import { UserConfiguration } from '../../models/UserConfiguration';
 
 interface UserJsonDocument {
   id: string;
@@ -23,6 +24,7 @@ interface UserJsonDocument {
   activity: UserActivity;
   accountId: string;
   authentication: UserAuthentication;
+  configuration: UserConfiguration;
   role: UserRole;
   createdAt: string;
 }
@@ -176,6 +178,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
       item.accountId,
       item.authentication,
       item.role,
+      item.configuration,
       new Date(item.createdAt)
     );
   }
@@ -187,7 +190,8 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     account: Account,
     authentication: UserAuthentication,
     role: UserRole,
-    activity: UserActivity = UserActivity.Unknown
+    activity: UserActivity = UserActivity.Unknown,
+    configuration?: UserConfiguration
   ) => {
     if (!name) {
       throw new InvalidUserNameException();
@@ -196,7 +200,18 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     if (!account) {
       throw new AccountNotFoundException();
     }
-    const user = new User(uuidv4(), name, profileImageUrl, tags, activity, account.id, authentication, role);
+
+    const user = new User(
+      uuidv4(),
+      name,
+      profileImageUrl,
+      tags,
+      activity,
+      account.id,
+      authentication,
+      role,
+      configuration
+    );
 
     return this.save(user);
   };

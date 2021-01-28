@@ -10,6 +10,7 @@ import { InvalidUserNameException } from '../../exceptions/InvalidUserNameExcept
 import { UserNotFoundException } from '../../exceptions/UserNotFoundException';
 import { InvalidAccountException } from '../../exceptions/InvalidAccountException';
 import { Model } from 'mongoose';
+import { UserConfiguration } from '../../models/UserConfiguration';
 
 export class MongoUserRepository implements UserRepository {
   private model: Model<UserDocument>;
@@ -25,13 +26,24 @@ export class MongoUserRepository implements UserRepository {
     account: Account,
     authentication: UserAuthentication,
     role: UserRole,
-    activity: UserActivity = UserActivity.Unknown
+    activity: UserActivity = UserActivity.Unknown,
+    configuration: UserConfiguration | undefined
   ) {
     if (!name) {
       throw new InvalidUserNameException();
     }
 
-    const user = new User(uuidv4(), name, profileImageUrl, tags, activity, account.id, authentication, role);
+    const user = new User(
+      uuidv4(),
+      name,
+      profileImageUrl,
+      tags,
+      activity,
+      account.id,
+      authentication,
+      role,
+      configuration
+    );
 
     return this.save(user);
   }

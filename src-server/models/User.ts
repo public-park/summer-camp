@@ -21,6 +21,7 @@ export class User {
   activity: UserActivity;
   accountId: string;
   authentication: UserAuthentication;
+  configuration: UserConfiguration | undefined;
   createdAt: Date;
   role: UserRole;
 
@@ -33,6 +34,7 @@ export class User {
     accountId: string,
     authentication: UserAuthentication,
     role: UserRole,
+    configuration: UserConfiguration | undefined,
     createdAt: Date = new Date()
   ) {
     this.id = id;
@@ -42,6 +44,7 @@ export class User {
     this.activity = activity;
     this.accountId = accountId;
     this.authentication = authentication;
+    this.configuration = configuration;
     this.role = role;
     this.createdAt = createdAt;
   }
@@ -78,6 +81,10 @@ export class User {
       payload.profileImageUrl = this.profileImageUrl;
     }
 
+    if (this.configuration) {
+      payload.configuration = this.configuration;
+    }
+
     return payload;
   }
 
@@ -100,6 +107,10 @@ export class User {
 
     if (account.configuration?.outbound.isEnabled && account.configuration.outbound.phoneNumber) {
       configuration.callerIds = [account.configuration.outbound.phoneNumber];
+    }
+
+    if (this.configuration) {
+      configuration.constraints = this.configuration.phone.constraints;
     }
 
     return configuration;

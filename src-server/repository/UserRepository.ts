@@ -3,6 +3,7 @@ import { UserRole } from '../models/UserRole';
 import { UserActivity } from '../models/UserActivity';
 import { Account } from '../models/Account';
 import { UserAuthentication } from '../models/UserAuthenticationProvider';
+import { UserConfiguration } from '../models/UserConfiguration';
 
 export interface UserRepository {
   create: (
@@ -12,7 +13,8 @@ export interface UserRepository {
     account: Account,
     authentication: UserAuthentication,
     role: UserRole,
-    activity: UserActivity
+    activity: UserActivity,
+    configuration: UserConfiguration
   ) => Promise<User>;
   save: (user: User) => Promise<User>;
   getById: (id: string) => Promise<User | undefined>;

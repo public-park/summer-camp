@@ -35,7 +35,9 @@ describe('User Repository create', () => {
       new Set(['es', 'jp']),
       account,
       authentication,
-      UserRole.Owner
+      UserRole.Owner,
+      undefined,
+      undefined
     );
 
     expect(user).toBeInstanceOf(User);
@@ -56,16 +58,25 @@ describe('User Repository create', () => {
 
   test('should fail to create a user with the same name', async (done) => {
     expect(
-      users.create(personas.alice, undefined, new Set(['es', 'jp']), account, authentication, UserRole.Owner)
+      users.create(
+        personas.alice,
+        undefined,
+        new Set(['es', 'jp']),
+        account,
+        authentication,
+        UserRole.Owner,
+        undefined,
+        undefined
+      )
     ).rejects.toThrow();
 
     done();
   });
 
   test('should fail to create a user without name', async (done) => {
-    expect(users.create('', undefined, new Set(['es', 'jp']), account, authentication, UserRole.Owner)).rejects.toThrow(
-      InvalidUserNameException
-    );
+    expect(
+      users.create('', undefined, new Set(['es', 'jp']), account, authentication, UserRole.Owner, undefined, undefined)
+    ).rejects.toThrow(InvalidUserNameException);
 
     done();
   });
@@ -86,7 +97,9 @@ describe('User Repository read, update and delete a user', () => {
       new Set(['es', 'jp']),
       account,
       authentication,
-      UserRole.Owner
+      UserRole.Owner,
+      undefined,
+      undefined
     );
 
     id = user.id;
@@ -201,8 +214,26 @@ describe('User Repository read users', () => {
   });
 
   test('should return all users from the repository', async (done) => {
-    await users.create(personas.julia, undefined, new Set(['es', 'jp']), account, authentication, UserRole.Owner);
-    await users.create(personas.tim, undefined, new Set(['es', 'jp']), account, authentication, UserRole.Owner);
+    await users.create(
+      personas.julia,
+      undefined,
+      new Set(['es', 'jp']),
+      account,
+      authentication,
+      UserRole.Owner,
+      undefined,
+      undefined
+    );
+    await users.create(
+      personas.tim,
+      undefined,
+      new Set(['es', 'jp']),
+      account,
+      authentication,
+      UserRole.Owner,
+      undefined,
+      undefined
+    );
 
     let list = await users.getAll(account);
 
@@ -228,7 +259,9 @@ describe('User Repository delete', () => {
       new Set(['es', 'jp']),
       account,
       authentication,
-      UserRole.Owner
+      UserRole.Owner,
+      undefined,
+      undefined
     );
 
     id = user.id;
@@ -266,7 +299,8 @@ describe('user activities', () => {
       account,
       authentication,
       UserRole.Owner,
-      UserActivity.Away
+      UserActivity.Away,
+      undefined
     );
 
     done();

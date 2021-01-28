@@ -43,7 +43,9 @@ describe('Call Repository create, update', () => {
       new Set(['es', 'jp']),
       account,
       authentication,
-      UserRole.Owner
+      UserRole.Owner,
+      undefined,
+      undefined
     );
 
     userRepository.save(user);
@@ -194,7 +196,9 @@ describe('Call Repository call list', () => {
       new Set(['es', 'jp']),
       good,
       authentication,
-      UserRole.Owner
+      UserRole.Owner,
+      undefined,
+      undefined
     );
 
     max = await userRepository.create(
@@ -203,7 +207,9 @@ describe('Call Repository call list', () => {
       new Set(['es', 'jp']),
       good,
       authentication,
-      UserRole.Owner
+      UserRole.Owner,
+      undefined,
+      undefined
     );
 
     done();

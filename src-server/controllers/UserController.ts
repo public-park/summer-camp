@@ -35,16 +35,7 @@ const create = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
 
     const authentication = await authenticationProvider.create(req.body.password);
 
-    const user = await users.create(
-      req.body.name,
-      undefined,
-      tags,
-      req.jwt.account,
-      authentication,
-      role,
-      activity,
-      undefined
-    );
+    const user = await users.create(req.body.name, undefined, tags, req.jwt.account, authentication, role, activity);
 
     res.json(user.toDocumentWithoutAuthentication());
   } catch (error) {
@@ -84,34 +75,6 @@ const update = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
       isValidRole(req.body.role);
 
       user.role = req.body.role;
-    }
-
-    if (req.body.configuration?.phone?.constraints) {
-      const { autoGainControl, echoCancellation, noiseSuppression } = req.body.configuration.phone.constraints;
-
-      if (!user.configuration) {
-        user.configuration = {
-          phone: {
-            constraints: {
-              echoCancellation: true,
-              autoGainControl: true,
-              noiseSuppression: true,
-            },
-          },
-        };
-      }
-
-      if (autoGainControl !== undefined) {
-        user.configuration.phone.constraints.autoGainControl = Boolean(autoGainControl);
-      }
-
-      if (echoCancellation !== undefined) {
-        user.configuration.phone.constraints.echoCancellation = Boolean(echoCancellation);
-      }
-
-      if (noiseSuppression !== undefined) {
-        user.configuration.phone.constraints.noiseSuppression = Boolean(noiseSuppression);
-      }
     }
 
     user = await users.save(user);

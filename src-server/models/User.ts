@@ -42,7 +42,6 @@ export class User {
     this.activity = activity;
     this.accountId = accountId;
     this.authentication = authentication;
-    this.configuration = configuration;
     this.role = role;
     this.createdAt = createdAt;
   }

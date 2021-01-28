@@ -4,7 +4,6 @@ import { UserRole } from './UserRole';
 import { MessageType } from './socket/messages/Message';
 import { ActivityMessage } from './socket/messages/ActivityMessage';
 import { TagMessage } from './socket/messages/TagMessage';
-import { UserConfiguration } from './UserConfiguration';
 import { Connection, ConnectionState } from './Connection';
 
 enum UserEventType {
@@ -21,7 +20,6 @@ export class User {
   tags: Set<string>;
   activity: UserActivity;
   role: UserRole;
-  configuration: UserConfiguration | undefined;
   connection: Connection;
 
   private events: EventEmitter;
@@ -34,8 +32,7 @@ export class User {
     accountId: string,
     tags: Set<string> = new Set(),
     activity: UserActivity,
-    role: UserRole,
-    configuration: UserConfiguration | undefined
+    role: UserRole
   ) {
     this.events = new EventEmitter();
 
@@ -46,7 +43,6 @@ export class User {
     this.tags = tags;
     this.activity = activity;
     this.role = role;
-    this.configuration = configuration;
 
     connection.on<ActivityMessage>(MessageType.Activity, (message: ActivityMessage) => {
       this.activity = message.payload.activity;

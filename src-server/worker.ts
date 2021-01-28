@@ -107,7 +107,7 @@ mongoose
 
 export const accountRepository = new MongoAccountRepository('accounts');
 export const userRepository = new MongoUserRepository('users');
-export const callRepository = new MongoCallRepository('call');
+export const callRepository = new MongoCallRepository('calls');
 
 /* Google Firestore 
 const firestore = new Firestore({
@@ -126,7 +126,6 @@ export const accountRepository = new FileAccountRepository('./accounts.json');
 export const userRepository = new FileUserRepository('./users.json');
 export const callRepository = new FileCallRepository('calls.json');
 */
-
 export const authenticationProvider = new PasswordAuthenticationProvider();
 
 export const pool = new UserPoolManager(accountRepository, userRepository, callRepository);
@@ -212,7 +211,6 @@ user
 user.route('/:userId').delete(allowAccessWith('user.delete'), UserController.remove);
 user.route('/:userId/phone/token').post(allowAccessWith('user.phone.create'), PhoneController.createToken);
 user.route('/:userId/presence').get(allowAccessWith('user.read'), UserPresenceController.get);
-user.route('/:userId/configuration').get(allowAccessWith('user.read'), UserController.getConfiguration);
 
 app.use('/api/users', user);
 
@@ -304,6 +302,7 @@ app.use('/saml', samlRouter);
 
 if (process.env.REACT_APP_AUTHENTICATION_MODE === 'local-password-with-registration') {
   const registerRouter = express.Router();
+
   registerRouter.use(express.json());
   registerRouter.use(setHeaders);
   registerRouter.use(rejectIfContentTypeIsNot('application/json'));

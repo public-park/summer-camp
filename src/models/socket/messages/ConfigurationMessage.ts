@@ -1,6 +1,6 @@
-import { UserConfiguration } from '../../UserConfiguration';
+import { PhoneConfigurationDocument } from '../../documents/PhoneConfigurationDocument';
 import { Message } from './Message';
 
 export interface ConfigurationMessage extends Message {
-  payload: UserConfiguration | undefined;
+  payload: PhoneConfigurationDocument | undefined;
 }

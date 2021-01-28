@@ -14,7 +14,13 @@ export interface UserDocument {
   createdAt: Date;
 }
 
-export interface PresenceDocument {
+export interface UserPresenceDocument {
+  id: string;
+  name: string;
+  profileImageUrl?: string;
+  tags: Array<string>;
+  accountId: string;
+  role: UserRole;
   isOnline: boolean;
   isAvailable: boolean;
   activity: UserActivity;
@@ -25,13 +31,4 @@ export interface PresenceDocument {
     status: CallStatus;
     direction: CallDirection;
   };
-}
-
-export interface UserWithPresenceDocument extends PresenceDocument {
-  id: string;
-  name: string;
-  profileImageUrl?: string;
-  tags: Array<string>;
-  accountId: string;
-  role: UserRole;
 }

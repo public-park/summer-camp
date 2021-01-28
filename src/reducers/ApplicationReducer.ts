@@ -2,7 +2,7 @@ import { ApplicationStore } from '../store/ApplicationStore';
 import produce from 'immer';
 import { ActionType, ApplicationAction } from '../actions/Action';
 import { DefaultApplicationStore as Default } from '../store/DefaultApplicationStore';
-import { UserWithPresenceDocument } from '../models/documents/UserDocument';
+import { UserPresenceDocument } from '../models/documents/UserDocument';
 
 const application = (state: ApplicationStore = Default, action: ApplicationAction): ApplicationStore => {
   return produce(state, (draft) => {
@@ -49,7 +49,7 @@ const application = (state: ApplicationStore = Default, action: ApplicationActio
         break;
 
       case ActionType.USERS_UPDATE:
-        action.payload.map((user: UserWithPresenceDocument) => draft.users.set(user.id, user));
+        action.payload.map((user: UserPresenceDocument) => draft.users.set(user.id, user));
         break;
 
       case ActionType.APPLICATON_LOGOUT:

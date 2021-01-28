@@ -1,8 +1,9 @@
+import { UserUpdateRequestSchema } from '../middlewares/schema-validation/UserUpdateRequestSchema';
 import { UserRepository } from '../repository/UserRepository';
 import { WebSocketWithKeepAlive } from '../WebSocketWithKeepAlive';
 import { Account } from './Account';
 import { Call } from './Call';
-import { PresenceDocument, UserWithPresenceDocument } from './documents/UserDocument';
+import { UserPresenceDocument } from './documents/UserDocument';
 import { User } from './User';
 import { UserActivity } from './UserActivity';
 
@@ -60,6 +61,7 @@ export class UserWithSocket extends User {
       account.id,
       user.authentication,
       user.role,
+      user.configuration,
       user.createdAt
     );
 
@@ -81,24 +83,16 @@ export class UserWithSocket extends User {
     await this.users.save(this);
   }
 
-  toUserWithPresenceDocument(): UserWithPresenceDocument {
-    const { id, name, profileImageUrl, tags, role, accountId } = super.toDocument();
+  toPresenceDocument(): UserPresenceDocument {
+    const { id, name, profileImageUrl, tags, accountId, role } = super.toDocument();
 
-    const response: UserWithPresenceDocument = {
+    const response: UserPresenceDocument = {
       id,
       name,
       profileImageUrl,
       tags,
-      role,
       accountId,
-      ...this.toPresenceDocument(),
-    };
-
-    return response;
-  }
-
-  toPresenceDocument(): PresenceDocument {
-    const response: PresenceDocument = {
+      role,
       activity: this.activity,
       isOnline: this.isOnline,
       isAvailable: this.isAvailable,

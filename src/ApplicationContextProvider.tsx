@@ -85,30 +85,20 @@ export const ApplicationContextProvider = (props: any) => {
       console.log(`connection error`, event);
     });
 
-    connection.on<ErrorMessage>(MessageType.Error, (message: ErrorMessage) => {
-      dispatch(setNotification(true, `An error occured, please check the JS error log (${message.payload})`));
+    connection.on(MessageType.Error, (message: ErrorMessage) => {
+      dispatch(setNotification(true, `An error occured: (${message.payload})`));
     });
 
-    connection.on<UserMessage>(MessageType.User, (message: UserMessage) => {
+    connection.on(MessageType.User, (message: UserMessage) => {
       dispatch(updateList(message.payload));
     });
 
-    connection.on<ConnectMessage>(MessageType.Connect, (message: ConnectMessage) => {
+    connection.on(MessageType.Connect, async (message: ConnectMessage) => {
       dispatch(updateList(message.payload.list));
 
       const { id, name, profileImageUrl, accountId, tags, activity, role } = message.payload.user;
 
-      const user = new User(
-        connection,
-        id,
-        name,
-        profileImageUrl,
-        accountId,
-        new Set(tags),
-        activity,
-        role,
-        message.payload.configuration
-      );
+      const user = new User(connection, id, name, profileImageUrl, accountId, new Set(tags), activity, role);
 
       user.onActivityChanged((activity: UserActivity) => {
         console.log(`activity changed to: ${activity}`);
@@ -117,12 +107,6 @@ export const ApplicationContextProvider = (props: any) => {
       });
 
       const phone = new TwilioPhone(user);
-
-      phone.setConstraints({
-        echoCancellation: false,
-        autoGainControl: false,
-        noiseSuppression: true,
-      });
 
       phone.onStateChanged((state: PhoneState) => {
         console.debug(`Phone onStateChange: ${state}`);
@@ -137,14 +121,31 @@ export const ApplicationContextProvider = (props: any) => {
 
       phone.onError((error: Error) => {
         console.error(error);
-        dispatch(setPhoneError(error));
+
+        if ((error as any).code === 31202) {
+          // TODO, create error type
+          dispatch(
+            setPhoneError(
+              new Error(
+                'Invalid Twilio account configuration. Please check our configuration and validate your Twilio Account'
+              )
+            )
+          );
+        } else {
+          dispatch(setPhoneError(error));
+        }
       });
 
       setPhone(phone);
       setUser(user);
 
       dispatch(setReady(user));
-      dispatch(setPhoneConfiguration(user.configuration));
+
+      dispatch(setPhoneConfiguration(message.payload.phone));
+
+      if (message.payload.phone) {
+        await phone.setConstraints(message.payload.phone.constraints);
+      }
 
       if (view === 'CONNECT_VIEW') {
         dispatch(setView('PHONE_VIEW'));

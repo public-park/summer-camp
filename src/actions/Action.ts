@@ -1,8 +1,8 @@
 import { Call } from '../models/Call';
 import { ConnectionState } from '../models/Connection';
-import { UserWithPresenceDocument } from '../models/documents/UserDocument';
+import { PhoneConfigurationDocument } from '../models/documents/PhoneConfigurationDocument';
+import { UserPresenceDocument } from '../models/documents/UserDocument';
 import { UserActivity } from '../models/UserActivity';
-import { UserConfiguration } from '../models/UserConfiguration';
 import { PhoneState } from '../phone/PhoneState';
 import { LocalStorageContext } from '../services/LocalStorageContext';
 import { PhoneNumber, SetupStore, ValidationResult } from '../store/SetupStore';
@@ -116,7 +116,7 @@ export interface WorkspaceViewAction extends Action<ActionType.WORKSPACE_VIEW> {
 }
 
 export interface UserListUpdateAction extends Action<ActionType.USERS_UPDATE> {
-  payload: Array<UserWithPresenceDocument>;
+  payload: Array<UserPresenceDocument>;
 }
 
 export interface PhoneStateAction extends Action<ActionType.PHONE_STATE_CHANGE> {
@@ -139,7 +139,7 @@ export interface PhoneErrorAction extends Action<ActionType.PHONE_ERROR> {
 }
 
 export interface PhoneConfigurationAction extends Action<ActionType.PHONE_CONFIGURATION_UPDATE> {
-  payload: UserConfiguration | undefined;
+  payload: PhoneConfigurationDocument | undefined;
 }
 
 export interface PhoneInputDeviceAction extends Action<ActionType.PHONE_INPUT_DEVICE_UPDATE> {

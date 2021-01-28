@@ -4,11 +4,14 @@ import { OwnerRole } from './roles/OwnerRole';
 import { Role } from './roles/Role';
 import { UserRoleNotFoundException } from '../exceptions/UserRoleNotFoundException';
 import { UserRole } from './UserRole';
-import { AgentRole } from './roles/AgentRole';
-import { UserAuthentication } from './UserAuthenticationProvider';
 import { Account } from './Account';
+import { AgentRole } from './roles/AgentRole';
 import { UserConfiguration } from './UserConfiguration';
-import { UserDocument, UserDocumentWithoutAuthentication } from './documents/UserDocument';
+import { UserDocument } from './documents/UserDocument';
+import { UserAuthentication } from './UserAuthenticationProvider';
+import { PhoneConfigurationDocument } from './documents/PhoneConfigurationDocument';
+import { AccountConfiguration } from './AccountConfiguration';
+import { PhoneDirection } from '../types';
 
 export class User {
   id: string;
@@ -39,6 +42,7 @@ export class User {
     this.activity = activity;
     this.accountId = accountId;
     this.authentication = authentication;
+    this.configuration = configuration;
     this.role = role;
     this.createdAt = createdAt;
   }
@@ -63,7 +67,6 @@ export class User {
     const payload: UserDocument = {
       id: this.id,
       name: this.name,
-      profileImageUrl: this.profileImageUrl,
       tags: Array.from(this.tags),
       activity: this.activity,
       accountId: this.accountId,
@@ -72,25 +75,54 @@ export class User {
       createdAt: this.createdAt,
     };
 
-    if (!payload.profileImageUrl) {
-      delete payload.profileImageUrl;
+    if (this.profileImageUrl) {
+      payload.profileImageUrl = this.profileImageUrl;
     }
 
     return payload;
   }
 
-  toDocumentWithoutAuthentication(): UserDocumentWithoutAuthentication {
+  toDocumentWithoutAuthentication(): Omit<UserDocument, 'authentication'> {
     const { authentication, ...document } = this.toDocument();
 
     return document;
   }
 
-  getConfiguration(account: Account): UserConfiguration | undefined {
-    if (account.configuration) {
-      return {
-        inbound: account.configuration.inbound,
-        outbound: account.configuration.outbound,
-      };
+  getPhoneConfiguration(account: Account): PhoneConfigurationDocument {
+    const configuration: PhoneConfigurationDocument = {
+      direction: this.getPhoneDirection(account.configuration),
+      callerIds: [],
+      constraints: {
+        echoCancellation: false,
+        autoGainControl: false,
+        noiseSuppression: true,
+      },
+    };
+
+    if (account.configuration?.outbound.isEnabled && account.configuration.outbound.phoneNumber) {
+      configuration.callerIds = [account.configuration.outbound.phoneNumber];
     }
+
+    return configuration;
+  }
+
+  getPhoneDirection(configuration: AccountConfiguration | undefined): PhoneDirection {
+    if (!configuration) {
+      return 'none';
+    }
+
+    if (configuration.outbound.isEnabled && configuration.inbound.isEnabled) {
+      return 'both';
+    }
+
+    if (configuration.outbound.isEnabled) {
+      return 'outbound';
+    }
+
+    if (configuration.inbound.isEnabled) {
+      return 'inbound';
+    }
+
+    return 'none';
   }
 }

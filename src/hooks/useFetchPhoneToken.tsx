@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
+import { PhoneConfigurationDocument } from '../models/documents/PhoneConfigurationDocument';
 import { User } from '../models/User';
-import { UserConfiguration } from '../models/UserConfiguration';
 import { fetchPhoneToken } from '../services/RequestService';
 
 export const useFetchPhoneToken = (
   current: string | undefined,
   user: User | undefined,
-  configuration: UserConfiguration | undefined
+  configuration: PhoneConfigurationDocument | undefined
 ) => {
   const [error, setError] = useState<Error | undefined>();
   const [token, setToken] = useState<string>();

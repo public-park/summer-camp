@@ -1,10 +1,10 @@
-import { UserConfiguration } from '../../UserConfiguration';
+import { PhoneConfigurationDocument } from '../../documents/PhoneConfigurationDocument';
 import { Message, MessageType } from './Message';
 
 export class ConfigurationMessage extends Message {
-  payload: UserConfiguration | undefined;
+  payload: PhoneConfigurationDocument | undefined;
 
-  constructor(configuration: UserConfiguration | undefined, messageId?: string) {
+  constructor(configuration: PhoneConfigurationDocument | undefined, messageId?: string) {
     super(MessageType.Configuration, messageId);
 
     this.payload = configuration;

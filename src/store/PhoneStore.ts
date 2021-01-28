@@ -1,12 +1,12 @@
 import { CallStatusDocument } from '../models/documents/CallDocument';
-import { UserConfiguration } from '../models/UserConfiguration';
+import { PhoneConfigurationDocument } from '../models/documents/PhoneConfigurationDocument';
 import { PhoneState } from '../phone/PhoneState';
 
 export interface PhoneStore {
   userId: string | undefined;
   state: PhoneState;
   token: string | undefined;
-  configuration: UserConfiguration | undefined;
+  configuration: PhoneConfigurationDocument | undefined;
   error: string | undefined;
   display: {
     value: string;

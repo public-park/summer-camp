@@ -1,6 +1,5 @@
 import { PhoneState } from '../phone/PhoneState';
 import { Call } from '../models/Call';
-import { UserConfiguration } from '../models/UserConfiguration';
 import {
   PhoneDisplayAction,
   ActionType,
@@ -15,6 +14,7 @@ import {
   PhoneOverlayAction,
   PhoneTokenAction,
 } from './Action';
+import { PhoneConfigurationDocument } from '../models/documents/PhoneConfigurationDocument';
 
 export const updatePhoneDisplay = (value: string): PhoneDisplayAction => {
   return {
@@ -37,7 +37,9 @@ export const setPhoneError = (error: Error): PhoneErrorAction => {
   };
 };
 
-export const setPhoneConfiguration = (configuration?: UserConfiguration | undefined): PhoneConfigurationAction => {
+export const setPhoneConfiguration = (
+  configuration?: PhoneConfigurationDocument | undefined
+): PhoneConfigurationAction => {
   return {
     type: ActionType.PHONE_CONFIGURATION_UPDATE,
     payload: configuration,

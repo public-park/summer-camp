@@ -49,7 +49,7 @@ const update = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
       users.forEach((user) => {
         user.account = account;
 
-        user.broadcast(new ConfigurationMessage(user.getConfiguration(account)));
+        user.broadcast(new ConfigurationMessage(user.getPhoneConfiguration(account)));
       });
     }
 

@@ -17,13 +17,9 @@ const handle = async (
   message: InitiateCallMessage,
   acknowledge: AcknowledgeMessageHandler
 ): Promise<CallMessage | ErrorMessage> => {
-  const configuration = user.getConfiguration(user.account);
+  const configuration = user.getPhoneConfiguration(user.account);
 
-  if (!configuration) {
-    throw new ConfigurationNotFoundException();
-  }
-
-  if (configuration.outbound.isEnabled === false) {
+  if (configuration.direction === 'none' || configuration.direction === 'inbound') {
     throw new InvalidConfigurationException();
   }
 

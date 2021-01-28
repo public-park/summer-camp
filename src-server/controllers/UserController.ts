@@ -2,10 +2,10 @@ import { Response, NextFunction } from 'express';
 import { userRepository as users, accountRepository as accounts, authenticationProvider, pool } from '../worker';
 import { UserActivity } from '../models/UserActivity';
 import { isValidName, isValidTagList, isValidActivity, isValidRole } from './UserControllerValidator';
-import { ConfigurationNotFoundException } from '../exceptions/ConfigurationNotFoundException';
 import { UserRole } from '../models/UserRole';
 import { User } from '../models/User';
 import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
+import { UserNotFoundException } from '../exceptions/UserNotFoundException';
 
 const create = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
@@ -35,7 +35,16 @@ const create = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
 
     const authentication = await authenticationProvider.create(req.body.password);
 
-    const user = await users.create(req.body.name, undefined, tags, req.jwt.account, authentication, role, activity);
+    const user = await users.create(
+      req.body.name,
+      undefined,
+      tags,
+      req.jwt.account,
+      authentication,
+      role,
+      activity,
+      undefined
+    );
 
     res.json(user.toDocumentWithoutAuthentication());
   } catch (error) {
@@ -45,7 +54,11 @@ const create = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
 
 const fetch = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    res.json((req.resource.user as User).toDocumentWithoutAuthentication());
+    if (!req.resource.user) {
+      throw new UserNotFoundException();
+    }
+
+    res.json(req.resource.user.toDocumentWithoutAuthentication());
   } catch (error) {
     return next(error);
   }
@@ -73,6 +86,34 @@ const update = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
       user.role = req.body.role;
     }
 
+    if (req.body.configuration?.phone?.constraints) {
+      const { autoGainControl, echoCancellation, noiseSuppression } = req.body.configuration.phone.constraints;
+
+      if (!user.configuration) {
+        user.configuration = {
+          phone: {
+            constraints: {
+              echoCancellation: true,
+              autoGainControl: true,
+              noiseSuppression: true,
+            },
+          },
+        };
+      }
+
+      if (autoGainControl !== undefined) {
+        user.configuration.phone.constraints.autoGainControl = Boolean(autoGainControl);
+      }
+
+      if (echoCancellation !== undefined) {
+        user.configuration.phone.constraints.echoCancellation = Boolean(echoCancellation);
+      }
+
+      if (noiseSuppression !== undefined) {
+        user.configuration.phone.constraints.noiseSuppression = Boolean(noiseSuppression);
+      }
+    }
+
     user = await users.save(user);
 
     pool.updateIfExists(await pool.getUserWithSocket(user));
@@ -97,20 +138,7 @@ const remove = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
   }
 };
 
-export const getConfiguration = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    if (!req.jwt.account || !req.jwt.account.configuration) {
-      throw new ConfigurationNotFoundException();
-    }
-
-    res.json((req.resource.user as User).getConfiguration(req.jwt.account));
-  } catch (error) {
-    return next(error);
-  }
-};
-
 export const UserController = {
-  getConfiguration,
   fetch,
   update,
   remove,

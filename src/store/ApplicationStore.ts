@@ -1,5 +1,5 @@
 import { WorkspaceView } from '../actions/WorkspaceAction';
-import { UserWithPresenceDocument } from '../models/documents/UserDocument';
+import { UserPresenceDocument } from '../models/documents/UserDocument';
 import { ConnectionState } from '../models/Connection';
 
 export type ApplicationPage = 'LOGIN_PAGE' | 'LOGOUT_PAGE' | 'WORKSPACE_PAGE' | 'INIT_PAGE';
@@ -25,6 +25,6 @@ export interface ApplicationStore {
   };
   token: string | undefined;
   page: ApplicationPage | undefined;
-  users: Map<string, UserWithPresenceDocument>;
+  users: Map<string, UserPresenceDocument>;
   isPageLoaded: boolean;
 }

@@ -1,23 +1,23 @@
 import { UserPoolManager } from '../../../pool/UserPoolManager';
-import { UserWithPresenceDocument } from '../../documents/UserDocument';
-import { UserConfiguration } from '../../UserConfiguration';
+import { PhoneConfigurationDocument } from '../../documents/PhoneConfigurationDocument';
+import { UserPresenceDocument } from '../../documents/UserDocument';
 import { UserWithSocket } from '../../UserWithSocket';
 import { Message, MessageType } from './Message';
 
 export class ConnectMessage extends Message {
   payload: {
-    user: UserWithPresenceDocument;
-    configuration: UserConfiguration | undefined;
-    list: Array<UserWithPresenceDocument>;
+    user: UserPresenceDocument;
+    phone: PhoneConfigurationDocument;
+    list: Array<UserPresenceDocument>;
   };
 
   constructor(pool: UserPoolManager, user: UserWithSocket, messageId?: string) {
     super(MessageType.Connect, messageId);
 
     this.payload = {
-      user: user.toUserWithPresenceDocument(),
-      configuration: user.getConfiguration(user.account),
-      list: pool.getAll(user.account).map((user) => user.toUserWithPresenceDocument()),
+      user: user.toPresenceDocument(),
+      phone: user.getPhoneConfiguration(user.account),
+      list: pool.getAll(user.account).map((user) => user.toPresenceDocument()),
     };
   }
 }

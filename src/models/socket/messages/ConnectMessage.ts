@@ -1,11 +1,11 @@
-import { UserWithPresenceDocument } from '../../documents/UserDocument';
-import { UserConfiguration } from '../../UserConfiguration';
+import { PhoneConfigurationDocument } from '../../documents/PhoneConfigurationDocument';
+import { UserPresenceDocument } from '../../documents/UserDocument';
 import { Message } from './Message';
 
 export interface ConnectMessage extends Message {
   payload: {
-    user: UserWithPresenceDocument;
-    configuration: UserConfiguration;
-    list: Array<UserWithPresenceDocument>;
+    user: UserPresenceDocument;
+    phone: PhoneConfigurationDocument;
+    list: Array<UserPresenceDocument>;
   };
 }

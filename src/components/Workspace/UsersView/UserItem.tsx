@@ -1,9 +1,9 @@
 import { withStyles, Badge, Avatar } from '@material-ui/core';
 import React from 'react';
-import { UserWithPresenceDocument } from '../../../models/documents/UserDocument';
+import { UserPresenceDocument } from '../../../models/documents/UserDocument';
 
 export interface UserCardProps {
-  user: UserWithPresenceDocument;
+  user: UserPresenceDocument;
 }
 
 const StyledBadge = withStyles((theme) => ({
@@ -40,7 +40,7 @@ const StyledBadgeIsOnline = withStyles((theme) => ({
   },
 }))(Badge);
 
-const getStatusText = (user: UserWithPresenceDocument) => {
+const getStatusText = (user: UserPresenceDocument) => {
   if (user.call) {
     return 'on a call';
   }

@@ -90,6 +90,14 @@ button {
   padding-top: '10px';
 }
 
+.page-body-login .version {
+  font-size: 0.8em;
+  padding-bottom: 10px;
+  display: block;
+  position: absolute;
+  bottom: 0;
+}
+
 .workspace {
   min-height: 400px;
   max-height: 800px;

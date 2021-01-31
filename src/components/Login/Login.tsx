@@ -4,6 +4,7 @@ import { version } from '../../../package.json';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 import { SamlRedirect } from './SamlRedirect';
+import { DevelopmentModeNotification } from './DevelopmentModeNotification';
 
 export const Login = () => {
   const [title, setTitle] = useState('Already signed up?');
@@ -52,12 +53,9 @@ export const Login = () => {
             </Paper>
           )}
 
-          <span
-            className="version"
-            style={{ fontSize: '0.8em', paddingBottom: '10px', display: 'block', position: 'absolute', bottom: '0' }}
-          >
-            Summer Camp {version}
-          </span>
+          {process.env.NODE_ENV === 'development' && <DevelopmentModeNotification />}
+
+          <span className="version">Summer Camp {version}</span>
         </CardContent>
       </div>
     </div>

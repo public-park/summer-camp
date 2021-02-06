@@ -531,6 +531,16 @@ button {
   }
 }
 
+@media (max-width: 500px) {
+  .workspace > .header .user-status-toggle label > span:nth-child(2) {
+    display: none;
+  }
+
+  .workspace > .header .user-status-toggle label {
+    margin-right: 0;
+  }
+}
+
 .connection-lost-alert-badge > div {
   border-radius: 0;
 }

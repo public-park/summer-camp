@@ -13,7 +13,7 @@ import * as http from 'http';
 import * as cors from 'cors';
 import * as path from 'path';
 
-import { SocketWorker } from './socket-worker';
+import { SocketWorker, SocketWorkerOptions } from './socket-worker';
 
 // middlewares
 import { setHeaders } from './middlewares/setHeaders';
@@ -58,7 +58,7 @@ import * as mongoose from 'mongoose';
 import { UserPoolManager } from './pool/UserPoolManager';
 import { PhoneInboundController } from './controllers/callback/PhoneInboundController';
 import { CallStatusEventController } from './controllers/callback/CallStatusEventController';
-import { SamlController } from './controllers/SamlController';
+import { SamlAuthenticationController } from './controllers/SamlAuthenticationController';
 import * as passport from 'passport';
 
 import { getStrategy } from './helpers/SamlPassportHelper';
@@ -69,6 +69,8 @@ import { addCallToRequest } from './middlewares/callback/addCallToRequest';
 import { FileCallRepository } from './repository/file/FileCallRepository';
 import { UserPresenceController } from './controllers/UserPresenceController';
 import { addJwt } from './middlewares/addJwt';
+import { Request, Response } from 'express';
+import { ShopifyAuthenticationController } from './controllers/ShopifyAuthenticationController';
 
 /* SAML 2.0 Metadata */
 if (process.env.REACT_APP_AUTHENTICATION_MODE === 'saml') {
@@ -294,7 +296,7 @@ samlRouter.route('/:accountId/authenticate').all(
   passport.authenticate('saml', {
     session: false,
   }),
-  SamlController.authenticate
+  SamlAuthenticationController.authenticate
 );
 
 app.use('/saml', samlRouter);
@@ -348,12 +350,13 @@ app.use(handleError);
 
 const server = http.createServer(app);
 
-const options = {
+const options: SocketWorkerOptions = {
   keepAliveInSeconds: 30,
   server: {
     verifyClient: verifyJwtOnUpgrade,
     clientTracking: true,
     noServer: true,
+    path: '/socket',
   },
 };
 

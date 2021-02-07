@@ -28,7 +28,7 @@ import { UserNotFoundException } from './exceptions/UserNotFoundException';
 import { UserWithSocket } from './models/UserWithSocket';
 import { RejectMessageHandler } from './message-handler/handler/RejectMessageHandler';
 
-interface SocketWorkerOptions {
+export interface SocketWorkerOptions {
   server: WebSocket.ServerOptions;
   keepAliveInSeconds: number;
 }

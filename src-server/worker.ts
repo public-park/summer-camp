@@ -69,8 +69,6 @@ import { addCallToRequest } from './middlewares/callback/addCallToRequest';
 import { FileCallRepository } from './repository/file/FileCallRepository';
 import { UserPresenceController } from './controllers/UserPresenceController';
 import { addJwt } from './middlewares/addJwt';
-import { Request, Response } from 'express';
-import { ShopifyAuthenticationController } from './controllers/ShopifyAuthenticationController';
 
 /* SAML 2.0 Metadata */
 if (process.env.REACT_APP_AUTHENTICATION_MODE === 'saml') {

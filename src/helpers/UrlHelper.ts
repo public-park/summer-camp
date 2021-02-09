@@ -24,5 +24,7 @@ export const getUrl = (path?: string): string => {
 export const getWebSocketUrl = (): string => {
   const url = process.env.REACT_APP_SERVER_URL || window.location.host;
 
-  return window.location.protocol === 'https:' ? `wss://${url}` : `ws://${url}`;
+  return window.location.protocol === 'https:'
+    ? `wss://${stripTrailingSlash(url)}/socket`
+    : `ws://${stripTrailingSlash(url)}/socket`;
 };

@@ -48,17 +48,9 @@ import { ValidateTokenController } from './controllers/ValidateTokenController';
 
 import { PasswordAuthenticationProvider } from './security/authentication/PasswordAuthenticationProvider';
 
-import { FileUserRepository } from './repository/file/FileUserRepository';
-import { FileAccountRepository } from './repository/file/FileAccountRepository';
-
-import { MongoUserRepository } from './repository/mongo/MongoUserRepository';
-import { MongoAccountRepository } from './repository/mongo/MongoAccountRepository';
-import { MongoCallRepository } from './repository/mongo/MongoCallRepository';
-import * as mongoose from 'mongoose';
 import { UserPoolManager } from './pool/UserPoolManager';
 import { PhoneInboundController } from './controllers/callback/PhoneInboundController';
 import { CallStatusEventController } from './controllers/callback/CallStatusEventController';
-import { SamlAuthenticationController } from './controllers/SamlAuthenticationController';
 import * as passport from 'passport';
 
 import { getStrategy } from './helpers/SamlPassportHelper';
@@ -66,9 +58,13 @@ import { ConferenceStatusEventController } from './controllers/callback/Conferen
 import { verifyCallResourcePolicy } from './middlewares/verifyCallResourcePolicy';
 import { CallController } from './controllers/CallController';
 import { addCallToRequest } from './middlewares/callback/addCallToRequest';
-import { FileCallRepository } from './repository/file/FileCallRepository';
 import { UserPresenceController } from './controllers/UserPresenceController';
 import { addJwt } from './middlewares/addJwt';
+import { RepositoryInstance } from './repository/Repository';
+import { FileRepository } from './repository/file/FileRepository';
+import { MongoRepository } from './repository/mongo/MongoRepository';
+import { FirestoreRepository } from './repository/firestore/FirestoreRepository';
+import ConnectionSettings from './configuration/ConnectionSettings';
 
 /* SAML 2.0 Metadata */
 if (process.env.REACT_APP_AUTHENTICATION_MODE === 'saml') {
@@ -86,46 +82,39 @@ if (process.env.REACT_APP_AUTHENTICATION_MODE === 'saml') {
   }
 }
 
-/* MongoDB Repository */
-if (!process.env.MONGODB_URI) {
-  log.error(`env variable MONGODB_URI is not set, exiting worker ...`);
-  process.exit();
-}
+const createRepository = (): RepositoryInstance => {
+  let repository: RepositoryInstance | undefined = undefined;
 
-const mongoOptions = {
-  connectTimeoutMS: 5000,
-  useUnifiedTopology: true,
-  useFindAndModify: false,
-  useNewUrlParser: true,
-  useCreateIndex: true,
+  log.debug(`init repository with type ${ConnectionSettings.type}`);
+
+  switch (ConnectionSettings.type) {
+    case 'file':
+      repository = FileRepository.create(ConnectionSettings);
+      break;
+
+    case 'firestore':
+      repository = FirestoreRepository.create(ConnectionSettings);
+      break;
+
+    case 'mongodb':
+      repository = MongoRepository.create(ConnectionSettings);
+      break;
+
+    default:
+      log.error(`repository ${ConnectionSettings.type} not found`);
+      process.exit();
+  }
+
+  return repository!;
 };
 
-mongoose
-  .connect(process.env.MONGODB_URI, mongoOptions)
-  .then(() => log.info(`connected to ${process.env.MONGODB_URI} ...`))
-  .catch((error) => log.error(error));
+export const repository = createRepository();
 
-export const accountRepository = new MongoAccountRepository('accounts');
-export const userRepository = new MongoUserRepository('users');
-export const callRepository = new MongoCallRepository('calls');
+// keep it backwards compatible for now
+export const accountRepository = repository.accounts;
+export const userRepository = repository.users;
+export const callRepository = repository.calls;
 
-/* Google Firestore 
-const firestore = new Firestore({
-  projectId: '{project-id}',
-  keyFilename: './google-firestore-credentials.json',
-  ignoreUndefinedProperties: true,
-});
-
-export const accountRepository = new FirestoreAccountRepository(firestore, 'accounts');
-export const userRepository = new FirestoreUserRepository(firestore, 'users');
-export const callRepository = new FirestoreCallRepository(firestore, 'calls');
-*/
-
-/* Local File Repository 
-export const accountRepository = new FileAccountRepository('./accounts.json');
-export const userRepository = new FileUserRepository('./users.json');
-export const callRepository = new FileCallRepository('calls.json');
-*/
 export const authenticationProvider = new PasswordAuthenticationProvider();
 
 export const pool = new UserPoolManager(accountRepository, userRepository, callRepository);

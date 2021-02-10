@@ -69,7 +69,9 @@ The user's details and configuration is stored on the server. Right now two repo
 
 - **MongoDB** with Mongoose as a schema-based modelling for MongodB
 
-For both database connectors you find instructions in `/src-server/worker.js` source file directly. Enable one of the options listed and comment out all others, save the file afterwards.
+- **Firestore** a Google Cloud serverless document database
+
+To configure the database connector open `/src-server/configuration/ConnectionSettings.js`. The file contains a example configuration for each storage option. Export the configuration you would like to use and save the file.
 
 ## Installation
 

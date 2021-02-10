@@ -18,7 +18,7 @@ const handleInbound = async (request: StatusCallbackRequest, response: Response,
     body: { ParticipantLabel, ConferenceSid, StatusCallbackEvent, CallSid },
   } = request;
 
-  const call = request.resource.call as Call;
+  const call = request.resource.call;
 
   try {
     rejectIfNotJoinEvent(StatusCallbackEvent);

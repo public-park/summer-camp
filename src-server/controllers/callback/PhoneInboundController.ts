@@ -58,7 +58,7 @@ const handleConnectToUser = async (req: StatusCallbackRequest, res: Response, ne
 
     const status = user.isOnline && user.isAvailable ? CallStatus.Initiated : CallStatus.NoAnswer;
 
-    const call = await calls.create(account, From, To, CallDirection.Inbound, status, user, CallSid);
+    const call = await calls.create(account, From, To, CallDirection.Inbound, status, user);
 
     if (call.status === CallStatus.Initiated) {
       res.status(200).send(createConferenceTwiml(call, 'customer'));

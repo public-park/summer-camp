@@ -6,6 +6,7 @@ import { UserRole } from '../models/UserRole';
 import { TokenHelper } from '../helpers/TokenHelper';
 import { InvalidSamlAttributeException } from '../exceptions/InvalidSamlAttributeException';
 import { RequestWithProfile } from '../helpers/SamlPassportHelper';
+import { UserActivity } from '../models/UserActivity';
 
 const authenticate = async (req: RequestWithProfile, res: Response, next: NextFunction) => {
   try {
@@ -33,7 +34,7 @@ const authenticate = async (req: RequestWithProfile, res: Response, next: NextFu
         req.resource.account,
         authentication,
         req.profile.role,
-        undefined,
+        UserActivity.Unknown,
         undefined
       );
     }

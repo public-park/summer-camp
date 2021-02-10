@@ -14,7 +14,7 @@ export interface UserRepository {
     authentication: UserAuthentication,
     role: UserRole,
     activity: UserActivity,
-    configuration: UserConfiguration
+    configuration: UserConfiguration | undefined
   ) => Promise<User>;
   save: (user: User) => Promise<User>;
   getById: (id: string) => Promise<User | undefined>;

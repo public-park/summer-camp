@@ -31,7 +31,6 @@ import { ApplicationContext } from '../../context/ApplicationContext';
 import { PhoneState } from '../../phone/PhoneState';
 import { useHasLostMediaDevice } from '../../hooks/useHasLostMediaDevice';
 import { PhonePreflight } from './PhonePreflight';
-import { UserSetupView } from './UserSetupView/UserSetupView';
 
 export const Workspace = () => {
   const { phone } = useContext(ApplicationContext);

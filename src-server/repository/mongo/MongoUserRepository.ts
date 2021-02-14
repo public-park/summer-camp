@@ -23,7 +23,7 @@ export class MongoUserRepository implements UserRepository {
     name: string,
     profileImageUrl: string | undefined,
     tags: Set<string>,
-    account: Account,
+    accountId: string,
     authentication: UserAuthentication,
     role: UserRole,
     activity: UserActivity = UserActivity.Unknown,
@@ -39,7 +39,7 @@ export class MongoUserRepository implements UserRepository {
       profileImageUrl,
       tags,
       activity,
-      account.id,
+      accountId,
       authentication,
       role,
       configuration

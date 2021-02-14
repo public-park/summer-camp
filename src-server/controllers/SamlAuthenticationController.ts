@@ -31,11 +31,10 @@ const authenticate = async (req: RequestWithProfile, res: Response, next: NextFu
         req.profile.name,
         undefined,
         new Set(['none']),
-        req.resource.account,
+        req.resource.account.id,
         authentication,
         req.profile.role,
-        UserActivity.Unknown,
-        undefined
+        UserActivity.Unknown
       );
     }
 

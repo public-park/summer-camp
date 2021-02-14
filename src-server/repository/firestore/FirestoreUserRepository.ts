@@ -184,22 +184,23 @@ export class FirestoreUserRepository implements UserRepository {
     name: string,
     profileImageUrl: string | undefined,
     tags: Set<string>,
-    account: Account,
+    accountId: string,
     authentication: UserAuthentication,
     role: UserRole,
     activity: UserActivity = UserActivity.Unknown,
     configuration?: UserConfiguration
   ) => {
-    if (!account) {
-      throw new AccountNotFoundException();
+    if (!name) {
+      throw new InvalidUserNameException();
     }
+
     const user = new User(
       uuidv4(),
       name,
       profileImageUrl,
       tags,
       activity,
-      account.id,
+      accountId,
       authentication,
       role,
       configuration

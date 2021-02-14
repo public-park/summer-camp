@@ -67,15 +67,11 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
   };
 
   async getAll(account: Account, skip: number = 0, limit: number = 50) {
-    const list: User[] = [];
+    const list = Array.from(this.users.values()).filter(
+      (user, index) => user.accountId == account.id && index >= skip && index < limit
+    );
 
-    for (const user of this.users.values()) {
-      if (user.accountId === account.id) {
-        list.push(user);
-      }
-    }
-
-    return Promise.resolve(list);
+    return Promise.resolve(list.map((user) => user).reverse());
   }
 
   save = async (user: User) => {
@@ -187,7 +183,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     name: string,
     profileImageUrl: string | undefined,
     tags: Set<string>,
-    account: Account,
+    accountId: string,
     authentication: UserAuthentication,
     role: UserRole,
     activity: UserActivity = UserActivity.Unknown,
@@ -197,17 +193,13 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
       throw new InvalidUserNameException();
     }
 
-    if (!account) {
-      throw new AccountNotFoundException();
-    }
-
     const user = new User(
       uuidv4(),
       name,
       profileImageUrl,
       tags,
       activity,
-      account.id,
+      accountId,
       authentication,
       role,
       configuration

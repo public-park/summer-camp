@@ -35,16 +35,9 @@ const create = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
 
     const authentication = await authenticationProvider.create(req.body.password);
 
-    const user = await users.create(
-      req.body.name,
-      undefined,
-      tags,
-      req.jwt.account,
-      authentication,
-      role,
-      activity,
-      undefined
-    );
+    const user = await users.create(req.body.name, undefined, tags, req.jwt.account.id, authentication, role, activity);
+
+    pool.add(await pool.getUserWithSocket(user));
 
     res.json(user.toDocumentWithoutAuthentication());
   } catch (error) {

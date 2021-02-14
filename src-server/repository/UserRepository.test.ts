@@ -1,7 +1,6 @@
 require('dotenv').config();
 
 import { User } from '../models/User';
-import { Account } from '../models/Account';
 import { UserActivity } from '../models/UserActivity';
 import { UserRole } from '../models/UserRole';
 import {
@@ -33,10 +32,9 @@ describe('User Repository create', () => {
       personas.alice,
       undefined,
       new Set(['es', 'jp']),
-      account,
+      account.id,
       authentication,
       UserRole.Owner,
-      undefined,
       undefined
     );
 
@@ -62,7 +60,7 @@ describe('User Repository create', () => {
         personas.alice,
         undefined,
         new Set(['es', 'jp']),
-        account,
+        account.id,
         authentication,
         UserRole.Owner,
         undefined,
@@ -95,11 +93,10 @@ describe('User Repository read, update and delete a user', () => {
       personas.joe,
       undefined,
       new Set(['es', 'jp']),
-      account,
+      account.id,
       authentication,
       UserRole.Owner,
-      undefined,
-      undefined
+      UserActivity.Unknown
     );
 
     id = user.id;
@@ -214,32 +211,36 @@ describe('User Repository read users', () => {
   });
 
   test('should return all users from the repository', async (done) => {
+    await users.create(personas.julia, undefined, new Set(['es', 'jp']), account.id, authentication, UserRole.Owner);
+    await users.create(personas.tim, undefined, new Set(['es', 'jp']), account.id, authentication, UserRole.Agent);
     await users.create(
-      personas.julia,
+      `${personas.julia}-ng`,
       undefined,
       new Set(['es', 'jp']),
-      account,
+      account.id,
       authentication,
-      UserRole.Owner,
-      undefined,
-      undefined
-    );
-    await users.create(
-      personas.tim,
-      undefined,
-      new Set(['es', 'jp']),
-      account,
-      authentication,
-      UserRole.Owner,
-      undefined,
-      undefined
+      UserRole.Agent
     );
 
     let list = await users.getAll(account);
 
-    expect(list).toHaveLength(2);
+    expect(list).toHaveLength(3);
     expect(list[0]).toBeInstanceOf(User);
 
+    done();
+  });
+
+  test('should return users from the repository and skip the first entry', async (done) => {
+    let list = await users.getAll(account, 1);
+
+    expect(list).toHaveLength(2);
+    done();
+  });
+
+  test('should return users from the repository and limit the results', async (done) => {
+    let list = await users.getAll(account, 0, 1);
+
+    expect(list).toHaveLength(1);
     done();
   });
 });
@@ -257,11 +258,10 @@ describe('User Repository delete', () => {
       personas.bob,
       undefined,
       new Set(['es', 'jp']),
-      account,
+      account.id,
       authentication,
       UserRole.Owner,
-      undefined,
-      undefined
+      UserActivity.Unknown
     );
 
     id = user.id;
@@ -296,11 +296,10 @@ describe('user activities', () => {
       personas.eva,
       undefined,
       new Set(['es', 'jp']),
-      account,
+      account.id,
       authentication,
       UserRole.Owner,
-      UserActivity.Away,
-      undefined
+      UserActivity.Away
     );
 
     done();

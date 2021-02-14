@@ -39,11 +39,11 @@ export const init = () => {
 };
 
 /* File Storage 
-
 export const accountRepository = new FileAccountRepository('./src-server/test/accounts-test.json');
-export const userRepository = new FileUserRepository(accountRepository, './src-server/test/users-test.json');
+export const userRepository = new FileUserRepository('./src-server/test/users-test.json');
 export const callRepository = new FileCallRepository('./src-server/test/calls-test.json');
 export const authenticationProvider = new PasswordAuthenticationProvider();
+
 
 export const init = () => {
   beforeAll(async () => {});
@@ -55,6 +55,7 @@ export const init = () => {
   });
 };
 */
+
 export const corporations = {
   mom: 'MomCorp',
   wonka: 'Wonka Industries',

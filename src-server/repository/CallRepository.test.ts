@@ -41,11 +41,9 @@ describe('Call Repository create, update', () => {
       personas.alice,
       undefined,
       new Set(['es', 'jp']),
-      account,
+      account.id,
       authentication,
-      UserRole.Owner,
-      undefined,
-      undefined
+      UserRole.Owner
     );
 
     userRepository.save(user);
@@ -86,8 +84,8 @@ describe('Call Repository create, update', () => {
     call.callSid = callSid;
     call.from = fromUpdated;
     call.to = toUpdated;
-    call.accountId = 'AX';
-    call.userId = 'UX';
+    call.accountId = account.id;
+    call.userId = user.id;
     call.status = CallStatus.Completed;
     call.direction = CallDirection.Outbound;
     call.answeredAt = new Date();
@@ -98,8 +96,8 @@ describe('Call Repository create, update', () => {
     expect(call.callSid).toBe(callSid);
     expect(call.from).toBe(fromUpdated);
     expect(call.to).toBe(toUpdated);
-    expect(call.accountId).toBe('AX');
-    expect(call.userId).toBe('UX');
+    expect(call.accountId).toBe(account.id);
+    expect(call.userId).toBe(user.id);
     expect(call.status).toBe(CallStatus.Completed);
     expect(call.direction).toBe(CallDirection.Outbound);
     expect(call.callSid).toBe(callSid);
@@ -194,22 +192,18 @@ describe('Call Repository call list', () => {
       personas.joe,
       undefined,
       new Set(['es', 'jp']),
-      good,
+      good.id,
       authentication,
-      UserRole.Owner,
-      undefined,
-      undefined
+      UserRole.Owner
     );
 
     max = await userRepository.create(
       personas.max,
       undefined,
       new Set(['es', 'jp']),
-      good,
+      good.id,
       authentication,
-      UserRole.Owner,
-      undefined,
-      undefined
+      UserRole.Owner
     );
 
     done();

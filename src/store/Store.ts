@@ -34,6 +34,14 @@ export const selectSetupPhoneNumbers = (store: Store) => store.setup.phoneNumber
 export const selectSetupValidation = (store: Store) => store.setup.validation;
 export const selectSetupIsSaving = (store: Store) => store.setup.isSaving;
 
+export const selectHasOutboundEnabled = (store: Store) => {
+  return store.phone.configuration && ['both', 'outbound'].includes(store.phone.configuration.direction);
+};
+
+export const selectHasInboundEnabled = (store: Store) => {
+  return store.phone.configuration && ['both', 'inbound'].includes(store.phone.configuration.direction);
+};
+
 export interface Store {
   application: ApplicationStore;
   setup: SetupStore;

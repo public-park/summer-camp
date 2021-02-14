@@ -4,7 +4,7 @@ import { Keypad } from './Keypad';
 import { CallButton } from '../Controls/CallButton';
 import { OutgoingDisabled } from './OutgoingDisabled';
 import { useSelector } from 'react-redux';
-import { selectConfiguration } from '../../../../store/Store';
+import { selectConfiguration, selectHasOutboundEnabled } from '../../../../store/Store';
 
 const getPhoneCanvas = () => {
   return (
@@ -26,10 +26,11 @@ const getOutgoingDisabledCanvas = () => {
 
 export const Idle = () => {
   const configuration = useSelector(selectConfiguration);
+  const hasOutboundEnabled = useSelector(selectHasOutboundEnabled);
 
   if (!configuration) {
     return null;
   }
 
-  return configuration.direction === 'none' ? getOutgoingDisabledCanvas() : getPhoneCanvas();
+  return hasOutboundEnabled ? getPhoneCanvas() : getOutgoingDisabledCanvas();
 };

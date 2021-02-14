@@ -84,7 +84,7 @@ export class SocketWorker {
       try {
         const user = await this.getUserFromHttpHeader(req.headers);
 
-        log.info(`add user ${user.id}, (socket(s) ${user.sockets}) to pool, size is ${this.pool.getSize()}`);
+        log.info(`add user ${user.id}, (socket(s) ${user.sockets.length()}) to pool, size is ${this.pool.getSize()}`);
 
         socket.isAlive = true;
         socket.token = <string>req.headers.token;
@@ -183,10 +183,10 @@ export class SocketWorker {
 
         this.pool.add(user);
 
-        user.broadcast(new ConnectMessage(this.pool, user));
+        user.broadcast(await new ConnectMessage().build(this.pool, user));
       } catch (error) {
+        log.error(error);
         socket.terminate();
-        log.debug(error);
       }
     });
 

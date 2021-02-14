@@ -6,6 +6,6 @@ export interface ConnectMessage extends Message {
   payload: {
     user: UserPresenceDocument;
     phone: PhoneConfigurationDocument;
-    list: Array<UserPresenceDocument>;
+    list: Array<UserPresenceDocument>; // TODO rename
   };
 }

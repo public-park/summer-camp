@@ -69,7 +69,7 @@ export class UserPoolManager {
 
       this.broadcastToAccount(user);
     } else {
-      throw new UserNotFoundException();
+      throw new UserNotFoundException(); // TODO FIX
     }
   }
 
@@ -143,6 +143,16 @@ export class UserPoolManager {
 
   getAll(account: Account): Array<UserWithSocket> {
     return Array.from(this.pool.values()).filter((user) => user.accountId === account.id);
+  }
+
+  async getAllWithFallback(account: Account): Promise<Array<UserWithSocket>> {
+    const offline = (await this.users.getAll(account)).filter((user) => !this.pool.has(user.id));
+
+    const onlineWithSocket = await Promise.all(offline.map(async (user) => await this.getUserWithSocket(user)));
+
+    let online = Array.from(this.pool.values()).filter((user) => user.accountId === account.id);
+
+    return online.concat(onlineWithSocket);
   }
 
   async getUserWithSocket(user: User, sockets: Array<WebSocketWithKeepAlive> = []): Promise<UserWithSocket> {

@@ -144,17 +144,25 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
   }
 
   async getByUser(user: User, skip: number = 0, limit: number = 50) {
-    const list = Array.from(this.calls.values()).filter(
-      (call, index) => call.userId == user.id && index >= skip && index < limit
+    const list = Array.from(this.calls.values()).filter((call) => call.userId == user.id);
+
+    return Promise.resolve(
+      list
+        .map((call) => call)
+        .filter((call, index) => index >= skip && index < limit)
+        .reverse()
     );
-    return Promise.resolve(list.map((call) => call).reverse());
   }
 
   async getByAccount(account: Account, skip: number = 0, limit: number = 50) {
-    const list = Array.from(this.calls.values()).filter(
-      (call, index) => call.accountId == account.id && index >= skip && index < limit
+    const list = Array.from(this.calls.values()).filter((call) => call.accountId == account.id);
+
+    return Promise.resolve(
+      list
+        .map((call) => call)
+        .filter((call, index) => index >= skip && index < limit)
+        .reverse()
     );
-    return Promise.resolve(list.map((call) => call).reverse());
   }
 
   async remove(call: Call) {

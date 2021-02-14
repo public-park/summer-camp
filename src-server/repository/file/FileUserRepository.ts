@@ -67,11 +67,14 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
   };
 
   async getAll(account: Account, skip: number = 0, limit: number = 50) {
-    const list = Array.from(this.users.values()).filter(
-      (user, index) => user.accountId == account.id && index >= skip && index < limit
-    );
+    const list = Array.from(this.users.values()).filter((user) => user.accountId == account.id);
 
-    return Promise.resolve(list.map((user) => user).reverse());
+    return Promise.resolve(
+      list
+        .map((user) => user)
+        .filter((user, index) => index >= skip && index < limit)
+        .reverse()
+    );
   }
 
   save = async (user: User) => {

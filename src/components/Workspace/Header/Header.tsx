@@ -45,7 +45,7 @@ export const Header = () => {
           />
         </div>
         <div>
-          <UsersButton name="users" onClick={() => dispatch(setView('USERS_VIEW'))} color="secondary" />
+          <UsersButton name="users" onClick={() => dispatch(setView('USER_LIST_VIEW'))} color="secondary" />
         </div>
         {user.role === 'owner' && (
           <div>

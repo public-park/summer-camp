@@ -18,8 +18,6 @@ export const Busy = () => {
 
   const { from, to, direction, answeredAt } = useSelector(selectCall) || {};
 
-  const [showKeypad, setShowKeypad] = useState(false);
-
   const duration = useCallDuration(answeredAt); // TODO, fix
   const durationFormatted = useCallDurationFormat(duration);
 
@@ -55,7 +53,7 @@ export const Busy = () => {
         </div>
       </div>
 
-      {showKeypad ? <Keypad /> : <div className="blank"></div>}
+      <div className="blank"></div>
 
       <button onClick={() => end()} disabled={!call?.isConnected} className="end-call-button"></button>
     </div>

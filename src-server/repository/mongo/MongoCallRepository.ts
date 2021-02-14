@@ -31,6 +31,7 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
     callSid?: string
   ) {
     const call = new Call(uuidv4(), from, to, account.id, direction, status, user, callSid);
+
     return this.save(call);
   }
 

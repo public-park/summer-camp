@@ -27,7 +27,7 @@ export class MongoUserRepository implements UserRepository {
     authentication: UserAuthentication,
     role: UserRole,
     activity: UserActivity = UserActivity.Unknown,
-    configuration: UserConfiguration | undefined
+    configuration?: UserConfiguration
   ) {
     if (!name) {
       throw new InvalidUserNameException();

@@ -13,7 +13,7 @@ export interface UserRepository {
     accountId: string,
     authentication: UserAuthentication,
     role: UserRole,
-    activity: UserActivity,
+    activity?: UserActivity,
     configuration?: UserConfiguration
   ) => Promise<User>;
   save: (user: User) => Promise<User>;

@@ -37,7 +37,7 @@ import { getContextFromLocalStorage, setContextOnLocalStorage } from './services
 import { onPageLoad, setLogin, setLogout } from './actions/ApplicationAction';
 import { Call } from './models/Call';
 import { setNotification, setView } from './actions/WorkspaceAction';
-import { updateList } from './actions/UserListAction';
+import { updateUserList } from './actions/UserListAction';
 
 export const ApplicationContextProvider = (props: any) => {
   const { isResume } = usePageLifecycle();
@@ -90,11 +90,12 @@ export const ApplicationContextProvider = (props: any) => {
     });
 
     connection.on(MessageType.User, (message: UserMessage) => {
-      dispatch(updateList(message.payload));
+      dispatch(updateUserList(message.payload));
     });
 
+    // TODO, connection object should return user
     connection.on(MessageType.Connect, async (message: ConnectMessage) => {
-      dispatch(updateList(message.payload.list));
+      dispatch(updateUserList(message.payload.list)); // TODO change naming, #terrible
 
       const { id, name, profileImageUrl, accountId, tags, activity, role } = message.payload.user;
 

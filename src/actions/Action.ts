@@ -19,7 +19,7 @@ export enum ActionType {
   APPLICATION_LOGIN = 'APPLICATION_LOGIN',
   APPLICATON_LOGOUT = 'APPLICATON_LOGOUT',
   APPLICATION_PAGE_LOAD = 'APPLICATION_PAGE_LOAD',
-  USERS_UPDATE = 'USERS_UPDATE',
+  USERS_LIST_UPDATE = 'USERS_LIST_UPDATE',
   PHONE_STATE_CHANGE = 'PHONE_STATE_CHANGE',
   PHONE_DISPLAY_UPDATE = 'PHONE_DISPLAY_UPDATE',
   PHONE_TOKEN_UPDATE = 'PHONE_TOKEN_UPDATE',
@@ -115,7 +115,7 @@ export interface WorkspaceViewAction extends Action<ActionType.WORKSPACE_VIEW> {
   };
 }
 
-export interface UserListUpdateAction extends Action<ActionType.USERS_UPDATE> {
+export interface UserListUpdateAction extends Action<ActionType.USERS_LIST_UPDATE> {
   payload: Array<UserPresenceDocument>;
 }
 

@@ -26,7 +26,7 @@ export const useFetchPhoneToken = (
         setIsFetching(false);
       }
     };
-    if (!current && !isFetching && user && configuration) {
+    if (!current && !isFetching && user && configuration && configuration.direction !== 'none') {
       console.debug('fetch phone token');
 
       fetchToken();

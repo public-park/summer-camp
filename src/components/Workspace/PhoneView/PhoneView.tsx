@@ -26,7 +26,7 @@ export const PhoneView = () => {
   };
 
   const getPhoneView = (): JSX.Element | undefined => {
-    if (!configuration) {
+    if (!configuration || configuration.direction === 'none') {
       return <PhoneException text="The phone is not configured yet, please go to setup" />;
     }
 

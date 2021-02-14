@@ -6,7 +6,8 @@ export type WorkspaceView =
   | 'CALL_HISTORY_VIEW'
   | 'AUDIO_DEVICES_VIEW'
   | 'CONNECT_VIEW'
-  | 'USERS_VIEW';
+  | 'USER_LIST_VIEW'
+  | 'USER_SETUP_VIEW';
 
 export const setView = (view: WorkspaceView): WorkspaceViewAction => {
   return {

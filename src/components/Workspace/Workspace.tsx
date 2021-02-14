@@ -25,12 +25,13 @@ import { useReconnectWebSocket } from '../../hooks/useReconnectWebSocket';
 import { ConnectionLostWithReconnectAlert } from './NotificationLayer/ConnectionLostWithReconnectAlert';
 import { useAudioDevices } from '../../hooks/useAudioDevices';
 import { setAudioDevicesException, updateAudioDevices } from '../../actions/AudioDeviceAction';
-import { UsersView } from './UsersView/UsersView';
+import { UserListView } from './UserListView/UserListView';
 import { ConnectionState } from '../../models/Connection';
 import { ApplicationContext } from '../../context/ApplicationContext';
 import { PhoneState } from '../../phone/PhoneState';
 import { useHasLostMediaDevice } from '../../hooks/useHasLostMediaDevice';
 import { PhonePreflight } from './PhonePreflight';
+import { UserSetupView } from './UserSetupView/UserSetupView';
 
 export const Workspace = () => {
   const { phone } = useContext(ApplicationContext);
@@ -130,11 +131,12 @@ export const Workspace = () => {
 
       case 'AUDIO_DEVICES_VIEW':
         return <AudioDeviceView />;
+
       case 'CONNECT_VIEW':
         return <ConnectView />;
 
-      case 'USERS_VIEW':
-        return <UsersView />;
+      case 'USER_LIST_VIEW':
+        return <UserListView />;
     }
   };
 

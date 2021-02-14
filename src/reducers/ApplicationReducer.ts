@@ -14,7 +14,6 @@ const application = (state: ApplicationStore = Default, action: ApplicationActio
           draft.page = 'LOGIN_PAGE';
         }
         break;
-
       case ActionType.CONNECTION_STATE_CHANGE:
         draft.connection.state = action.payload.state;
         break;
@@ -48,7 +47,7 @@ const application = (state: ApplicationStore = Default, action: ApplicationActio
         draft.page = 'WORKSPACE_PAGE';
         break;
 
-      case ActionType.USERS_UPDATE:
+      case ActionType.USERS_LIST_UPDATE:
         action.payload.map((user: UserPresenceDocument) => draft.users.set(user.id, user));
         break;
 

@@ -24,11 +24,10 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
       name,
       undefined,
       new Set(['none']),
-      account,
+      account.id,
       authentication,
       UserRole.Owner,
-      UserActivity.Away,
-      undefined
+      UserActivity.Away
     );
 
     const payload = {

@@ -129,7 +129,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
     for (const user of this.users.values()) {
       const authentication = user.authentication as SamlUserAuthentication;
 
-      if (user.accountId === account.id) {
+      if (user.accountId !== account.id) {
         return;
       }
 

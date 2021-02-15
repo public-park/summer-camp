@@ -212,26 +212,6 @@ paths:
         '5XX':
           description: Unexpected error.
           $ref: '#/components/responses/ServerError'
-  '/users/{userid}/configuration':
-    get:
-      security:
-        - AuthenticationToken: []
-      description: get the configuration details of a user
-      parameters:
-        - $ref: '#/components/parameters/userId'
-      responses:
-        '200':
-          $ref: '#/components/responses/UserConfigurationResponse'
-        '400':
-          description: Bad request. User ID must be an valid UUID
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/NotAuthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '5XX':
-          description: Unexpected error.
-          $ref: '#/components/responses/ServerError'
   '/accounts/{accountId}':
     get:
       security:
@@ -380,6 +360,21 @@ components:
           readOnly: true
         role:
           type: string
+        configuration:
+          type: object
+          properties:
+            phone:
+              type: object
+              properties:
+                constraints:
+                  type: object
+                  properties:
+                    autoGainControl:
+                      type: boolean
+                    noiseSuppression:
+                      type: boolean
+                    echoCancellation:
+                      type: boolean
         createdAt:
           type: string
           format: date-time
@@ -394,13 +389,25 @@ components:
     UserPresence:
       type: object
       properties:
+        id:
+          type: string
+        name:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        accountId:
+          type: string
         isOnline:
           type: boolean
         isAvailable:
           type: boolean
         activity:
           $ref: '#/components/schemas/Activity'
-    UserConfiguration:
+        role:
+          $ref: '#/components/schemas/Role'
+    PhoneConfiguration:
       type: object
       properties:
         inbound:

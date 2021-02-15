@@ -46,10 +46,14 @@ export class User {
 
     connection.on<ActivityMessage>(MessageType.Activity, (message: ActivityMessage) => {
       this.activity = message.payload.activity;
+
+      this.events.emit(UserEventType.Activity, this.activity);
     });
 
     connection.on<TagMessage>(MessageType.Tags, (message: TagMessage) => {
       this.tags = new Set(message.payload.tags);
+
+      this.events.emit(UserEventType.Tags, this.tags);
     });
 
     this.connection = connection;
@@ -67,20 +71,12 @@ export class User {
     console.info(`set tags to: ${tags}`);
 
     await this.connection.send(new TagMessage(tags));
-
-    this.tags = tags;
-
-    this.events.emit(UserEventType.Tags, tags);
   }
 
   async setActivity(activity: UserActivity) {
     console.info(`set state to: ${activity}`);
 
     await this.connection.send(new ActivityMessage(activity));
-
-    this.activity = activity;
-
-    this.events.emit(UserEventType.Activity, activity);
   }
 
   onActivityChanged(listener: (activity: UserActivity) => void) {

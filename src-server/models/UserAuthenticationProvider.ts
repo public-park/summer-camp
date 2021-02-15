@@ -2,4 +2,5 @@ import { AuthenticationProviderType } from '../security/authentication/Authentic
 
 export interface UserAuthentication {
   provider: AuthenticationProviderType;
+  [prop: string]: string | number | boolean;
 }

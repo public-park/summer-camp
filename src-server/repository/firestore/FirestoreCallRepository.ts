@@ -58,7 +58,7 @@ export class FirestoreCallRepository implements CallRepository, BaseRepository<C
   }
 
   async create(
-    account: Account,
+    accountId: string,
     from: string,
     to: string,
     direction: CallDirection,
@@ -66,7 +66,7 @@ export class FirestoreCallRepository implements CallRepository, BaseRepository<C
     user?: User,
     callSid?: string
   ) {
-    const call = new Call(uuidv4(), from, to, account.id, direction, status, user, callSid);
+    const call = new Call(uuidv4(), from, to, accountId, direction, status, user, callSid);
 
     return this.save(call);
   }

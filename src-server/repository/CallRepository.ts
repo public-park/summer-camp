@@ -7,7 +7,7 @@ import { CallStatus } from '../models/CallStatus';
 
 export interface CallRepository extends BaseRepository<Call> {
   create: (
-    account: Account,
+    accountId: string,
     from: string,
     to: string,
     direction: CallDirection,

@@ -60,7 +60,7 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
   }
 
   async create(
-    account: Account,
+    accountId: string,
     from: string,
     to: string,
     direction: CallDirection,
@@ -68,7 +68,7 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
     user?: User,
     callSid?: string
   ) {
-    const call = new Call(uuidv4(), from, to, account.id, direction, status, user, callSid);
+    const call = new Call(uuidv4(), from, to, accountId, direction, status, user, callSid);
 
     return this.save(call);
   }

@@ -22,7 +22,7 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
   }
 
   async create(
-    account: Account,
+    accountId: string,
     from: string,
     to: string,
     direction: CallDirection,
@@ -30,7 +30,7 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
     user?: User,
     callSid?: string
   ) {
-    const call = new Call(uuidv4(), from, to, account.id, direction, status, user, callSid);
+    const call = new Call(uuidv4(), from, to, accountId, direction, status, user, callSid);
 
     return this.save(call);
   }

@@ -37,7 +37,7 @@ In case no user is found in the list of connected users, the strategy will fetch
 This strategy is defined in`PhoneInboundController.handleConnectWithFilter`. Incoming phone calls are routed to a random user that is `online` and `available`.
 
 ```typescript
-let users: Array<UserWithOnlineState> = pool.getOnlineByAccount(req.account);
+let users: Array<User> = pool.getOnlineByAccount(req.account);
 
 users = users.filter((user) => user.isAvailable);
 ```

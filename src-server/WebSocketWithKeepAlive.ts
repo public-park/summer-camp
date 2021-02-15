@@ -1,9 +1,9 @@
 import * as WebSocket from 'ws';
-import { UserWithSocket } from './models/UserWithSocket';
+import { User } from './models/User';
 
 export interface WebSocketWithKeepAlive extends WebSocket {
   isAlive: boolean;
   token: string;
-  user: UserWithSocket;
+  user: User;
   remoteAddress: string | undefined;
 }

@@ -1,13 +1,12 @@
 import { callRepository as calls } from '../../worker';
-
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { TwilioCallControlHelper } from '../../helpers/twilio/TwilioCallControlHelper';
 import { CallNotInProgressException } from '../../exceptions/CallNotInProgressException';
 import { CallStatus } from '../../models/CallStatus';
 import { RecordMessage } from '../../models/socket/messages/RecordMessage';
-import { UserWithSocket } from '../../models/UserWithSocket';
+import { User } from '../../models/User';
 
-const handle = async (user: UserWithSocket, message: RecordMessage): Promise<RecordMessage> => {
+const handle = async (user: User, message: RecordMessage): Promise<RecordMessage> => {
   const call = await calls.getById(message.payload.id);
 
   if (!call) {
@@ -18,7 +17,7 @@ const handle = async (user: UserWithSocket, message: RecordMessage): Promise<Rec
     throw new CallNotInProgressException();
   }
 
-  const helper = new TwilioCallControlHelper(user.account);
+  const helper = new TwilioCallControlHelper(await user.getAccount());
 
   await helper.record(call, message.payload.state);
 

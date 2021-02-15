@@ -1,9 +1,11 @@
 import { ConfigurationMessage } from '../../models/socket/messages/ConfigurationMessage';
 import { Message } from '../../models/socket/messages/Message';
-import { UserWithSocket } from '../../models/UserWithSocket';
+import { User } from '../../models/User';
 
-const handle = async (user: UserWithSocket, message: Message): Promise<ConfigurationMessage> => {
-  return new ConfigurationMessage(user.getPhoneConfiguration(user.account), message.header.id);
+const handle = async (user: User, message: Message): Promise<ConfigurationMessage> => {
+  const configuration = await user.getPhoneConfiguration();
+
+  return new ConfigurationMessage(configuration, message.header.id);
 };
 
 export const ConfigurationMessageHandler = {

@@ -46,10 +46,8 @@ const update = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
     ) {
       const users = pool.getAll(account);
 
-      users.forEach((user) => {
-        user.account = account;
-
-        user.broadcast(new ConfigurationMessage(user.getPhoneConfiguration(account)));
+      users.forEach(async (user) => {
+        user.broadcast(new ConfigurationMessage(await user.getPhoneConfiguration()));
       });
     }
 

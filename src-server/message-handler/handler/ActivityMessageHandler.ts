@@ -1,15 +1,12 @@
 import { ActivityMessage } from '../../models/socket/messages/ActivityMessage';
-import { UserWithSocket } from '../../models/UserWithSocket';
+import { User } from '../../models/User';
 import { UserPoolManager } from '../../pool/UserPoolManager';
+import { userRepository as users } from '../../worker';
 
-const handle = async (
-  pool: UserPoolManager,
-  user: UserWithSocket,
-  message: ActivityMessage
-): Promise<ActivityMessage> => {
+const handle = async (pool: UserPoolManager, user: User, message: ActivityMessage): Promise<ActivityMessage> => {
   user.activity = message.payload.activity;
 
-  await user.save();
+  await users.save(user);
 
   pool.broadcastToAccount(user);
 

@@ -3,10 +3,10 @@ import { CallNotInProgressException } from '../../exceptions/CallNotInProgressEx
 import { TwilioCallControlHelper } from '../../helpers/twilio/TwilioCallControlHelper';
 import { CallStatus } from '../../models/CallStatus';
 import { HoldMessage } from '../../models/socket/messages/HoldMessage';
-import { UserWithSocket } from '../../models/UserWithSocket';
+import { User } from '../../models/User';
 import { callRepository } from '../../worker';
 
-const handle = async (user: UserWithSocket, message: HoldMessage): Promise<HoldMessage> => {
+const handle = async (user: User, message: HoldMessage): Promise<HoldMessage> => {
   const call = await callRepository.getById(message.payload.id);
 
   if (!call) {
@@ -17,7 +17,7 @@ const handle = async (user: UserWithSocket, message: HoldMessage): Promise<HoldM
     throw new CallNotInProgressException();
   }
 
-  const helper = new TwilioCallControlHelper(user.account);
+  const helper = new TwilioCallControlHelper(await user.getAccount());
 
   await helper.hold(call, 'customer', message.payload.state);
 

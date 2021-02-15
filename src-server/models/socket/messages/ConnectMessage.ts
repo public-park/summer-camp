@@ -1,7 +1,7 @@
 import { UserPoolManager } from '../../../pool/UserPoolManager';
 import { PhoneConfigurationDocument } from '../../documents/PhoneConfigurationDocument';
 import { UserPresenceDocument } from '../../documents/UserDocument';
-import { UserWithSocket } from '../../UserWithSocket';
+import { User } from '../../User';
 import { Message, MessageType } from './Message';
 
 export class ConnectMessage extends Message {
@@ -21,11 +21,11 @@ export class ConnectMessage extends Message {
     };
   }
 
-  async build(pool: UserPoolManager, user: UserWithSocket) {
+  async build(pool: UserPoolManager, user: User) {
     this.payload = {
       user: user.toPresenceDocument(),
-      phone: user.getPhoneConfiguration(user.account),
-      list: (await pool.getAllWithFallback(user.account)).map((user) => user.toPresenceDocument()),
+      phone: await user.getPhoneConfiguration(),
+      list: (await pool.getAllWithFallback(await user.getAccount())).map((user) => user.toPresenceDocument()),
     };
 
     return this;

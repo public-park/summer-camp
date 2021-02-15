@@ -6,10 +6,10 @@ import { getStatus, getDuration, getFinalInboundCallState } from './CallStatusEv
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
 import { CallStatus } from '../../models/CallStatus';
 import { CallDirection } from '../../models/CallDirection';
-import { UserWithSocket } from '../../models/UserWithSocket';
 import { createConferenceTwiml, createEnqueueTwiml, createRejectTwiml } from '../../helpers/twilio/TwilioTwimlHelper';
 import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
 import { Account } from '../../models/Account';
+import { User } from '../../models/User';
 
 export const handleConnectWithFilter = async (req: StatusCallbackRequest, res: Response, next: NextFunction) => {
   const { From, To, CallSid } = req.body;
@@ -17,7 +17,7 @@ export const handleConnectWithFilter = async (req: StatusCallbackRequest, res: R
   try {
     log.info(`${To} called`);
 
-    let users: Array<UserWithSocket> = pool.getAll(req.resource.account);
+    let users: Array<User> = pool.getAll(req.resource.account);
 
     const tag = req.query.tag?.toString();
 
@@ -31,7 +31,7 @@ export const handleConnectWithFilter = async (req: StatusCallbackRequest, res: R
 
     const status = users.length !== 0 ? CallStatus.Initiated : CallStatus.NoAnswer;
 
-    const call = await calls.create(req.resource.account as Account, From, To, CallDirection.Inbound, status, user);
+    const call = await calls.create(req.resource.account.id, From, To, CallDirection.Inbound, status, user);
 
     if (user) {
       res.status(200).send(createConferenceTwiml(call, 'customer'));
@@ -58,7 +58,7 @@ const handleConnectToUser = async (req: StatusCallbackRequest, res: Response, ne
 
     const status = user.isOnline && user.isAvailable ? CallStatus.Initiated : CallStatus.NoAnswer;
 
-    const call = await calls.create(account, From, To, CallDirection.Inbound, status, user);
+    const call = await calls.create(account.id, From, To, CallDirection.Inbound, status, user);
 
     if (call.status === CallStatus.Initiated) {
       res.status(200).send(createConferenceTwiml(call, 'customer'));
@@ -98,7 +98,7 @@ const handleCompleted = async (req: StatusCallbackRequest, res: Response, next: 
 const handleEnqueue = async (req: StatusCallbackRequest, res: Response, next: NextFunction) => {
   const { From, To } = req.body;
 
-  const call = await calls.create(req.resource.account as Account, From, To, CallDirection.Inbound, CallStatus.Queued);
+  const call = await calls.create(req.resource.account.id, From, To, CallDirection.Inbound, CallStatus.Queued);
 
   try {
     log.info(`${req.body.To} called`);

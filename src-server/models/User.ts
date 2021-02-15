@@ -7,11 +7,15 @@ import { UserRole } from './UserRole';
 import { Account } from './Account';
 import { AgentRole } from './roles/AgentRole';
 import { UserConfiguration } from './UserConfiguration';
-import { UserDocument } from './documents/UserDocument';
+import { UserDocument, UserPresenceDocument } from './documents/UserDocument';
 import { UserAuthentication } from './UserAuthenticationProvider';
 import { PhoneConfigurationDocument } from './documents/PhoneConfigurationDocument';
 import { AccountConfiguration } from './AccountConfiguration';
 import { PhoneDirection } from '../types';
+import { UserSockets } from './UserSockets';
+import { Call } from './Call';
+import { repository } from '../worker';
+import { AccountNotFoundException } from '../exceptions/AccountNotFoundException';
 
 export class User {
   id: string;
@@ -24,6 +28,10 @@ export class User {
   configuration: UserConfiguration | undefined;
   createdAt: Date;
   role: UserRole;
+
+  call: Call | undefined;
+  private account: Account | undefined;
+  sockets: UserSockets;
 
   constructor(
     id: string,
@@ -47,6 +55,10 @@ export class User {
     this.configuration = configuration;
     this.role = role;
     this.createdAt = createdAt;
+
+    this.call = undefined;
+    this.account = undefined;
+    this.sockets = new UserSockets();
   }
 
   hasPermission(name: Permission): boolean {
@@ -94,7 +106,37 @@ export class User {
     return document;
   }
 
-  getPhoneConfiguration(account: Account): PhoneConfigurationDocument {
+  toPresenceDocument(): UserPresenceDocument {
+    const { id, name, profileImageUrl, tags, accountId, role } = this.toDocument();
+
+    const response: UserPresenceDocument = {
+      id,
+      name,
+      profileImageUrl,
+      tags,
+      accountId,
+      role,
+      activity: this.activity,
+      isOnline: this.isOnline,
+      isAvailable: this.isAvailable,
+    };
+
+    if (this.call) {
+      response.call = {
+        ...this.call.toStatusDocument(),
+      };
+    }
+
+    return response;
+  }
+
+  broadcast(payload: object) {
+    this.sockets.broadcast(JSON.stringify(payload));
+  }
+
+  async getPhoneConfiguration(): Promise<PhoneConfigurationDocument> {
+    const account = await this.getAccount();
+
     const configuration: PhoneConfigurationDocument = {
       direction: this.getPhoneDirection(account.configuration),
       callerIds: [],
@@ -134,5 +176,27 @@ export class User {
     }
 
     return 'none';
+  }
+
+  get isAvailable(): boolean {
+    return this.activity === UserActivity.WaitingForWork && !this.call;
+  }
+
+  get isOnline(): boolean {
+    return this.sockets.length() > 0;
+  }
+
+  async getAccount(): Promise<Account> {
+    if (this.account) {
+      return this.account;
+    }
+
+    this.account = await repository.accounts.getById(this.accountId);
+
+    if (!this.account) {
+      throw new AccountNotFoundException();
+    }
+
+    return this.account;
   }
 }

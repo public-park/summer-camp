@@ -2,17 +2,14 @@ import { UserRepository } from '../repository/UserRepository';
 import { UserNotFoundException } from '../exceptions/UserNotFoundException';
 import { User } from '../models/User';
 import { Account } from '../models/Account';
-import { WebSocketWithKeepAlive } from '../WebSocketWithKeepAlive';
 import { CallRepository } from '../repository/CallRepository';
 import { CallMessage } from '../models/socket/messages/CallMessage';
 import { UserMessage } from '../models/socket/messages/UserMessage';
 import { Call } from '../models/Call';
-import { UserWithSocket } from '../models/UserWithSocket';
 import { AccountRepository } from '../repository/AccountRepository';
-import { AccountNotFoundException } from '../exceptions/AccountNotFoundException';
 
 export class UserPoolManager {
-  pool: Map<string, UserWithSocket>;
+  pool: Map<string, User>;
   calls: CallRepository;
   users: UserRepository;
   accounts: AccountRepository;
@@ -35,7 +32,7 @@ export class UserPoolManager {
     });
   }
 
-  getUser(call: Call): UserWithSocket | undefined {
+  getUser(call: Call): User | undefined {
     if (!call.userId) {
       return;
     }
@@ -49,11 +46,11 @@ export class UserPoolManager {
     return user;
   }
 
-  async broadcastToAccount(user: UserWithSocket) {
-    this.getAll(user.account).forEach((it) => it.broadcast(new UserMessage(user)));
+  async broadcastToAccount(user: User) {
+    this.getAll(await user.getAccount()).forEach((it) => it.broadcast(new UserMessage(user)));
   }
 
-  async add(user: UserWithSocket): Promise<UserWithSocket> {
+  async add(user: User): Promise<User> {
     this.pool.set(user.id, user);
 
     this.broadcastToAccount(user);
@@ -61,7 +58,7 @@ export class UserPoolManager {
     return user;
   }
 
-  updateIfExists(user: UserWithSocket) {
+  updateIfExists(user: User) {
     let it = this.getById(user.id);
 
     if (it) {
@@ -73,7 +70,7 @@ export class UserPoolManager {
     }
   }
 
-  delete(user: UserWithSocket) {
+  delete(user: User) {
     user.sockets.close(1006);
 
     this.pool.delete(user.id);
@@ -89,7 +86,7 @@ export class UserPoolManager {
     }
   }
 
-  getById(id: string): UserWithSocket | undefined {
+  getById(id: string): User | undefined {
     return this.pool.get(id);
   }
 
@@ -103,21 +100,19 @@ export class UserPoolManager {
     return user;
   }
 
-  async getByIdWithFallback(id: string): Promise<UserWithSocket | undefined> {
-    let UserWithSocket = this.getById(id);
+  async getByIdWithFallback(id: string): Promise<User | undefined> {
+    let User = this.getById(id);
 
-    if (UserWithSocket) {
-      return UserWithSocket;
+    if (User) {
+      return User;
     } else {
       const user = await this.users.getById(id);
 
-      if (user) {
-        return this.getUserWithSocket(user);
-      }
+      return user;
     }
   }
 
-  async getOneByAccount(account: Account): Promise<UserWithSocket | undefined> {
+  async getOneByAccount(account: Account): Promise<User | undefined> {
     const users = this.getAll(account);
 
     if (users.length !== 0) {
@@ -125,7 +120,7 @@ export class UserPoolManager {
     }
   }
 
-  async getOneByAccountWithFallback(account: Account): Promise<UserWithSocket | undefined> {
+  async getOneByAccountWithFallback(account: Account): Promise<User | undefined> {
     const user = this.getOneByAccount(account);
 
     if (user) {
@@ -137,32 +132,20 @@ export class UserPoolManager {
         throw new UserNotFoundException();
       }
 
-      return this.getUserWithSocket(user);
+      return user;
     }
   }
 
-  getAll(account: Account): Array<UserWithSocket> {
+  getAll(account: Account): Array<User> {
     return Array.from(this.pool.values()).filter((user) => user.accountId === account.id);
   }
 
-  async getAllWithFallback(account: Account): Promise<Array<UserWithSocket>> {
+  async getAllWithFallback(account: Account): Promise<Array<User>> {
     const offline = (await this.users.getAll(account)).filter((user) => !this.pool.has(user.id));
-
-    const onlineWithSocket = await Promise.all(offline.map(async (user) => await this.getUserWithSocket(user)));
 
     let online = Array.from(this.pool.values()).filter((user) => user.accountId === account.id);
 
-    return online.concat(onlineWithSocket);
-  }
-
-  async getUserWithSocket(user: User, sockets: Array<WebSocketWithKeepAlive> = []): Promise<UserWithSocket> {
-    const account = await this.accounts.getById(user.accountId);
-
-    if (!account) {
-      throw new AccountNotFoundException();
-    }
-
-    return new UserWithSocket(account, user, sockets, this.users);
+    return online.concat(offline);
   }
 
   getSize() {

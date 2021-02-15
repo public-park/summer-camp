@@ -1,15 +1,14 @@
 import { NextFunction, Response } from 'express';
-import { pool } from '../worker';
 import { UserNotFoundException } from '../exceptions/UserNotFoundException';
 import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 
 const get = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const user = await pool.getByIdWithFallback(req.params.userId!);
-
-    if (!user) {
+    if (!req.resource.user) {
       throw new UserNotFoundException();
     }
+
+    let user = req.resource.user;
 
     res.json(user.toPresenceDocument());
   } catch (error) {

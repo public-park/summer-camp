@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import isUUID from 'validator/lib/isUUID';
-import { userRepository } from '../worker';
+import { pool } from '../worker';
 import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 import { InvalidUrlException } from '../exceptions/InvalidUrlException';
 import { UserNotFoundException } from '../exceptions/UserNotFoundException';
@@ -16,7 +16,7 @@ export const verifyUserResourcePolicy = async (
   }
 
   try {
-    const user = await userRepository.getById(userId);
+    const user = await pool.getByIdWithFallback(userId);
 
     if (!user) {
       return next(new UserNotFoundException());

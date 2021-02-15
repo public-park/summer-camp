@@ -25,8 +25,8 @@ import { InitiateCallMessage } from './models/socket/messages/InitiateCallMessag
 import { AcknowledgeMessageHandler } from './message-handler/AcknowledgeMessageHandler';
 import { ConnectMessage } from './models/socket/messages/ConnectMessage';
 import { UserNotFoundException } from './exceptions/UserNotFoundException';
-import { UserWithSocket } from './models/UserWithSocket';
 import { RejectMessageHandler } from './message-handler/handler/RejectMessageHandler';
+import { User } from './models/User';
 
 export interface SocketWorkerOptions {
   server: WebSocket.ServerOptions;
@@ -49,7 +49,7 @@ export class SocketWorker {
     this.acknowledge = new AcknowledgeMessageHandler();
   }
 
-  async getUserFromHttpHeader(headers: http.IncomingHttpHeaders): Promise<UserWithSocket> {
+  async getUserFromHttpHeader(headers: http.IncomingHttpHeaders): Promise<User> {
     if (!headers.userId || !headers.accountId || !headers.token) {
       throw new InvalidHttpHeaderException();
     }

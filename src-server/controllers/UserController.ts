@@ -6,6 +6,8 @@ import { UserRole } from '../models/UserRole';
 import { User } from '../models/User';
 import { AuthenticatedRequest } from '../requests/AuthenticatedRequest';
 import { UserNotFoundException } from '../exceptions/UserNotFoundException';
+import { TagMessage } from '../models/socket/messages/TagMessage';
+import { ActivityMessage } from '../models/socket/messages/ActivityMessage';
 
 const create = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
@@ -37,7 +39,7 @@ const create = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
 
     const user = await users.create(req.body.name, undefined, tags, req.jwt.account.id, authentication, role, activity);
 
-    pool.add(await pool.getUserWithSocket(user));
+    pool.add(user);
 
     res.json(user.toDocumentWithoutAuthentication());
   } catch (error) {
@@ -59,18 +61,32 @@ const fetch = async (req: AuthenticatedRequest, res: Response, next: NextFunctio
 
 const update = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    let user = req.resource.user as User;
+    if (!req.resource.user) {
+      throw new UserNotFoundException();
+    }
+
+    let user = req.resource.user;
 
     if (req.body.tags) {
       isValidTagList(req.body.tags);
 
-      user.tags = new Set(req.body.tags);
+      const tags = new Set(req.body.tags as string[]);
+
+      if ([...user.tags].join('') !== [...tags].join('')) {
+        user.tags = tags;
+
+        user.broadcast(new TagMessage(user.tags));
+      }
     }
 
     if (req.body.activity) {
       isValidActivity(req.body.activity);
 
-      user.activity = req.body.activity;
+      if (user.activity !== req.body.activity) {
+        user.activity = req.body.activity;
+
+        user.broadcast(new ActivityMessage(user.activity));
+      }
     }
 
     if (req.body.role) {
@@ -107,9 +123,9 @@ const update = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
       }
     }
 
-    user = await users.save(user);
+    pool.broadcastToAccount(user);
 
-    pool.updateIfExists(await pool.getUserWithSocket(user));
+    user = await users.save(user);
 
     res.json(user.toDocumentWithoutAuthentication());
   } catch (error) {

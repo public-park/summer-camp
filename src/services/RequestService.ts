@@ -2,13 +2,12 @@ import { RequestException } from '../exceptions/RequestException';
 import { RequestTimeoutException } from '../exceptions/RequestTimeoutException';
 import { getUrl } from '../helpers/UrlHelper';
 import { AccountConfiguration } from '../models/AccountConfiguration';
+import { AccountConfigurationDocument } from '../models/documents/AccountConfigurationDocument';
+import { CallDocument } from '../models/documents/CallDocument';
 import { User } from '../models/User';
 import { PhoneNumber } from '../store/SetupStore';
 
-async function fetchWithTimeout(request: string, options: any): Promise<Response> {
-  // TODO remove any
-  const { timeout = 8000 } = options;
-
+async function fetchWithTimeout(url: string, request: RequestInit, timeout = 8000): Promise<Response> {
   try {
     const controller = new AbortController();
 
@@ -16,8 +15,8 @@ async function fetchWithTimeout(request: string, options: any): Promise<Response
       controller.abort();
     }, timeout);
 
-    const response: Response = await fetch(request, {
-      ...options,
+    const response: Response = await fetch(url, {
+      ...request,
       signal: controller.signal,
     });
 
@@ -53,7 +52,7 @@ const getHeaderWithAuthentication = (method: 'POST' | 'GET', user: User) => {
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      Token: user.connection.token,
+      Token: user.connection.token as string,
     },
   };
 };
@@ -185,7 +184,7 @@ const fetchPhoneToken = async (user: User): Promise<string> => {
   return parsed.token;
 };
 
-const fetchAccountConfiguration = async (user: User): Promise<unknown> => {
+const fetchAccountConfiguration = async (user: User): Promise<AccountConfigurationDocument | undefined> => {
   const url = getUrl(`/api/accounts/${user.accountId}/configuration`);
 
   const response = await fetchWithTimeout(url, getHeaderWithAuthentication('GET', user));
@@ -236,14 +235,14 @@ const fetchAccountPhoneNumbers = async (user: User): Promise<AccountPhoneNumberJ
   return parsed;
 };
 
-const fetchCalls = async (user: User, skip: number, limit: number): Promise<any> => {
+const fetchCalls = async (user: User, skip: number, limit: number): Promise<Array<CallDocument>> => {
   const url = getUrl(`/api/calls?skip=${skip}&limit=${limit}`);
 
   const response = await fetchWithTimeout(url, getHeaderWithAuthentication('GET', user));
 
   const parsed = await parseJson(response);
 
-  return parsed;
+  return parsed as Array<CallDocument>;
 };
 
 export {

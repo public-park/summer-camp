@@ -33,7 +33,6 @@ export const Keypad = () => {
 
   const dispatch = useDispatch();
 
-  // TODO add logic to separate component
   const addDigit = (digit: string) => {
     if (call) {
       call.sendDigits(digit);

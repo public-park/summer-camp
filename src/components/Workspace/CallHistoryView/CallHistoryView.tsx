@@ -4,12 +4,13 @@ import { ApplicationContext } from '../../../context/ApplicationContext';
 import { LoadIndicator } from '../ConfigurationView/LoadIndicator';
 import { fetchCalls } from '../../../services/RequestService';
 import { User } from '../../../models/User';
+import { CallDocument } from '../../../models/documents/CallDocument';
 
 export const CallHistoryView = () => {
   // TODO, add hook useFetchCallHistory(start, limit) => isFetching, calls
 
   const { user } = useContext(ApplicationContext);
-  const [calls, setCalls] = useState([]);
+  const [calls, setCalls] = useState<Array<CallDocument>>([]);
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState('');
 

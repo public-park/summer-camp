@@ -7,7 +7,7 @@ export const PhoneNumberSelect = (props: any) => {
   };
 
   return (
-    <div style={{ margin: '5px 0px 15px 0px' }}>
+    <div style={{ margin: '5px 0px 5px 0px' }}>
       <Select fullWidth value={props.value} onChange={handleChange}>
         <MenuItem key="please_select" value="">
           Please Select

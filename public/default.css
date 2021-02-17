@@ -52,7 +52,7 @@ button {
 
 .page {
   display: flex;
-  min-height: 100%;
+  height: 100%;
   justify-content: center;
   flex-direction: row;
 }
@@ -100,13 +100,19 @@ button {
 
 .workspace {
   min-height: 400px;
-  max-height: 800px;
+  max-height: 100%;
   flex: auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border-radius: 5px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 2px 1px -1px rgba(0, 0, 0, 0.12);
+}
+
+@media screen and (min-height: 800px) {
+  .workspace {
+    max-height: 800px;
+  }
 }
 
 .workspace > .header {
@@ -612,6 +618,7 @@ button {
   background-color: #f7f7f7;
   flex: auto;
   padding: 10px;
+  overflow: auto;
 }
 
 .configuration .phone-number-configuration-panel {
@@ -627,12 +634,12 @@ button {
 .configuration .inbound-canvas,
 .outbound-canvas {
   background-color: #f7f7f7;
-  margin-bottom: 10px;
-  padding: 10px 10px 10px 35px;
+  margin-bottom: 5px;
+  padding: 5px 10px 5px 35px;
 }
 
 .configuration .outbound-title {
-  margin-top: 10px;
+  margin-top: 0px;
 }
 
 .configuration .phone-number-configuration-panel {
@@ -664,6 +671,7 @@ button {
   flex-direction: column;
   background-color: #fafafa;
   overflow: auto;
+  position: relative;
 }
 
 .users .item {
@@ -684,4 +692,16 @@ button {
 .users .item .detail .status {
   font-weight: 200;
   line-height: 1.8em;
+}
+
+.users .create-user-button {
+  position: sticky;
+  bottom: 10px;
+  right: 10px;
+}
+
+.users .create-user-button button {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
 }

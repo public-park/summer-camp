@@ -13,7 +13,6 @@ import { selectSetupConfiguration, selectSetupIsSaving, selectSetupValidation } 
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { updateTwilioAccount, validateConfigurationComplete } from '../../../actions/SetupAction';
 import { updateAccountConfiguration, validateAccountConfiguration } from '../../../services/RequestService';
-import { User } from '../../../models/User';
 
 export const AccountSetupForm = () => {
   const dispatch = useDispatch();

@@ -44,7 +44,7 @@ const update = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
       account.configuration &&
       (account.configuration.inbound.isEnabled || account.configuration.outbound.isEnabled)
     ) {
-      const users = pool.getAll(account);
+      const users = pool.getByAccount(account);
 
       users.forEach(async (user) => {
         user.broadcast(new ConfigurationMessage(await user.getPhoneConfiguration()));

@@ -5,6 +5,7 @@ import { accountRepository as accounts } from '../../worker';
 import { AccountNotFoundException } from '../../exceptions/AccountNotFoundException';
 import { ServerException } from '../../exceptions/ServerException';
 import { StatusCallbackRequest } from '../../requests/StatusCallbackRequest';
+import { log } from '../../logger';
 
 export const addAccountToRequest = async (
   request: StatusCallbackRequest,
@@ -30,7 +31,7 @@ export const addAccountToRequest = async (
 
     return next();
   } catch (error) {
-    console.log(error); // TODO otherwise not written to consoe ..
+    log.error(error);
     return next(new ServerException());
   }
 };

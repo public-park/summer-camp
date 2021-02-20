@@ -47,7 +47,7 @@ export class UserPoolManager {
   }
 
   async broadcastToAccount(user: User) {
-    this.getAll(await user.getAccount()).forEach((it) => it.broadcast(new UserMessage(user)));
+    this.getByAccount(await user.getAccount()).forEach((it) => it.broadcast(new UserMessage(user)));
   }
 
   async add(user: User): Promise<User> {
@@ -56,18 +56,6 @@ export class UserPoolManager {
     this.broadcastToAccount(user);
 
     return user;
-  }
-
-  updateIfExists(user: User) {
-    let it = this.getById(user.id);
-
-    if (it) {
-      this.pool.set(user.id, user);
-
-      this.broadcastToAccount(user);
-    } else {
-      throw new UserNotFoundException(); // TODO FIX
-    }
   }
 
   delete(user: User) {
@@ -113,7 +101,7 @@ export class UserPoolManager {
   }
 
   async getOneByAccount(account: Account): Promise<User | undefined> {
-    const users = this.getAll(account);
+    const users = this.getByAccount(account);
 
     if (users.length !== 0) {
       return Promise.resolve(users[0]);
@@ -136,11 +124,11 @@ export class UserPoolManager {
     }
   }
 
-  getAll(account: Account): Array<User> {
+  getByAccount(account: Account): Array<User> {
     return Array.from(this.pool.values()).filter((user) => user.accountId === account.id);
   }
 
-  async getAllWithFallback(account: Account): Promise<Array<User>> {
+  async getByAccountWithFallback(account: Account): Promise<Array<User>> {
     const offline = (await this.users.getAll(account)).filter((user) => !this.pool.has(user.id));
 
     let online = Array.from(this.pool.values()).filter((user) => user.accountId === account.id);

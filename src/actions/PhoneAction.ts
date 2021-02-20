@@ -15,6 +15,7 @@ import {
   PhoneTokenAction,
 } from './Action';
 import { PhoneConfigurationDocument } from '../models/documents/PhoneConfigurationDocument';
+import { CallStatusDocument } from '../models/documents/CallDocument';
 
 export const updatePhoneDisplay = (value: string): PhoneDisplayAction => {
   return {
@@ -101,9 +102,24 @@ export const setPhoneState = (state: PhoneState, userId: string): PhoneStateActi
 };
 
 export const setPhoneCallState = (call: Call | undefined): PhoneCallStateAction => {
+  if (!call) {
+    return {
+      type: ActionType.PHONE_CALL_STATE_CHANGE,
+      payload: undefined,
+    };
+  }
+
+  const { id, from, to, status, direction, answeredAt } = call;
+
+  const payload: CallStatusDocument = { id, from, to, status, direction };
+
+  if (answeredAt) {
+    payload.answeredAt = answeredAt.toString();
+  }
+
   return {
     type: ActionType.PHONE_CALL_STATE_CHANGE,
-    payload: call,
+    payload: payload,
   };
 };
 

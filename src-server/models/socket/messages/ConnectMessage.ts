@@ -8,7 +8,7 @@ export class ConnectMessage extends Message {
   payload: {
     user: UserPresenceDocument | undefined;
     phone: PhoneConfigurationDocument | undefined;
-    list: Array<UserPresenceDocument>;
+    users: Array<UserPresenceDocument>;
   };
 
   constructor() {
@@ -17,7 +17,7 @@ export class ConnectMessage extends Message {
     this.payload = {
       user: undefined,
       phone: undefined,
-      list: [],
+      users: [],
     };
   }
 
@@ -25,7 +25,7 @@ export class ConnectMessage extends Message {
     this.payload = {
       user: user.toPresenceDocument(),
       phone: await user.getPhoneConfiguration(),
-      list: (await pool.getAllWithFallback(await user.getAccount())).map((user) => user.toPresenceDocument()),
+      users: (await pool.getByAccountWithFallback(await user.getAccount())).map((user) => user.toPresenceDocument()),
     };
 
     return this;

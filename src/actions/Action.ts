@@ -1,5 +1,6 @@
 import { Call } from '../models/Call';
 import { ConnectionState } from '../models/Connection';
+import { CallStatusDocument } from '../models/documents/CallDocument';
 import { PhoneConfigurationDocument } from '../models/documents/PhoneConfigurationDocument';
 import { UserPresenceDocument } from '../models/documents/UserDocument';
 import { UserActivity } from '../models/UserActivity';
@@ -159,7 +160,7 @@ export interface PhoneOutputDeviceLostAction extends Action<ActionType.PHONE_OUT
 }
 
 export interface PhoneCallStateAction extends Action<ActionType.PHONE_CALL_STATE_CHANGE> {
-  payload: Call | undefined;
+  payload: CallStatusDocument | undefined;
 }
 
 export interface PhoneOverlayAction extends Action<ActionType.PHONE_OVERLAY> {

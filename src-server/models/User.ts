@@ -86,7 +86,7 @@ export class User {
       accountId: this.accountId,
       authentication: this.authentication,
       role: this.role,
-      createdAt: this.createdAt,
+      createdAt: this.createdAt.toUTCString(),
     };
 
     if (this.profileImageUrl) {

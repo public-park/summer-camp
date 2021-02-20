@@ -57,7 +57,7 @@ export class Call {
       accountId: this.accountId,
       status: this.status,
       direction: this.direction,
-      createdAt: this.createdAt,
+      createdAt: this.createdAt.toUTCString(),
     };
 
     if (this.userId) {
@@ -73,11 +73,11 @@ export class Call {
     }
 
     if (this.updatedAt) {
-      payload.updatedAt = this.updatedAt;
+      payload.updatedAt = this.updatedAt.toUTCString();
     }
 
     if (this.answeredAt) {
-      payload.answeredAt = this.answeredAt;
+      payload.answeredAt = this.answeredAt.toUTCString();
     }
 
     return payload;
@@ -93,7 +93,7 @@ export class Call {
     };
 
     if (this.answeredAt) {
-      payload.answeredAt = this.answeredAt;
+      payload.answeredAt = this.answeredAt.toUTCString();
     }
     return payload;
   }

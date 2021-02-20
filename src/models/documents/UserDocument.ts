@@ -2,7 +2,8 @@ import { CallDirection } from '../CallDirection';
 import { CallStatus } from '../CallStatus';
 import { UserActivity } from '../UserActivity';
 import { UserRole } from '../UserRole';
-
+import { UserConfigurationDocument } from './UserConfigurationDocume';
+// TODO UserAuthentication is part of this DTO on the BE
 export interface UserDocument {
   id: string;
   name: string;
@@ -10,8 +11,9 @@ export interface UserDocument {
   tags: Array<string>;
   activity: UserActivity;
   accountId: string;
+  configuration?: UserConfigurationDocument;
   role: UserRole;
-  createdAt: Date;
+  createdAt: string;
 }
 
 export interface UserPresenceDocument {

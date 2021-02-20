@@ -107,6 +107,7 @@ export class MongoUserRepository implements UserRepository {
       { _id: user.id },
       {
         ...user.toDocument(),
+        createdAt: user.createdAt,
       },
       {
         new: true,

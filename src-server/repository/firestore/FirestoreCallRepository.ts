@@ -11,7 +11,7 @@ import { InvalidDocumentException } from '../../exceptions/InvalidDocumentExcept
 import { Call } from '../../models/Call';
 import { Firestore, Timestamp } from '@google-cloud/firestore';
 
-interface CallFirestoreDocument {
+interface FirestoreCallDocument {
   id: string;
   from: string;
   to: string;
@@ -86,7 +86,7 @@ export class FirestoreCallRepository implements CallRepository, BaseRepository<C
       throw new InvalidDocumentException();
     }
 
-    const item = data as CallFirestoreDocument;
+    const item = data as FirestoreCallDocument;
 
     const call = new Call(item.id, item.from, item.to, item.accountId, item.direction, item.status);
 
@@ -108,7 +108,7 @@ export class FirestoreCallRepository implements CallRepository, BaseRepository<C
       return this.convertDocumentToCall(document.data());
     }
   }
-  protected convertCallToDocument(call: Call): CallFirestoreDocument {
+  protected convertCallToDocument(call: Call): FirestoreCallDocument {
     return {
       ...call,
       createdAt: Timestamp.fromDate(call.createdAt),

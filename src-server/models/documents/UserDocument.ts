@@ -2,8 +2,8 @@ import { CallDirection } from '../CallDirection';
 import { CallStatus } from '../CallStatus';
 import { UserActivity } from '../UserActivity';
 import { UserAuthentication } from '../UserAuthenticationProvider';
-import { UserConfiguration } from '../UserConfiguration';
 import { UserRole } from '../UserRole';
+import { UserConfigurationDocument } from './UserConfigurationDocument';
 
 export interface UserDocument {
   id: string;
@@ -13,9 +13,9 @@ export interface UserDocument {
   activity: UserActivity;
   accountId: string;
   authentication: UserAuthentication;
-  configuration?: UserConfiguration;
+  configuration?: UserConfigurationDocument;
   role: UserRole;
-  createdAt: Date;
+  createdAt: string;
 }
 
 export interface UserPresenceDocument {

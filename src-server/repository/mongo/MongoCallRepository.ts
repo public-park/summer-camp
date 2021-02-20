@@ -1,7 +1,7 @@
 import { BaseRepository } from '../BaseRepository';
 import { CallRepository } from '../CallRepository';
 import { Call } from '../../models/Call';
-import { CallDocument, getModel } from './CallSchema';
+import { getModel, MongoCallDocument } from './CallSchema';
 import { User } from '../../models/User';
 import { Account } from '../../models/Account';
 import { CallNotFoundException } from '../../exceptions/CallNotFoundException';
@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Model } from 'mongoose';
 
 export class MongoCallRepository implements CallRepository, BaseRepository<Call> {
-  private model: Model<CallDocument>;
+  private model: Model<MongoCallDocument>;
   private eventEmitter: EventEmitter;
 
   constructor(COLLECTION_NAME: string) {
@@ -77,6 +77,8 @@ export class MongoCallRepository implements CallRepository, BaseRepository<Call>
       {
         ...call.toDocument(),
         updatedAt: new Date(),
+        createdAt: call.createdAt,
+        answeredAt: call.answeredAt ?? undefined,
       },
       {
         new: true,

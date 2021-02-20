@@ -5,7 +5,7 @@ import { Call } from '../../models/Call';
 import { CallStatus } from '../../models/CallStatus';
 import { CallDirection } from '../../models/CallDirection';
 
-export interface CallDocument extends Document {
+export interface MongoCallDocument extends Document {
   _id: string;
   from: string;
   to: string;
@@ -59,5 +59,5 @@ CallSchema.methods.toCall = function (): Call {
 CallSchema.index({ callSid: 1 }, { unique: true, partialFilterExpression: { callSid: { $ne: null } } });
 
 export const getModel = (COLLECTION_NAME: string) => {
-  return mongoose.model<CallDocument>('CallModel', CallSchema, COLLECTION_NAME);
+  return mongoose.model<MongoCallDocument>('CallModel', CallSchema, COLLECTION_NAME);
 };

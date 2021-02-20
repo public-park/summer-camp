@@ -23,7 +23,7 @@ export class Account {
     const payload: AccountDocument = {
       id: this.id,
       name: this.name,
-      createdAt: this.createdAt,
+      createdAt: this.createdAt.toUTCString(),
     };
 
     if (this.configuration) {

@@ -9,11 +9,11 @@ export interface CallDocument {
   userId?: string;
   status: CallStatus;
   direction: CallDirection;
-  createdAt: Date;
+  createdAt: string;
   duration?: number;
   callSid?: string;
-  updatedAt?: Date;
-  answeredAt?: Date;
+  updatedAt?: string;
+  answeredAt?: string;
 }
 
 export interface CallStatusDocument {
@@ -22,5 +22,5 @@ export interface CallStatusDocument {
   to: string;
   status: CallStatus;
   direction: CallDirection;
-  answeredAt?: Date;
+  answeredAt?: string;
 }

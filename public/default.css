@@ -666,12 +666,17 @@ button {
 }
 
 .users {
-  flex: auto;
-  display: flex;
   flex-direction: column;
   background-color: #fafafa;
   overflow: auto;
   position: relative;
+  height: 100%;
+  background-color: #fafafa;
+}
+
+.users .list-wrapper {
+  height: 100%;
+  overflow: auto;
 }
 
 .users .item {
@@ -692,6 +697,13 @@ button {
 .users .item .detail .status {
   font-weight: 200;
   line-height: 1.8em;
+}
+
+.users .button-wrapper {
+  width: 100%;
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
 }
 
 .users .create-user-button {

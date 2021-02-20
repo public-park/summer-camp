@@ -38,6 +38,7 @@ import { onPageLoad, setLogin, setLogout } from './actions/ApplicationAction';
 import { Call } from './models/Call';
 import { setNotification, setView } from './actions/WorkspaceAction';
 import { updateUserList } from './actions/UserListAction';
+import { PhoneError } from './phone/PhoneError';
 
 export const ApplicationContextProvider = (props: any) => {
   const { isResume } = usePageLifecycle();
@@ -95,7 +96,7 @@ export const ApplicationContextProvider = (props: any) => {
 
     // TODO, connection object should return user
     connection.on(MessageType.Connect, async (message: ConnectMessage) => {
-      dispatch(updateUserList(message.payload.list)); // TODO change naming, #terrible
+      dispatch(updateUserList(message.payload.users));
 
       const { id, name, profileImageUrl, accountId, tags, activity, role } = message.payload.user;
 
@@ -120,11 +121,10 @@ export const ApplicationContextProvider = (props: any) => {
         dispatch(setPhoneCallState(call));
       });
 
-      phone.onError((error: Error) => {
+      phone.onError((error: PhoneError) => {
         console.error(error);
 
-        if ((error as any).code === 31202) {
-          // TODO, create error type
+        if (error.code === 31202) {
           dispatch(
             setPhoneError(
               new Error(

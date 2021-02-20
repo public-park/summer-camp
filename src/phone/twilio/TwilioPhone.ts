@@ -12,6 +12,7 @@ import { CallMessage } from '../../models/socket/messages/CallMessage';
 import { InitiateCallMessage } from '../../models/socket/messages/InitiateCallMessage';
 import { CallStatus } from '../../models/CallStatus';
 import { CallDirection } from '../../models/CallDirection';
+import { PhoneError } from '../PhoneError';
 
 interface DelayedState {
   state: PhoneState;
@@ -62,8 +63,8 @@ export class TwilioPhone implements PhoneControl {
         });
       }
 
-      if (this.call && message.payload) {
-        this.call.status = message.payload.status;
+      if (this.call) {
+        this.updateCallFromPayload(message);
       }
 
       this.eventEmitter.emit(PhoneEventType.CallStateChanged, this.call);
@@ -120,13 +121,14 @@ export class TwilioPhone implements PhoneControl {
       await this.onCallEnd();
     });
 
-    this.device.on('error', (error: any) => {
+    this.device.on('error', (error: Client.Device.Error) => {
       let state: PhoneState;
 
       switch (error.code) {
         case 31205:
           state = PhoneState.Expired;
           break;
+
         default:
           state = PhoneState.Error;
           break;
@@ -251,7 +253,7 @@ export class TwilioPhone implements PhoneControl {
     this.eventEmitter.on(PhoneEventType.StateChanged, listener);
   }
 
-  onError(listener: (error: Error) => void) {
+  onError(listener: (error: PhoneError) => void) {
     this.eventEmitter.on(PhoneEventType.Error, listener);
   }
 
@@ -271,6 +273,19 @@ export class TwilioPhone implements PhoneControl {
 
   onCallStateChanged(listener: (call: Call | undefined) => void) {
     this.eventEmitter.on(PhoneEventType.CallStateChanged, listener);
+  }
+
+  private updateCallFromPayload(message: CallMessage) {
+    if (!this.call) {
+      return;
+    }
+
+    this.call.status = message.payload.status;
+    this.call.createdAt = new Date(message.payload.createdAt);
+
+    if (message.payload.answeredAt) {
+      this.call.answeredAt = new Date(message.payload.answeredAt);
+    }
   }
 
   private hasEnded(message: CallMessage) {

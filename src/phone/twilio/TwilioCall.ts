@@ -28,7 +28,7 @@ export class TwilioCall implements Call {
   isRecording: boolean;
   readonly direction: CallDirection;
   status: CallStatus;
-  readonly createdAt: Date;
+  createdAt: Date;
   answeredAt: Date | undefined;
 
   private eventEmitter: EventEmitter;

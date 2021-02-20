@@ -61,10 +61,11 @@ export class Connection {
     };
 
     this.socket.onmessage = (event: MessageEvent) => {
-      console.info(`message received: ${event.data}`);
-
       try {
         const message: Message = JSON.parse(event.data);
+
+        console.log(`%c WebSocket message: ${message.header.type.toUpperCase()}`, 'color: #00a2ff');
+        console.info(message);
 
         this.send(new AcknowledgeMessage(message.header.id));
 

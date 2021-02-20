@@ -12,21 +12,6 @@ import { InvalidDocumentException } from '../../exceptions/InvalidDocumentExcept
 import { Call } from '../../models/Call';
 import { CallDocument } from '../../models/documents/CallDocument';
 
-interface CallJsonDocument {
-  id: string;
-  from: string;
-  to: string;
-  accountId: string;
-  status: CallStatus;
-  direction: CallDirection;
-  userId?: string;
-  callSid?: string;
-  duration?: number;
-  createdAt: string;
-  updatedAt?: string;
-  answeredAt?: string;
-}
-
 const isValidCallDocument = (data: unknown) => {
   if (typeof data !== 'object') {
     return false;
@@ -102,7 +87,7 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
       throw new InvalidDocumentException();
     }
 
-    const item = data as CallJsonDocument;
+    const item = data as CallDocument;
 
     const call = new Call(item.id, item.from, item.to, item.accountId, item.direction, item.status);
 
@@ -127,12 +112,8 @@ export class FileCallRepository extends FileBaseRepository<Call> implements Call
 
   protected toFile(): Array<CallDocument> {
     return Array.from(this.calls.values()).map((call) => {
-      return this.convertCallToDocument(call);
+      return call.toDocument();
     });
-  }
-
-  protected convertCallToDocument(call: Call): CallDocument {
-    return call.toDocument();
   }
 
   async getByCallSid(callSid: string) {

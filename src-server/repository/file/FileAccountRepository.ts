@@ -9,28 +9,6 @@ import { InvalidDocumentException } from '../../exceptions/InvalidDocumentExcept
 import { AccountConfiguration } from '../../models/AccountConfiguration';
 import { AccountDocument } from '../../models/documents/AccountDocument';
 
-interface AccountJsonDocument {
-  id: string;
-  name: string;
-  configuration:
-    | {
-        key?: string;
-        secret?: string;
-        accountSid?: string;
-        inbound: {
-          isEnabled: boolean;
-          phoneNumber?: string;
-        };
-        outbound: {
-          isEnabled: boolean;
-          mode?: string;
-          phoneNumber?: string;
-        };
-      }
-    | undefined;
-  createdAt: string;
-}
-
 const isValidAccountDocument = (data: unknown) => {
   if (typeof data !== 'object') {
     return false;
@@ -92,16 +70,12 @@ export class FileAccountRepository
     return this.persist(this.toFile());
   };
 
-  protected toAccountDocument(account: Account): AccountDocument {
-    return account.toDocument();
-  }
-
   protected convertDocumentToAccount(data: unknown): Account {
     if (!isValidAccountDocument(data)) {
       throw new InvalidDocumentException();
     }
 
-    const item = data as AccountJsonDocument;
+    const item = data as AccountDocument;
 
     const configuration: AccountConfiguration = {
       key: undefined,
@@ -125,7 +99,7 @@ export class FileAccountRepository
 
   protected toFile(): Array<AccountDocument> {
     return Array.from(this.accounts.values()).map((account) => {
-      return this.toAccountDocument(account);
+      return account.toDocument();
     });
   }
 

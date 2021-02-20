@@ -16,19 +16,6 @@ import { InvalidAccountException } from '../../exceptions/InvalidAccountExceptio
 import { UserDocument } from '../../models/documents/UserDocument';
 import { UserConfiguration } from '../../models/UserConfiguration';
 
-interface UserJsonDocument {
-  id: string;
-  name: string;
-  profileImageUrl?: string;
-  tags: string[];
-  activity: UserActivity;
-  accountId: string;
-  authentication: UserAuthentication;
-  configuration: UserConfiguration;
-  role: UserRole;
-  createdAt: string;
-}
-
 const isValidUserDocument = (data: unknown) => {
   if (typeof data !== 'object') {
     return false;
@@ -141,12 +128,8 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
 
   protected toFile(): Array<UserDocument> {
     return Array.from(this.users.values()).map((user) => {
-      return this.convertUserToDocument(user);
+      return user.toDocument();
     });
-  }
-
-  protected convertUserToDocument(user: User): UserDocument {
-    return user.toDocument();
   }
 
   protected fromFile(list: Array<unknown>): Map<string, User> {
@@ -166,7 +149,7 @@ export class FileUserRepository extends FileBaseRepository<User> implements User
       throw new InvalidDocumentException();
     }
 
-    const item = data as UserJsonDocument;
+    const item = data as UserDocument;
 
     return new User(
       item.id,

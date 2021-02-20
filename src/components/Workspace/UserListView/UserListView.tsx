@@ -2,12 +2,12 @@ import { Button } from '@material-ui/core';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setView } from '../../../actions/WorkspaceAction';
-import { selectTeam, selectUser } from '../../../store/Store';
+import { selectUser, selectUserList } from '../../../store/Store';
 import { UserItem } from './UserItem';
 
 export const UserListView = () => {
   const user = useSelector(selectUser);
-  const users = useSelector(selectTeam);
+  const users = useSelector(selectUserList);
 
   const dispatch = useDispatch();
 
@@ -26,17 +26,20 @@ export const UserListView = () => {
 
   return (
     <div className="users">
-      {list.map((it) => {
-        return it.id !== user?.id ? <UserItem key={it.id} user={it} /> : undefined;
-      })}
-
-      {user.role === 'owner' && (
-        <div className="create-user-button">
-          <Button onClick={() => dispatch(setView('USER_SETUP_VIEW'))} variant="contained" color="primary">
-            Add User
-          </Button>
-        </div>
-      )}
+      <div className="button-wrapper">
+        {user.role === 'owner' && (
+          <div className="create-user-button">
+            <Button onClick={() => dispatch(setView('USER_SETUP_VIEW'))} variant="contained" color="primary">
+              Add User
+            </Button>
+          </div>
+        )}
+      </div>
+      <div className="list-wrapper">
+        {list.map((it) => {
+          return it.id !== user?.id ? <UserItem key={it.id} user={it} /> : undefined;
+        })}
+      </div>
     </div>
   );
 };

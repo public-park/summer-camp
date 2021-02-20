@@ -11,7 +11,7 @@ interface CallItemProps {
   to: string;
   from: string;
   direction: CallDirection;
-  duration: number;
+  duration: number | undefined;
   createdAt: string;
   status: CallStatus;
 }
@@ -19,7 +19,7 @@ interface CallItemProps {
 export const CallItem = (props: CallItemProps) => {
   const { from, to, duration, direction, status } = props;
 
-  const createdAt = DateTime.fromISO(props.createdAt);
+  const createdAt = DateTime.fromRFC2822(props.createdAt);
   const durationToMinutes = useCallDurationFormat(duration);
 
   const dispatch = useDispatch();

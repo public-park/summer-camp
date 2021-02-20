@@ -3,9 +3,8 @@ import { CallItem } from './CallItem';
 import { ApplicationContext } from '../../../context/ApplicationContext';
 import { LoadIndicator } from '../ConfigurationView/LoadIndicator';
 import { fetchCalls } from '../../../services/RequestService';
-import { User } from '../../../models/User';
 import { CallDocument } from '../../../models/documents/CallDocument';
-
+// TODO rename to CallList
 export const CallHistoryView = () => {
   // TODO, add hook useFetchCallHistory(start, limit) => isFetching, calls
 
@@ -40,7 +39,7 @@ export const CallHistoryView = () => {
 
       {!isFetching && calls.length === 0 && <div style={{ padding: '10px' }}>No calls recorded</div>}
 
-      {calls.map((call: any) => {
+      {calls.map((call: CallDocument) => {
         return (
           <CallItem
             to={call.to}

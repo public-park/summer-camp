@@ -18,7 +18,7 @@ export const Busy = () => {
 
   const { from, to, direction, answeredAt } = useSelector(selectCall) || {};
 
-  const duration = useCallDuration(answeredAt); // TODO, fix
+  const duration = useCallDuration(answeredAt);
   const durationFormatted = useCallDurationFormat(duration);
 
   const end = () => {

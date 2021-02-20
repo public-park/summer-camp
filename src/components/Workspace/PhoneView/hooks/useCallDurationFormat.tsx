@@ -6,7 +6,11 @@ const addLeadingZero = (value: number) => {
   return value;
 };
 
-export const useCallDurationFormat = (duration: number) => {
+export const useCallDurationFormat = (duration: number | undefined) => {
+  if (!duration) {
+    return '00:00';
+  }
+
   const hours = Math.floor(duration / 3600);
   const minutes = Math.floor((duration - hours * 3600) / 60);
   const seconds = duration - hours * 3600 - minutes * 60;

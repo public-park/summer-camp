@@ -187,10 +187,6 @@ export class User {
   }
 
   async getAccount(): Promise<Account> {
-    if (this.account) {
-      return this.account;
-    }
-
     this.account = await repository.accounts.getById(this.accountId);
 
     if (!this.account) {

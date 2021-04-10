@@ -12,6 +12,7 @@ import { Call } from '../../models/Call';
 import { getCallerId, getCallbackUrl } from '../../controllers/callback/PhoneHelper';
 import { CallListInstanceCreateOptions } from 'twilio/lib/rest/api/v2010/account/call';
 import { createConferenceTwiml } from './TwilioTwimlHelper';
+import VoiceResponse = require('twilio/lib/twiml/VoiceResponse');
 
 interface VoiceAccessToken extends AccessToken {
   identity: string;
@@ -83,7 +84,8 @@ export class TwilioHelper {
       `client:${getIdentityByUserId(<string>call.userId)}`,
       'agent',
       getCallbackUrl(`status-callback/accounts/${call.accountId}/calls/${call.id}/status`),
-      ['answered']
+      ['answered'],
+      'medium'
     );
   }
 
@@ -112,7 +114,8 @@ export class TwilioHelper {
     to: string,
     label: string,
     statusEventUrl: string,
-    statusEvents: string[]
+    statusEvents: string[],
+    jitterBufferSize?: VoiceResponse.ConferenceAttributes['jitterBufferSize']
   ): Promise<string> {
     let options: ParticipantListInstanceCreateOptions = {
       to: to,
@@ -124,6 +127,7 @@ export class TwilioHelper {
       statusCallbackEvent: statusEvents,
       statusCallbackMethod: 'POST',
       statusCallback: statusEventUrl,
+      jitterBufferSize: jitterBufferSize,
     };
 
     const { callSid } = await this.client.conferences(conferenceName).participants.create(options);
@@ -133,7 +137,7 @@ export class TwilioHelper {
 
   async initiateOutgoingCall(call: Call, user: User, account: Account): Promise<string> {
     const options: CallListInstanceCreateOptions = {
-      twiml: createConferenceTwiml(call, 'agent'),
+      twiml: createConferenceTwiml(call, 'agent', 'medium'),
       to: `client:${getIdentityByUserId(<string>user.id)}`,
       from: getCallerId(account),
     };

@@ -2,12 +2,17 @@ import { Call } from '../../models/Call';
 import VoiceResponse = require('twilio/lib/twiml/VoiceResponse');
 import { getCallbackUrl } from '../../controllers/callback/PhoneHelper';
 
-const createConferenceTwiml = (call: Call, label: string) => {
+const createConferenceTwiml = (
+  call: Call,
+  label: string,
+  jitterBufferSize?: VoiceResponse.ConferenceAttributes['jitterBufferSize']
+) => {
   let twiml = new VoiceResponse();
 
   const dial = twiml.dial({ callerId: call.from });
-  // VoiceResponse.ConferenceAttributes
-  const conferenceOptions: any = {
+
+  const conferenceOptions: VoiceResponse.ConferenceAttributes = {
+    jitterBufferSize: jitterBufferSize,
     endConferenceOnExit: true,
     statusCallbackEvent: ['join'],
     statusCallback: getCallbackUrl(

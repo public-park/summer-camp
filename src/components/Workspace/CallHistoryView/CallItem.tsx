@@ -16,10 +16,8 @@ interface CallItemProps {
   status: CallStatus;
 }
 
-export const CallItem = (props: CallItemProps) => {
-  const { from, to, duration, direction, status } = props;
-
-  const createdAt = DateTime.fromRFC2822(props.createdAt);
+export const CallItem: React.FC<CallItemProps> = ({ from, to, duration, direction, createdAt, status }) => {
+  const date = DateTime.fromRFC2822(createdAt);
   const durationToMinutes = useCallDurationFormat(duration);
 
   const dispatch = useDispatch();
@@ -52,7 +50,7 @@ export const CallItem = (props: CallItemProps) => {
           </h3>
 
           <h4 className="duration">
-            {createdAt.toRelative()} {status === 'completed' && `, ${durationToMinutes} minutes`}
+            {date.toRelative()} {status === 'completed' && `, ${durationToMinutes} minutes`}
           </h4>
         </div>
       </div>
